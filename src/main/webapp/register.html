@@ -4,92 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Registration — Book4u</title>
-    <meta name="description" content="Create a student account on Book4u peer-to-peer textbook exchange platform.">
-    <!-- Commercial Bookstore Design System -->
+    <meta name="description" content="Create a student account on Book4u peer-to-peer textbook exchange and campus bookstore platform.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Design System Stylesheet -->
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body style="background-color: var(--cw-cream);">
 
-    <!-- Top Notice Bar -->
-    <div class="top-notice-bar">
-        🎓 University Peer-to-Peer Book Exchange • 100% Non-Commercial • Zero Retail Markups • On-Campus Handover
-    </div>
-
-    <!-- Navigation Header (Screenshot 1 Layout) -->
-    <header class="navbar">
-        <div class="nav-container">
-            <!-- Brand Logo -->
-            <a href="index.html" class="brand-link" aria-label="Book4u Home">
-                <div class="brand-icon">B</div>
-                <div class="brand-text">
-                    <h1>Book4u</h1>
-                    <p>Student Book Exchange</p>
+    <!-- Header -->
+    <header class="cw-header">
+        <div class="cw-header-container">
+            <a href="index.html" class="cw-logo">
+                <div class="cw-logo-icon"><span>B</span></div>
+                <div class="cw-logo-text">
+                    <span class="cw-logo-title">BOOK4U</span>
+                    <span class="cw-logo-sub">STUDENT BOOKSTORE</span>
                 </div>
             </a>
 
-            <!-- Nav Links -->
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="explore.html">Explore Books</a></li>
-                <li><a href="my-books.html">My Listings</a></li>
-                <li><a href="index.html#categories">Categories</a></li>
-                <li><a href="index.html#how-it-works">How It Works</a></li>
-            </ul>
+            <div class="cw-search-wrapper">
+                <form action="explore.html" method="GET" class="cw-search-form">
+                    <input type="text" name="query" class="cw-search-input" placeholder="Search by Title, Author, ISBN...">
+                    <button type="submit" class="cw-search-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                </form>
+            </div>
 
-            <!-- Right Actions -->
-            <div class="nav-actions">
-                <a href="explore.html" class="btn btn-outline btn-sm">Explore Books</a>
-                <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
+            <div class="cw-header-actions nav-actions">
+                <a href="index.html" class="cw-btn cw-btn-outline">← Back to Store</a>
+                <a href="login.html" class="cw-btn cw-btn-primary">Sign In</a>
             </div>
         </div>
     </header>
 
     <!-- Registration Container -->
     <main class="main-content">
-        <div class="auth-wrapper" style="max-width: 680px; margin: 2rem auto;">
-            <div class="auth-card" style="box-shadow: var(--shadow-card); border-radius: var(--radius-md); padding: 2.5rem 2rem;">
-                <div class="auth-header" style="text-align: center; margin-bottom: 1.75rem;">
-                    <span class="auth-icon" style="background-color: var(--badge-swap-bg); color: var(--primary); width: 56px; height: 56px; border-radius: var(--radius-full); display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 0.75rem;">🎓</span>
-                    <h2 style="font-family: var(--font-editorial); font-size: 1.85rem; color: var(--text-main);">Create Student Account</h2>
-                    <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 0.25rem;">Join your campus peer-to-peer textbook sharing community</p>
+        <div class="cw-container" style="padding-top: 3rem; padding-bottom: 5rem; max-width: 640px;">
+            
+            <div style="background: #FFFFFF; border: 1px solid var(--cw-border); border-radius: 12px; padding: 2.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                <div style="text-align: center; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--cw-border);">
+                    <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🎓</div>
+                    <h1 style="font-family: var(--font-editorial); font-size: 1.9rem; margin: 0 0 0.5rem 0;">Student Registration</h1>
+                    <p style="color: #64748B; font-size: 0.95rem;">Join your campus peer-to-peer book sharing community.</p>
                 </div>
 
-                <!-- Alert Message Box -->
-                <div id="register-alert" class="alert" style="display: none;"></div>
+                <div id="register-alert" class="alert" style="display: none; margin-bottom: 1.5rem;"></div>
 
                 <form id="register-form" novalidate>
                     <!-- Full Name -->
                     <div class="form-group" style="margin-bottom: 1.25rem;">
-                        <label for="reg-fullname" style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">Full Name *</label>
-                        <input type="text" id="reg-fullname" class="form-control" placeholder="e.g. Aarav Sharma" required autofocus>
-                        <div class="form-hint" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Official name matching campus records</div>
+                        <label for="reg-fullname" style="font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase;">Full Name *</label>
+                        <input type="text" id="reg-fullname" class="form-control" placeholder="e.g. Aarav Sharma" required>
                     </div>
 
                     <!-- University ID & College Email -->
-                    <div class="form-grid-2">
+                    <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                         <div class="form-group">
-                            <label for="reg-univ-id" style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">University ID / Roll No *</label>
+                            <label for="reg-univ-id" style="font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase;">University ID / Roll No *</label>
                             <input type="text" id="reg-univ-id" class="form-control" placeholder="e.g. U2023CS001" required>
-                            <div class="form-hint" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Unique institutional roll number</div>
                         </div>
-
                         <div class="form-group">
-                            <label for="reg-email" style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">College Email Address *</label>
+                            <label for="reg-email" style="font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase;">College Email *</label>
                             <input type="email" id="reg-email" class="form-control" placeholder="student@campus.edu" required>
-                            <div class="form-hint" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Institutional email for verification</div>
                         </div>
                     </div>
 
                     <!-- Phone Number & Campus Name -->
-                    <div class="form-grid-2">
+                    <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                         <div class="form-group">
-                            <label for="reg-phone" style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">Phone Number (Optional)</label>
+                            <label for="reg-phone" style="font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase;">Phone Number (Optional)</label>
                             <input type="tel" id="reg-phone" class="form-control" placeholder="+91 98765 43210">
-                            <div class="form-hint" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">For in-person handover coordination</div>
                         </div>
-
                         <div class="form-group">
-                            <label for="reg-campus" style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">Campus Location</label>
+                            <label for="reg-campus" style="font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase;">Campus Branch</label>
                             <select id="reg-campus" class="form-control">
                                 <option value="Main Campus" selected>Main Campus</option>
                                 <option value="North Campus">North Campus</option>
@@ -100,121 +91,79 @@
                     </div>
 
                     <!-- Department & Semester -->
-                    <div class="form-grid-2">
+                    <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                         <div class="form-group">
-                            <label for="reg-dept" style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">Academic Department *</label>
+                            <label for="reg-dept" style="font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase;">Department *</label>
                             <select id="reg-dept" class="form-control" required>
                                 <option value="" disabled selected>Select Department</option>
-                                <option value="Computer Science">Computer Science &amp; Engineering</option>
-                                <option value="Information Science">Information Science &amp; Engineering</option>
-                                <option value="Electronics & Communication">Electronics &amp; Communication</option>
-                                <option value="Electrical Engineering">Electrical &amp; Electronics</option>
+                                <option value="Computer Science">Computer Science & Engineering</option>
+                                <option value="Information Science">Information Science & Engineering</option>
+                                <option value="Electronics & Communication">Electronics & Communication</option>
+                                <option value="Electrical Engineering">Electrical Engineering</option>
                                 <option value="Mechanical Engineering">Mechanical Engineering</option>
                                 <option value="Civil Engineering">Civil Engineering</option>
                                 <option value="Biotechnology">Biotechnology</option>
-                                <option value="Mathematics & Sciences">Mathematics &amp; Basic Sciences</option>
+                                <option value="Mathematics & Sciences">Mathematics & Sciences</option>
                                 <option value="Business & Management">Management Studies</option>
                             </select>
                         </div>
-
                         <div class="form-group">
-                            <label for="reg-semester" style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">Current Semester *</label>
+                            <label for="reg-semester" style="font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase;">Current Semester *</label>
                             <select id="reg-semester" class="form-control" required>
-                                <option value="" disabled selected>Select Semester</option>
-                                <option value="1">Semester 1 (1st Year)</option>
-                                <option value="2">Semester 2 (1st Year)</option>
-                                <option value="3">Semester 3 (2nd Year)</option>
-                                <option value="4">Semester 4 (2nd Year)</option>
-                                <option value="5">Semester 5 (3rd Year)</option>
-                                <option value="6">Semester 6 (3rd Year)</option>
-                                <option value="7">Semester 7 (4th Year)</option>
-                                <option value="8">Semester 8 (4th Year)</option>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                                <option value="3">Semester 3</option>
+                                <option value="4">Semester 4</option>
+                                <option value="5" selected>Semester 5</option>
+                                <option value="6">Semester 6</option>
+                                <option value="7">Semester 7</option>
+                                <option value="8">Semester 8</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- Password Fields -->
-                    <div class="form-grid-2">
+                    <!-- Password & Confirm Password -->
+                    <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.75rem;">
                         <div class="form-group">
-                            <label for="reg-password" style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">Password *</label>
-                            <div class="password-toggle-wrapper" style="position: relative; display: flex; align-items: center;">
-                                <input type="password" id="reg-password" class="form-control" placeholder="Min. 6 characters" minlength="6" required style="padding-right: 2.75rem;">
-                                <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('reg-password', this)" title="Show/Hide Password" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-muted);">👁️</button>
+                            <label for="reg-password" style="font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase;">Password *</label>
+                            <div class="password-toggle-wrapper" style="position: relative;">
+                                <input type="password" id="reg-password" class="form-control" placeholder="Min. 6 characters" minlength="6" required>
+                                <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('reg-password', this)" title="Show/Hide Password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer;">👁️</button>
                             </div>
                         </div>
-
                         <div class="form-group">
-                            <label for="reg-confirm-password" style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">Confirm Password *</label>
-                            <div class="password-toggle-wrapper" style="position: relative; display: flex; align-items: center;">
-                                <input type="password" id="reg-confirm-password" class="form-control" placeholder="Re-enter password" minlength="6" required style="padding-right: 2.75rem;">
-                                <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('reg-confirm-password', this)" title="Show/Hide Password" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-muted);">👁️</button>
+                            <label for="reg-confirm-password" style="font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase;">Confirm Password *</label>
+                            <div class="password-toggle-wrapper" style="position: relative;">
+                                <input type="password" id="reg-confirm-password" class="form-control" placeholder="Re-type password" minlength="6" required>
+                                <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('reg-confirm-password', this)" title="Show/Hide Password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer;">👁️</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" id="btn-submit-register" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem; font-weight: 700; margin-top: 1.25rem;">
+                    <button type="submit" id="btn-submit-register" class="cw-btn cw-btn-primary" style="width: 100%; padding: 0.9rem; font-size: 1rem; font-weight: 700;">
                         Create Student Account
                     </button>
                 </form>
 
-                <div class="auth-footer" style="text-align: center; margin-top: 1.75rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem; font-size: 0.88rem; color: var(--text-muted);">
-                    Already registered? <a href="login.html" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Sign In Here</a>
+                <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: #64748B;">
+                    Already registered on Book4u? <a href="login.html" style="color: var(--cw-burgundy); font-weight: 700;">Sign In here &rarr;</a>
                 </div>
             </div>
+
         </div>
     </main>
 
-    <!-- Commercial Bookstore Footer (Forest Green Theme) -->
-    <footer class="bookstore-footer">
-        <div class="footer-container">
-            <div class="footer-col footer-col-brand">
-                <div class="footer-brand-title">
-                    <span class="footer-brand-badge">B</span>
-                    <span>Book4u</span>
-                </div>
-                <p class="footer-brand-desc">
-                    An independent student-to-student academic textbook repository built to eliminate commercial retail markups and foster scholarly collaboration across campus.
-                </p>
-                <div class="footer-badge-row">
-                    <span class="tech-tag">Java 21</span>
-                    <span class="tech-tag">Jakarta Servlet 6.0</span>
-                    <span class="tech-tag">Apache Tomcat 10.1</span>
-                    <span class="tech-tag">MySQL 8.0</span>
-                    <span class="tech-tag">Pure JDBC</span>
-                </div>
+    <!-- Footer -->
+    <footer class="cw-footer">
+        <div class="cw-footer-container">
+            <div class="cw-footer-bottom">
+                <p>&copy; 2026 Book4u. Inspired by Crossword.in.</p>
             </div>
-
-            <div class="footer-col">
-                <h5>Navigation</h5>
-                <ul class="footer-links">
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="explore.html">Explore Catalog</a></li>
-                    <li><a href="my-books.html">My Listed Books</a></li>
-                    <li><a href="add-book.html">List a Textbook</a></li>
-                    <li><a href="profile.html">Student Profile</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-col">
-                <h5>Protocols &amp; Health</h5>
-                <ul class="footer-links">
-                    <li><a href="index.html#how-it-works">How It Works</a></li>
-                    <li><a href="api/health/live" target="_blank" rel="noopener">Liveness Health Probe</a></li>
-                    <li><a href="api/health/ready" target="_blank" rel="noopener">Readiness Health Probe</a></li>
-                    <li><a href="login.html">Sign In</a></li>
-                    <li><a href="register.html">Student Registration</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="footer-bottom">
-            <p>&copy; 2026 Book4u — Student Peer-to-Peer Academic Book Exchange. All rights reserved.</p>
         </div>
     </footer>
 
-    <!-- Client Scripts -->
-    <script src="js/app.js"></script>
+    <!-- Scripts -->
+    <script src="js/store.js"></script>
     <script src="js/auth.js"></script>
 </body>
 </html>

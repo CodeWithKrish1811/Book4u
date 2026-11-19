@@ -76,6 +76,9 @@ public class AuthenticationFilterTest {
         assertTrue((Boolean) isPublicMethod.invoke(filter, "/", "GET"));
         assertTrue((Boolean) isPublicMethod.invoke(filter, "/explore.html", "GET"));
         assertTrue((Boolean) isPublicMethod.invoke(filter, "/book-details.html", "GET"));
+        assertTrue((Boolean) isPublicMethod.invoke(filter, "/cart.html", "GET"));
+        assertTrue((Boolean) isPublicMethod.invoke(filter, "/wishlist.html", "GET"));
+        assertTrue((Boolean) isPublicMethod.invoke(filter, "/checkout.html", "GET"));
         assertTrue((Boolean) isPublicMethod.invoke(filter, "/login.html", "GET"));
         assertTrue((Boolean) isPublicMethod.invoke(filter, "/register.html", "GET"));
 
