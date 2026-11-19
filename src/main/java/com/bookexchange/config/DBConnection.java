@@ -101,7 +101,33 @@ public class DBConnection {
             password = properties.getProperty("db.password", "");
         }
 
-        // Allow environment variable overrides if provided
+        // 1. Cloud & Container Environment Variables (Railway, Render, Docker)
+        String railwayHost = System.getenv("MYSQLHOST");
+        String railwayPort = System.getenv("MYSQLPORT");
+        String railwayDb = System.getenv("MYSQLDATABASE");
+        String railwayUser = System.getenv("MYSQLUSER");
+        String railwayPass = System.getenv("MYSQLPASSWORD");
+        String railwayUrl = System.getenv("MYSQL_URL");
+        String databaseUrl = System.getenv("DATABASE_URL");
+
+        if (railwayHost != null && !railwayHost.isBlank()) {
+            String port = (railwayPort != null && !railwayPort.isBlank()) ? railwayPort : "3306";
+            String db = (railwayDb != null && !railwayDb.isBlank()) ? railwayDb : "railway";
+            url = "jdbc:mysql://" + railwayHost + ":" + port + "/" + db + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+        } else if (railwayUrl != null && !railwayUrl.isBlank()) {
+            url = railwayUrl.startsWith("jdbc:") ? railwayUrl : "jdbc:" + railwayUrl;
+        } else if (databaseUrl != null && !databaseUrl.isBlank()) {
+            url = databaseUrl.startsWith("jdbc:") ? databaseUrl : "jdbc:" + databaseUrl;
+        }
+
+        if (railwayUser != null && !railwayUser.isBlank()) {
+            username = railwayUser;
+        }
+        if (railwayPass != null) {
+            password = railwayPass;
+        }
+
+        // 2. Direct environment variable overrides (highest precedence)
         String envUrl = System.getenv("DB_URL");
         if (envUrl != null && !envUrl.isBlank()) {
             url = envUrl;
