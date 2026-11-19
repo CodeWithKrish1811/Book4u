@@ -47,6 +47,7 @@ public class HealthServiceImpl implements HealthService {
             long duration = System.currentTimeMillis() - startTime;
             String rootCauseMessage = ex.getMostSpecificCause() != null ?
                     ex.getMostSpecificCause().getMessage() : ex.getMessage();
+            rootCauseMessage = sanitizeMessage(rootCauseMessage);
             log.warn("Database connection check failed after {}ms: {}", duration, rootCauseMessage);
             return new DatabaseHealthDto(
                     "DISCONNECTED",
@@ -57,14 +58,20 @@ public class HealthServiceImpl implements HealthService {
             );
         } catch (Exception ex) {
             long duration = System.currentTimeMillis() - startTime;
-            log.warn("Unexpected exception during database connection check: {}", ex.getMessage());
+            String sanitized = sanitizeMessage(ex.getMessage());
+            log.warn("Unexpected exception during database connection check: {}", sanitized);
             return new DatabaseHealthDto(
                     "ERROR",
                     "MySQL Relational Database",
                     "Unknown",
                     duration,
-                    "Unexpected error during connection test: " + ex.getMessage()
+                    "Unexpected error during connection test: " + sanitized
             );
         }
+    }
+
+    private String sanitizeMessage(String msg) {
+        if (msg == null) return "Unknown database error";
+        return msg.replaceAll("(?i)(password=)[^&;\\s]*", "$1****");
     }
 }

@@ -174,6 +174,8 @@ CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
 VITE_API_BASE_URL=http://localhost:8080/api
 ```
 
+> **Note on Environment Resolution:** Spring Boot 3.x is configured with supported configuration import (`spring.config.import=optional:file:.env[.properties],optional:file:../.env[.properties],optional:file:backend/.env[.properties]`). It will automatically load variables from `.env` in the repository root or `backend/` directory upon startup without needing third-party libraries. You can also pass credentials via standard OS environment variables or command-line parameters.
+
 ---
 
 ### Step 2: Initialize MySQL Database
@@ -191,15 +193,34 @@ This creates the `book4u_db` database, all required tables, indexes, and initial
 
 ### Step 3: Run the Spring Boot Backend
 
-Navigate to `backend/` and start the server using the Maven wrapper:
+Navigate to the `backend/` directory and start the server using the Maven wrapper:
 
 ```bash
 cd backend
+```
 
-# On Windows PowerShell / Command Prompt:
+**On Windows PowerShell:**
+```powershell
 .\mvnw.cmd spring-boot:run
+```
 
-# On Linux / macOS:
+**On Windows Command Prompt (CMD):**
+```cmd
+mvnw.cmd spring-boot:run
+```
+
+**From Repository Root (without changing directory):**
+```powershell
+# PowerShell
+.\backend\mvnw.cmd -f backend\pom.xml spring-boot:run
+
+# Command Prompt (CMD)
+backend\mvnw.cmd -f backend\pom.xml spring-boot:run
+```
+
+**On Linux / macOS:**
+```bash
+chmod +x mvnw
 ./mvnw spring-boot:run
 ```
 
