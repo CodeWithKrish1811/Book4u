@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book4u — Student Peer-to-Peer Book Exchange System</title>
+    <meta name="description" content="University peer-to-peer textbook sharing system supporting Swap, Giveaway, and Lending. Built with Java 21, Jakarta Servlets, JDBC, and MySQL.">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand-link">
+                <div class="brand-logo-icon">📚</div>
+                <div class="brand-details">
+                    <h1>Book4u</h1>
+                    <p>Student Peer-to-Peer Book Exchange</p>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <!-- Live System Diagnostic Pill -->
+                <div id="system-health-pill" class="health-pill" title="Servlet & MySQL Health Status">
+                    <span id="health-dot" class="health-dot dot-amber"></span>
+                    <span id="health-text">Checking System...</span>
+                </div>
+
+                <!-- Action Button -->
+                <button id="btn-open-list-modal" class="btn btn-primary btn-sm">+ List a Book</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-content">
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <p class="hero-tagline">Your Books • Your Campus • Your Community</p>
+            <h2 class="hero-title">Academic Book Sharing for University Students</h2>
+            <p class="hero-desc">
+                Exchange textbooks you've completed for books required in your current semester.
+                Zero cost, zero commercial sales — strictly student-to-student sharing on campus.
+            </p>
+        </section>
+
+        <!-- 3 Sharing Modes Highlights -->
+        <section class="modes-container">
+            <div class="mode-box">
+                <span class="mode-badge badge-swap">SWAP</span>
+                <h3>Book Exchange</h3>
+                <p>Trade a textbook you no longer need directly for one required for your coursework.</p>
+                <div class="mode-footer">Cost: $0 (Trade)</div>
+            </div>
+
+            <div class="mode-box">
+                <span class="mode-badge badge-giveaway">GIVEAWAY</span>
+                <h3>Altruistic Gifting</h3>
+                <p>Graduating students and seniors pass down reference books to juniors with zero return obligation.</p>
+                <div class="mode-footer">Cost: $0 (Free Gift)</div>
+            </div>
+
+            <div class="mode-box">
+                <span class="mode-badge badge-lending">LENDING</span>
+                <h3>Time-Bound Loan</h3>
+                <p>Temporarily lend reference books or lab manuals with an agreed return calendar date.</p>
+                <div class="mode-footer">Cost: $0 (Borrow & Return)</div>
+            </div>
+        </section>
+
+        <!-- Catalog Header & Filters -->
+        <section class="catalog-section">
+            <div class="catalog-header">
+                <div>
+                    <h3>Available Campus Textbooks</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Loaded live from MySQL database via JDBC and Java Servlets</p>
+                </div>
+
+                <div class="catalog-filters">
+                    <!-- Filter by Subject -->
+                    <select id="filter-subject" class="filter-select" aria-label="Filter by Subject">
+                        <option value="">All Subjects</option>
+                        <option value="Java">Java</option>
+                        <option value="DBMS">DBMS</option>
+                        <option value="DSA">DSA</option>
+                        <option value="Networks">Networks</option>
+                    </select>
+
+                    <!-- Filter by Sharing Mode -->
+                    <select id="filter-mode" class="filter-select" aria-label="Filter by Sharing Mode">
+                        <option value="">All Modes</option>
+                        <option value="SWAP">SWAP Only</option>
+                        <option value="GIVEAWAY">GIVEAWAY Only</option>
+                        <option value="LENDING">LENDING Only</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dynamic Book Cards Grid -->
+            <div id="book-grid" class="book-grid">
+                <!-- Rendered dynamically by app.js -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Form: List a New Book -->
+    <div id="list-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">List an Academic Book</h2>
+                <button id="btn-close-modal" class="modal-close" aria-label="Close modal">&times;</button>
+            </div>
+
+            <form id="new-book-form">
+                <div class="form-group">
+                    <label for="book-title-input">Book Title *</label>
+                    <input type="text" id="book-title-input" class="form-control" placeholder="e.g. Operating System Concepts" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="book-author-input">Author(s) *</label>
+                    <input type="text" id="book-author-input" class="form-control" placeholder="e.g. Silberschatz, Galvin" required>
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div>
+                        <label for="book-subject-input">Subject *</label>
+                        <select id="book-subject-input" class="form-control" required>
+                            <option value="Java">Java</option>
+                            <option value="DBMS">DBMS</option>
+                            <option value="DSA">DSA</option>
+                            <option value="Networks">Networks</option>
+                            <option value="Operating Systems">Operating Systems</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="book-course-input">Course Code</label>
+                        <input type="text" id="book-course-input" class="form-control" placeholder="e.g. CS301">
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div>
+                        <label for="book-mode-select">Sharing Mode *</label>
+                        <select id="book-mode-select" class="form-control" required>
+                            <option value="SWAP">SWAP (Exchange)</option>
+                            <option value="GIVEAWAY">GIVEAWAY (Free)</option>
+                            <option value="LENDING">LENDING (Temporary)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="book-condition-select">Condition *</label>
+                        <select id="book-condition-select" class="form-control" required>
+                            <option value="NEW">New</option>
+                            <option value="LIKE_NEW" selected>Like New</option>
+                            <option value="GOOD">Good</option>
+                            <option value="FAIR">Fair</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Conditional Lending Duration -->
+                <div id="lending-duration-group" class="form-group" style="display: none;">
+                    <label for="book-days-input">Max Lending Duration (Days) *</label>
+                    <input type="number" id="book-days-input" class="form-control" min="1" max="180" placeholder="e.g. 30">
+                </div>
+
+                <div class="form-group">
+                    <label for="book-swap-input">Swap Preferences (If swapping)</label>
+                    <input type="text" id="book-swap-input" class="form-control" placeholder="What books or topics do you want in exchange?">
+                </div>
+
+                <div class="form-group">
+                    <label for="book-desc-input">Description & Condition Notes</label>
+                    <textarea id="book-desc-input" class="form-control" rows="3" placeholder="Pencil highlights, syllabus notes, CD included, etc."></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn btn-primary">Publish Listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div>
+                <p><strong>Student Peer-to-Peer Book Exchange System (Book4u)</strong></p>
+                <p style="font-size: 0.85rem; color: #64748b;">University Academic Coursework Project</p>
+            </div>
+            <div class="footer-tech-stack">
+                <span class="tag">Java 21</span>
+                <span class="tag">Jakarta Servlet 6.0</span>
+                <span class="tag">Apache Tomcat 10.1</span>
+                <span class="tag">JDBC</span>
+                <span class="tag">MySQL 8.x</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Client Script -->
+    <script src="js/app.js"></script>
+</body>
+</html>
