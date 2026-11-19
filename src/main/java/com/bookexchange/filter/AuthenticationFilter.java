@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
 
 /**
  * ============================================================================
@@ -23,6 +24,7 @@ import java.io.PrintWriter;
  * 3. Whitelists public resources (CSS, JS, images, health checks, login/register).
  * 4. Prevents authenticated students from unnecessarily visiting /login.html or /register.html
  *    by smoothly redirecting them to /profile.html.
+ * 5. CSRF defense: Validates Origin header on state-changing requests (POST, PUT, DELETE).
  * ============================================================================
  */
 @WebFilter(filterName = "AuthenticationFilter", urlPatterns = "/*")
@@ -45,30 +47,47 @@ public class AuthenticationFilter implements Filter {
         String contextPath = req.getContextPath();
         String uri = req.getRequestURI();
         String path = uri.substring(contextPath.length());
+        String method = req.getMethod();
+
+        // 1. CSRF defense on state-changing requests (POST, PUT, DELETE)
+        if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method)) {
+            if (!isAllowedOrigin(req)) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                resp.setContentType("application/json");
+                resp.setCharacterEncoding("UTF-8");
+                JsonObject err = new JsonObject();
+                err.addProperty("success", false);
+                err.addProperty("error", "Forbidden: Cross-site request rejected by CSRF protection.");
+                try (PrintWriter out = resp.getWriter()) {
+                    out.print(gson.toJson(err));
+                }
+                return;
+            }
+        }
 
         // Check if user has an active authenticated session
         HttpSession session = req.getSession(false);
         boolean isAuthenticated = (session != null && session.getAttribute("currentUser") != null);
 
-        // 1. Whitelist static assets
+        // 2. Whitelist static assets
         if (isStaticResource(path)) {
             chain.doFilter(request, response);
             return;
         }
 
-        // 2. Prevent already logged-in users from accessing login or registration pages
+        // 3. Prevent already logged-in users from accessing login or registration pages
         if (isAuthenticated && (path.equals("/login.html") || path.equals("/register.html"))) {
             resp.sendRedirect(contextPath + "/profile.html");
             return;
         }
 
-        // 3. Whitelist public pages and endpoints
+        // 4. Whitelist public pages and endpoints
         if (isPublicResource(path, req.getMethod(), req)) {
             chain.doFilter(request, response);
             return;
         }
 
-        // 4. If request is for a protected resource and user is NOT authenticated:
+        // 5. If request is for a protected resource and user is NOT authenticated:
         if (!isAuthenticated) {
             if (path.startsWith("/api/")) {
                 // For API requests, return structured HTTP 401 JSON
@@ -90,8 +109,45 @@ public class AuthenticationFilter implements Filter {
             }
         }
 
-        // 5. Authenticated user accessing protected resource: proceed
+        // 6. Authenticated user accessing protected resource: proceed
         chain.doFilter(request, response);
+    }
+
+    /**
+     * Verifies that the Origin header (if present) matches trusted application hostnames.
+     */
+    public boolean isAllowedOrigin(HttpServletRequest req) {
+        String origin = req.getHeader("Origin");
+        if (origin == null || origin.isBlank()) {
+            return true; // Direct same-origin request, curl, or standard non-cross-origin navigation
+        }
+
+        String hostHeader = req.getHeader("X-Forwarded-Host");
+        if (hostHeader == null || hostHeader.isBlank()) {
+            hostHeader = req.getHeader("Host");
+        }
+        if (hostHeader == null || hostHeader.isBlank()) {
+            hostHeader = req.getServerName();
+        }
+
+        String hostOnly = (hostHeader != null && hostHeader.contains(":"))
+                ? hostHeader.substring(0, hostHeader.indexOf(':'))
+                : (hostHeader != null ? hostHeader : "");
+
+        try {
+            URI originUri = new URI(origin);
+            String originHost = originUri.getHost();
+            if (originHost == null) {
+                return false;
+            }
+            return originHost.equalsIgnoreCase(hostOnly)
+                    || originHost.equalsIgnoreCase("localhost")
+                    || originHost.equalsIgnoreCase("127.0.0.1")
+                    || originHost.endsWith(".railway.app")
+                    || originHost.endsWith(".up.railway.app");
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -121,7 +177,7 @@ public class AuthenticationFilter implements Filter {
             return true;
         }
 
-        // Public Health Diagnostics
+        // Public Health Diagnostics (/api/health, /api/health/live, /api/health/ready)
         if (path.startsWith("/api/health")) {
             return true;
         }
@@ -152,6 +208,5 @@ public class AuthenticationFilter implements Filter {
 
     @Override
     public void destroy() {
-        // Cleanup if required
     }
 }

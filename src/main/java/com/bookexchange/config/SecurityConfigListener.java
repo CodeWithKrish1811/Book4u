@@ -10,10 +10,10 @@ import jakarta.servlet.annotation.WebListener;
  * SecurityConfigListener - Application Security Lifecycle Listener
  * ============================================================================
  * Dynamically configures session cookie security flags based on runtime environment:
- * 1. Production (Railway / Cloud HTTPS): Enables HttpOnly and Secure flags to prevent
- *    XSS session theft and transmission over unencrypted channels.
- * 2. Local Development (Localhost HTTP): Enables HttpOnly while keeping Secure=false so
- *    sessions function properly on plain http://localhost:8080.
+ * 1. HttpOnly: Enabled in all environments to prevent XSS session hijacking.
+ * 2. SameSite=Lax: Configured to defend against Cross-Site Request Forgery (CSRF).
+ * 3. Secure: Dynamically enabled in Production (Railway / Cloud HTTPS) while disabled
+ *    in local development to maintain full compatibility with http://localhost:8080.
  * ============================================================================
  */
 @WebListener
@@ -25,13 +25,20 @@ public class SecurityConfigListener implements ServletContextListener {
             SessionCookieConfig cookieConfig = sce.getServletContext().getSessionCookieConfig();
             cookieConfig.setHttpOnly(true);
 
+            // Configure SameSite=Lax to protect against Cross-Site Request Forgery (CSRF)
+            try {
+                cookieConfig.setAttribute("SameSite", "Lax");
+            } catch (Exception e) {
+                System.err.println("[SecurityConfig] Note on SameSite attribute configuration: " + e.getMessage());
+            }
+
             boolean isProduction = DBConnection.isProductionEnvironment();
             if (isProduction) {
                 cookieConfig.setSecure(true);
-                System.out.println("[SecurityConfig] Production environment detected: Session cookies configured with HttpOnly=true, Secure=true.");
+                System.out.println("[SecurityConfig] Production environment: Session cookies configured with HttpOnly=true, Secure=true, SameSite=Lax.");
             } else {
                 cookieConfig.setSecure(false);
-                System.out.println("[SecurityConfig] Local development environment: Session cookies configured with HttpOnly=true, Secure=false (local HTTP compatible).");
+                System.out.println("[SecurityConfig] Local development environment: Session cookies configured with HttpOnly=true, Secure=false, SameSite=Lax (local HTTP compatible).");
             }
         } catch (Exception e) {
             System.err.println("[SecurityConfig] Note on session cookie initialization: " + e.getMessage());

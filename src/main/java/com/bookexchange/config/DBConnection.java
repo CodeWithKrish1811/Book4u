@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -18,11 +21,12 @@ import java.util.Properties;
  * Technology: Core Java, JDBC (Java Database Connectivity), MySQL 8.x
  *
  * Production Hardening:
- * 1. Prioritizes cloud environment variables (DB_URL, MYSQL_URL, DATABASE_URL, MYSQLHOST).
- * 2. Parses and extracts embedded credentials without overwriting with empty values.
- * 3. Strict validation: Rejects insecure localhost fallback in production environments.
- * 4. Credential masking: Never logs passwords, credential lengths, or unmasked JDBC URLs.
- * 5. Preserves backward-compatible local development configuration via db.properties / db.properties.local.
+ * 1. Safe URI & RFC 3986 URL parsing with decoding for @, :, /, ?, #, and %.
+ * 2. Fallback parser for non-standard / unencoded special characters.
+ * 3. Consistent credential resolution handling conflicting and missing variables.
+ * 4. Strict validation: Rejects insecure localhost in production environments.
+ * 5. Complete credential masking in logs and exception messages.
+ * 6. Thread-isolated test connection override mechanism.
  * ============================================================================
  */
 public class DBConnection {
@@ -38,8 +42,8 @@ public class DBConnection {
     private static boolean configured = false;
     private static String configurationError = null;
 
-    // Test hook for simulating connection state in automated tests without running MySQL
-    private static volatile Boolean testConnectionOverride = null;
+    // Test hook for simulating connection state in automated tests with complete thread isolation
+    private static final ThreadLocal<Boolean> testConnectionOverride = new ThreadLocal<>();
 
     // Static initialization block
     static {
@@ -110,6 +114,38 @@ public class DBConnection {
     }
 
     /**
+     * Safely percent-decodes a URL token without crashing on invalid or incomplete escape sequences (e.g. lone '%').
+     */
+    public static String safeUrlDecode(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+        try {
+            return URLDecoder.decode(value, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException e) {
+            // Fallback: manually decode valid %XX hexadecimal sequences while preserving literal characters
+            StringBuilder sb = new StringBuilder();
+            int i = 0;
+            int len = value.length();
+            while (i < len) {
+                char c = value.charAt(i);
+                if (c == '%' && i + 2 < len) {
+                    try {
+                        int code = Integer.parseInt(value.substring(i + 1, i + 3), 16);
+                        sb.append((char) code);
+                        i += 3;
+                        continue;
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                sb.append(c);
+                i++;
+            }
+            return sb.toString();
+        }
+    }
+
+    /**
      * Sanitizes any database connection URL by redacting embedded passwords and query credentials.
      */
     public static String sanitizeUrl(String rawUrl) {
@@ -157,7 +193,8 @@ public class DBConnection {
 
     /**
      * Parses a database URL (e.g. mysql://user:pass@host:port/db or jdbc:mysql://...)
-     * and extracts any embedded credentials, returning a clean JDBC URL.
+     * and extracts embedded credentials, returning a clean JDBC URL.
+     * Supports percent-encoded credentials, special characters (@, :, /, ?, #, %), and Railway URLs.
      */
     public static ParsedDatabaseUrl parseDatabaseUrl(String rawUrl) {
         if (rawUrl == null || rawUrl.isBlank()) {
@@ -165,69 +202,95 @@ public class DBConnection {
         }
 
         String urlStr = rawUrl.trim();
-        int schemeEnd = urlStr.indexOf("://");
-        if (schemeEnd == -1) {
-            String clean = urlStr.startsWith("jdbc:") ? urlStr : "jdbc:" + urlStr;
-            return new ParsedDatabaseUrl(clean, null, null);
-        }
+        String uriCandidate = urlStr;
 
-        String scheme = urlStr.substring(0, schemeEnd);
-        int authStart = schemeEnd + 3;
-        int pathStart = urlStr.indexOf('/', authStart);
-        int queryStart = urlStr.indexOf('?', authStart);
-
-        int limit = urlStr.length();
-        if (pathStart != -1 && pathStart < limit) {
-            limit = pathStart;
+        // Strip leading "jdbc:" if present to allow standard URI parsing
+        if (urlStr.startsWith("jdbc:")) {
+            uriCandidate = urlStr.substring(5);
         }
-        if (queryStart != -1 && queryStart < limit) {
-            limit = queryStart;
+        if (uriCandidate.startsWith("//")) {
+            uriCandidate = "mysql:" + uriCandidate;
         }
-
-        String authority = urlStr.substring(authStart, limit);
-        String pathAndQuery = urlStr.substring(limit);
 
         String user = null;
         String pass = null;
-        String hostPart = authority;
+        String hostPart = null;
+        String pathAndQuery = "";
 
-        int atIndex = authority.lastIndexOf('@');
-        if (atIndex != -1) {
-            String userInfo = authority.substring(0, atIndex);
-            hostPart = authority.substring(atIndex + 1);
+        // Strategy 1: Safe standard URI parsing (handles RFC 2396/3986 percent-encoded credentials)
+        boolean uriParsed = false;
+        try {
+            URI uri = new URI(uriCandidate);
+            if (uri.getHost() != null) {
+                hostPart = uri.getHost() + (uri.getPort() > 0 ? ":" + uri.getPort() : ":3306");
+                pathAndQuery = (uri.getPath() != null ? uri.getPath() : "")
+                        + (uri.getRawQuery() != null ? "?" + uri.getRawQuery() : "");
 
-            int colonIndex = userInfo.indexOf(':');
-            if (colonIndex != -1) {
-                user = userInfo.substring(0, colonIndex);
-                pass = userInfo.substring(colonIndex + 1);
-            } else {
-                user = userInfo;
-            }
-
-            if (user != null) {
-                try {
-                    user = java.net.URLDecoder.decode(user, StandardCharsets.UTF_8);
-                } catch (Exception ignored) {
+                String rawUserInfo = uri.getRawUserInfo();
+                if (rawUserInfo != null && !rawUserInfo.isBlank()) {
+                    int colon = rawUserInfo.indexOf(':');
+                    if (colon != -1) {
+                        user = safeUrlDecode(rawUserInfo.substring(0, colon));
+                        pass = safeUrlDecode(rawUserInfo.substring(colon + 1));
+                    } else {
+                        user = safeUrlDecode(rawUserInfo);
+                        pass = null;
+                    }
                 }
+                uriParsed = true;
             }
-            if (pass != null) {
-                try {
-                    pass = java.net.URLDecoder.decode(pass, StandardCharsets.UTF_8);
-                } catch (Exception ignored) {
+        } catch (URISyntaxException ignored) {
+            // Standard URI parsing failed due to unencoded special characters; proceed to fallback parser
+        }
+
+        // Strategy 2: Robust fallback parser for non-standard or unencoded special characters
+        if (!uriParsed) {
+            int schemeEnd = urlStr.indexOf("://");
+            if (schemeEnd == -1) {
+                String clean = urlStr.startsWith("jdbc:") ? urlStr : "jdbc:" + urlStr;
+                return new ParsedDatabaseUrl(clean, null, null);
+            }
+
+            int authStart = schemeEnd + 3;
+            int pathStart = urlStr.indexOf('/', authStart);
+            int queryStart = urlStr.indexOf('?', authStart);
+
+            int limit = urlStr.length();
+            if (pathStart != -1 && pathStart < limit) {
+                limit = pathStart;
+            }
+            if (queryStart != -1 && queryStart < limit) {
+                limit = queryStart;
+            }
+
+            String authority = urlStr.substring(authStart, limit);
+            pathAndQuery = urlStr.substring(limit);
+
+            hostPart = authority;
+            int atIndex = authority.lastIndexOf('@');
+            if (atIndex != -1) {
+                String userInfo = authority.substring(0, atIndex);
+                hostPart = authority.substring(atIndex + 1);
+
+                int colonIndex = userInfo.indexOf(':');
+                if (colonIndex != -1) {
+                    user = safeUrlDecode(userInfo.substring(0, colonIndex));
+                    pass = safeUrlDecode(userInfo.substring(colonIndex + 1));
+                } else {
+                    user = safeUrlDecode(userInfo);
+                    pass = null;
                 }
             }
         }
 
-        // Clean JDBC URL prefix
-        String cleanJdbcUrl;
-        if (scheme.equalsIgnoreCase("jdbc:mysql") || scheme.equalsIgnoreCase("mysql")) {
-            cleanJdbcUrl = "jdbc:mysql://" + hostPart + pathAndQuery;
-        } else if (scheme.startsWith("jdbc:")) {
-            cleanJdbcUrl = scheme + "://" + hostPart + pathAndQuery;
-        } else {
-            cleanJdbcUrl = "jdbc:" + scheme + "://" + hostPart + pathAndQuery;
+        // Reconstruct clean JDBC URL without plaintext credentials
+        if (hostPart == null || hostPart.isBlank()) {
+            hostPart = "localhost:3306";
+        } else if (!hostPart.contains(":")) {
+            hostPart += ":3306";
         }
 
+        String cleanJdbcUrl = "jdbc:mysql://" + hostPart + pathAndQuery;
         return new ParsedDatabaseUrl(cleanJdbcUrl, user, pass);
     }
 
@@ -248,6 +311,7 @@ public class DBConnection {
 
     /**
      * Validates database configuration values independently of a live MySQL connection.
+     * Does not expose passwords or complete connection strings in error messages.
      */
     public static ValidationResult validateConfig(String checkUrl, String checkUser, String checkPass, boolean checkProd) {
         if (checkUrl == null || checkUrl.isBlank()) {
@@ -266,6 +330,21 @@ public class DBConnection {
             }
         }
         return new ValidationResult(true, null);
+    }
+
+    /**
+     * Formats an SQL exception safely for server logs without leaking credentials or complete sensitive URLs.
+     */
+    public static String formatSqlException(String context, SQLException e) {
+        if (e == null) {
+            return "[" + (context != null ? context : "Database") + "] Database error occurred.";
+        }
+        StringBuilder sb = new StringBuilder("[");
+        sb.append(context != null ? context : "Database").append("] ");
+        sb.append("SQLState=").append(e.getSQLState() != null ? e.getSQLState() : "N/A");
+        sb.append(" | ErrorCode=").append(e.getErrorCode());
+        sb.append(" | Details=").append(sanitizeUrl(e.getMessage()));
+        return sb.toString();
     }
 
     /**
@@ -425,17 +504,21 @@ public class DBConnection {
     }
 
     /**
-     * Set a mock/override value for testConnection() during unit tests.
+     * Set a thread-isolated override value for testConnection() during unit tests.
      */
     public static void setTestConnectionOverride(Boolean override) {
-        testConnectionOverride = override;
+        if (override == null) {
+            testConnectionOverride.remove();
+        } else {
+            testConnectionOverride.set(override);
+        }
     }
 
     /**
-     * Reset the mock/override value for testConnection().
+     * Reset the thread-isolated override value for testConnection().
      */
     public static void resetTestConnectionOverride() {
-        testConnectionOverride = null;
+        testConnectionOverride.remove();
     }
 
     /**
@@ -469,19 +552,21 @@ public class DBConnection {
         try {
             return DriverManager.getConnection(url, username, password);
         } catch (SQLException e) {
-            System.err.println("[DBConnection] Connection failed to " + getSanitizedUrl() + ": " + e.getMessage());
+            System.err.println(formatSqlException("DBConnection.getConnection to " + getSanitizedUrl(), e));
             throw e;
         }
     }
 
     /**
      * Diagnostic helper method to test whether MySQL server is currently reachable.
+     * Checks thread-isolated test override before attempting live connection.
      *
      * @return true if connection was successfully opened and verified, false otherwise
      */
     public static boolean testConnection() {
-        if (testConnectionOverride != null) {
-            return testConnectionOverride;
+        Boolean override = testConnectionOverride.get();
+        if (override != null) {
+            return override;
         }
         if (!configured) {
             loadProperties();
@@ -506,7 +591,7 @@ public class DBConnection {
             try {
                 conn.close();
             } catch (SQLException e) {
-                System.err.println("[DBConnection] Error closing connection: " + e.getMessage());
+                System.err.println(formatSqlException("DBConnection.closeConnection", e));
             }
         }
     }

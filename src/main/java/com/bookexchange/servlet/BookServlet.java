@@ -1,5 +1,6 @@
 package com.bookexchange.servlet;
 
+import com.bookexchange.config.DBConnection;
 import com.bookexchange.model.Book;
 import com.bookexchange.model.User;
 import com.bookexchange.service.BookService;
@@ -117,7 +118,7 @@ public class BookServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             sendError(resp, "Invalid numeric format for ID: " + idParam);
         } catch (SQLException e) {
-            System.err.println("[BookServlet] SQL error in doGet: " + e.getMessage());
+            System.err.println(DBConnection.formatSqlException("BookServlet.doGet", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             sendError(resp, "Unable to retrieve book records due to an internal database error. Please try again later.");
         }
@@ -181,7 +182,7 @@ public class BookServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             sendError(resp, e.getMessage());
         } catch (SQLException e) {
-            System.err.println("[BookServlet] SQL error in doPost: " + e.getMessage());
+            System.err.println(DBConnection.formatSqlException("BookServlet.doPost", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             sendError(resp, "Unable to save book listing due to an internal database error. Please try again later.");
         }
@@ -233,7 +234,7 @@ public class BookServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             sendError(resp, e.getMessage());
         } catch (SQLException e) {
-            System.err.println("[BookServlet] SQL error in doPut: " + e.getMessage());
+            System.err.println(DBConnection.formatSqlException("BookServlet.doPut", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             sendError(resp, "Unable to update book listing due to an internal database error. Please try again later.");
         }
@@ -297,7 +298,7 @@ public class BookServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             sendError(resp, e.getMessage());
         } catch (SQLException e) {
-            System.err.println("[BookServlet] SQL error in doDelete: " + e.getMessage());
+            System.err.println(DBConnection.formatSqlException("BookServlet.doDelete", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             sendError(resp, "Unable to delete book listing due to an internal database error. Please try again later.");
         }

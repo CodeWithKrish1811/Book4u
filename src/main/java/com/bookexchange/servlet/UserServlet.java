@@ -1,5 +1,6 @@
 package com.bookexchange.servlet;
 
+import com.bookexchange.config.DBConnection;
 import com.bookexchange.model.User;
 import com.bookexchange.service.UserService;
 import com.google.gson.Gson;
@@ -67,7 +68,7 @@ public class UserServlet extends HttpServlet {
             err.addProperty("error", "Invalid numeric ID format: " + idParam);
             resp.getWriter().print(gson.toJson(err));
         } catch (SQLException e) {
-            System.err.println("[UserServlet] SQL error in doGet: " + e.getMessage());
+            System.err.println(DBConnection.formatSqlException("UserServlet.doGet", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             JsonObject err = new JsonObject();
             err.addProperty("error", "Unable to retrieve student record due to an internal database error. Please try again later.");
@@ -126,7 +127,7 @@ public class UserServlet extends HttpServlet {
             err.addProperty("error", e.getMessage());
             resp.getWriter().print(gson.toJson(err));
         } catch (SQLException e) {
-            System.err.println("[UserServlet] SQL error in doPost: " + e.getMessage());
+            System.err.println(DBConnection.formatSqlException("UserServlet.doPost", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             JsonObject err = new JsonObject();
             err.addProperty("error", "Unable to process student registration due to an internal database error. Please try again later.");

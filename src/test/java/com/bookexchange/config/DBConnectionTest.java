@@ -1,11 +1,21 @@
 package com.bookexchange.config;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.sql.SQLException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class DBConnectionTest {
+
+    @AfterEach
+    void tearDown() {
+        DBConnection.resetTestConnectionOverride();
+    }
 
     @Test
     @DisplayName("Sanitize URL: returns [NOT CONFIGURED] for null or blank inputs")
@@ -57,6 +67,89 @@ public class DBConnectionTest {
     void testSanitizeUrlCleanUrl() {
         String cleanUrl = "jdbc:mysql://mysql.railway.internal:3306/railway?useSSL=false&serverTimezone=UTC";
         assertEquals(cleanUrl, DBConnection.sanitizeUrl(cleanUrl));
+    }
+
+    @Test
+    @DisplayName("URL Parser: decodes percent-encoded username and password with special characters (@, :, /, ?, #, %)")
+    void testParseDatabaseUrlEncodedSpecialCharacters() {
+        // RFC 3986 percent-encoded user and password:
+        // user: student@univ.edu (%40)
+        // pass: p@ss:w/o?r#d%1 (%40, %3A, %2F, %3F, %23, %25)
+        String raw = "mysql://student%40univ.edu:p%40ss%3A%2F%3F%23%251@db.railway.internal:3306/railway?useSSL=false";
+        DBConnection.ParsedDatabaseUrl parsed = DBConnection.parseDatabaseUrl(raw);
+
+        assertNotNull(parsed);
+        assertEquals("student@univ.edu", parsed.getUsername());
+        assertEquals("p@ss:/?#%1", parsed.getPassword());
+        assertEquals("jdbc:mysql://db.railway.internal:3306/railway?useSSL=false", parsed.getCleanJdbcUrl());
+        assertFalse(parsed.getCleanJdbcUrl().contains("student"));
+        assertFalse(parsed.getCleanJdbcUrl().contains("p@ss"));
+    }
+
+    @Test
+    @DisplayName("URL Parser: handles passwords with unencoded colons and @ symbols via fallback parser")
+    void testParseDatabaseUrlUnencodedSpecialChars() {
+        String raw = "mysql://appuser:p@ss:word_123@junction.proxy.rlwy.net:12345/railway";
+        DBConnection.ParsedDatabaseUrl parsed = DBConnection.parseDatabaseUrl(raw);
+
+        assertNotNull(parsed);
+        assertEquals("appuser", parsed.getUsername());
+        assertEquals("p@ss:word_123", parsed.getPassword());
+        assertEquals("jdbc:mysql://junction.proxy.rlwy.net:12345/railway", parsed.getCleanJdbcUrl());
+    }
+
+    @Test
+    @DisplayName("URL Parser: safeUrlDecode handles lone percent characters without crashing")
+    void testSafeUrlDecodeWithLonePercent() {
+        // Lone '%' should not throw IllegalArgumentException
+        assertEquals("pass%word", DBConnection.safeUrlDecode("pass%word"));
+        assertEquals("pass%", DBConnection.safeUrlDecode("pass%"));
+        assertEquals("pass%4", DBConnection.safeUrlDecode("pass%4"));
+        assertEquals("p@ss", DBConnection.safeUrlDecode("p%40ss"));
+    }
+
+    @Test
+    @DisplayName("URL Parser: parses standard Railway MySQL URL and extracts credentials")
+    void testParseRailwayMySQLUrl() {
+        String railwayUrl = "mysql://root:s3cr3tCloudPass@junction.proxy.rlwy.net:12345/railway";
+        DBConnection.ParsedDatabaseUrl parsed = DBConnection.parseDatabaseUrl(railwayUrl);
+
+        assertNotNull(parsed);
+        assertEquals("root", parsed.getUsername());
+        assertEquals("s3cr3tCloudPass", parsed.getPassword());
+        assertEquals("jdbc:mysql://junction.proxy.rlwy.net:12345/railway", parsed.getCleanJdbcUrl());
+    }
+
+    @Test
+    @DisplayName("URL Parser: preserves clean JDBC URLs without embedded credentials")
+    void testParseDatabaseUrlCleanJdbc() {
+        String cleanJdbc = "jdbc:mysql://localhost:3306/book_exchange_db?useSSL=false&serverTimezone=UTC";
+        DBConnection.ParsedDatabaseUrl parsed = DBConnection.parseDatabaseUrl(cleanJdbc);
+
+        assertNotNull(parsed);
+        assertNull(parsed.getUsername());
+        assertNull(parsed.getPassword());
+        assertEquals(cleanJdbc, parsed.getCleanJdbcUrl());
+    }
+
+    @Test
+    @DisplayName("Credential Resolver: handles conflicting and missing credentials consistently")
+    void testResolveCredentialPrecedence() {
+        // Case 1: Explicit env var takes precedence over embedded URL credential (conflicting credentials)
+        assertEquals("explicit_user", DBConnection.resolveCredential("explicit_user", "railway_user", "url_user"));
+
+        // Case 2: Missing explicit env var falls back to railway user
+        assertEquals("railway_user", DBConnection.resolveCredential(null, "railway_user", "url_user"));
+        assertEquals("railway_user", DBConnection.resolveCredential("", "railway_user", "url_user"));
+        assertEquals("railway_user", DBConnection.resolveCredential("   ", "railway_user", "url_user"));
+
+        // Case 3: Missing explicit and railway env vars fall back to URL credential
+        assertEquals("url_user", DBConnection.resolveCredential(null, null, "url_user"));
+        assertEquals("url_user", DBConnection.resolveCredential("", "", "url_user"));
+
+        // Case 4: Completely missing returns empty string
+        assertEquals("", DBConnection.resolveCredential(null, null, null));
+        assertEquals("", DBConnection.resolveCredential("", "  ", ""));
     }
 
     @Test
@@ -164,36 +257,48 @@ public class DBConnectionTest {
     }
 
     @Test
-    @DisplayName("URL parser extracts embedded credentials and builds clean JDBC URL")
-    void testParseDatabaseUrl() {
-        DBConnection.ParsedDatabaseUrl parsed = DBConnection.parseDatabaseUrl(
-                "mysql://app_user:secret_token@junction.proxy.rlwy.net:12345/railway?useSSL=false"
+    @DisplayName("Error Logging: formatSqlException formats technical details while sanitizing sensitive credentials")
+    void testFormatSqlException() {
+        SQLException sqlEx = new SQLException(
+                "Access denied for user 'root'@'host' (using password: YES) on jdbc:mysql://admin:secret123@db.railway.net:3306/db",
+                "28000",
+                1045
         );
-        assertNotNull(parsed);
-        assertEquals("app_user", parsed.getUsername());
-        assertEquals("secret_token", parsed.getPassword());
-        assertEquals("jdbc:mysql://junction.proxy.rlwy.net:12345/railway?useSSL=false", parsed.getCleanJdbcUrl());
+
+        String formatted = DBConnection.formatSqlException("TestContext", sqlEx);
+        assertNotNull(formatted);
+        assertTrue(formatted.contains("[TestContext]"));
+        assertTrue(formatted.contains("SQLState=28000"));
+        assertTrue(formatted.contains("ErrorCode=1045"));
+        assertFalse(formatted.contains("secret123"), "Password must not leak into formatted exception log");
+        assertTrue(formatted.contains("***:***@db.railway.net:3306/db"));
     }
 
     @Test
-    @DisplayName("URL parser preserves clean JDBC URLs without embedded credentials")
-    void testParseDatabaseUrlClean() {
-        DBConnection.ParsedDatabaseUrl parsed = DBConnection.parseDatabaseUrl(
-                "jdbc:mysql://localhost:3306/book_exchange_db?useSSL=false"
-        );
-        assertNotNull(parsed);
-        assertNull(parsed.getUsername());
-        assertNull(parsed.getPassword());
-        assertEquals("jdbc:mysql://localhost:3306/book_exchange_db?useSSL=false", parsed.getCleanJdbcUrl());
-    }
+    @DisplayName("Test Isolation: testConnectionOverride operates with complete thread isolation")
+    void testConnectionOverrideThreadIsolation() throws Exception {
+        DBConnection.setTestConnectionOverride(true);
+        assertTrue(DBConnection.testConnection(), "Main thread override should be true");
 
-    @Test
-    @DisplayName("Credential resolver picks first non-empty candidate")
-    void testResolveCredential() {
-        assertEquals("primary", DBConnection.resolveCredential("primary", "secondary"));
-        assertEquals("secondary", DBConnection.resolveCredential("", "secondary"));
-        assertEquals("secondary", DBConnection.resolveCredential(null, "secondary", "tertiary"));
-        assertEquals("tertiary", DBConnection.resolveCredential(null, "  ", "tertiary"));
-        assertEquals("", DBConnection.resolveCredential(null, "  ", ""));
+        AtomicBoolean childThreadObservedOverride = new AtomicBoolean(false);
+        CountDownLatch latch = new CountDownLatch(1);
+
+        Thread backgroundThread = new Thread(() -> {
+            // Child thread must NOT see the main thread's ThreadLocal override
+            DBConnection.setTestConnectionOverride(false);
+            if (!DBConnection.testConnection()) {
+                childThreadObservedOverride.set(true);
+            }
+            DBConnection.resetTestConnectionOverride();
+            latch.countDown();
+        });
+
+        backgroundThread.start();
+        latch.await();
+
+        assertTrue(childThreadObservedOverride.get(), "Child thread must maintain its own isolated override");
+        assertTrue(DBConnection.testConnection(), "Main thread override must remain unaffected by child thread");
+
+        DBConnection.resetTestConnectionOverride();
     }
 }

@@ -16,17 +16,15 @@ import java.util.function.BooleanSupplier;
 
 /**
  * ============================================================================
- * HealthCheckServlet - System Diagnostic Endpoint
+ * HealthCheckServlet - System Diagnostic & Probe Endpoint
  * ============================================================================
- * Endpoint: GET /api/health
- *
- * Production Hardening:
- * 1. Returns HTTP 200 (OK) when Tomcat and MySQL are healthy and connected.
- * 2. Returns HTTP 503 (Service Unavailable) when the database is disconnected.
- * 3. Returns accurate JSON diagnostic metrics for cloud load balancers and container probes.
+ * Endpoints:
+ * - GET /api/health/live  : Liveness probe (reports application/Tomcat status; HTTP 200 OK)
+ * - GET /api/health/ready : Readiness probe (reports MySQL availability; HTTP 200 OK / 503 Service Unavailable)
+ * - GET /api/health       : Full health check (backward-compatible; reports UP/DEGRADED with HTTP 200/503)
  * ============================================================================
  */
-@WebServlet(name = "HealthCheckServlet", urlPatterns = "/api/health")
+@WebServlet(name = "HealthCheckServlet", urlPatterns = {"/api/health", "/api/health/live", "/api/health/ready"})
 public class HealthCheckServlet extends HttpServlet {
 
     private final Gson gson = new Gson();
@@ -48,23 +46,36 @@ public class HealthCheckServlet extends HttpServlet {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
 
-        boolean dbConnected = dbConnectionChecker.getAsBoolean();
+        String uri = req.getRequestURI();
+        boolean isLiveness = uri != null && uri.endsWith("/live");
+        boolean isReadiness = uri != null && uri.endsWith("/ready");
 
         JsonObject responseJson = new JsonObject();
-        if (dbConnected) {
-            resp.setStatus(HttpServletResponse.SC_OK); // 200
-            responseJson.addProperty("status", "UP");
-        } else {
-            resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE); // 503
-            responseJson.addProperty("status", "DEGRADED");
-        }
-
         responseJson.addProperty("project", "Student Peer-to-Peer Book Exchange System (Book4u)");
         responseJson.addProperty("server", "Apache Tomcat 10.1+ (Jakarta Servlet 6.0)");
         responseJson.addProperty("javaVersion", System.getProperty("java.version"));
-        responseJson.addProperty("databaseStatus", dbConnected ? "CONNECTED" : "DISCONNECTED");
         responseJson.addProperty("environment", DBConnection.isProductionEnvironment() ? "PRODUCTION" : "LOCAL");
         responseJson.addProperty("timestamp", LocalDateTime.now().toString());
+
+        if (isLiveness) {
+            // Liveness check: confirms servlet container and application are running and responsive
+            resp.setStatus(HttpServletResponse.SC_OK); // 200
+            responseJson.addProperty("status", "UP");
+            responseJson.addProperty("check", "liveness");
+        } else {
+            // Readiness check (/api/health/ready) or Legacy Health Check (/api/health)
+            boolean dbConnected = dbConnectionChecker.getAsBoolean();
+            if (dbConnected) {
+                resp.setStatus(HttpServletResponse.SC_OK); // 200
+                responseJson.addProperty("status", "UP");
+                responseJson.addProperty("databaseStatus", "CONNECTED");
+            } else {
+                resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE); // 503
+                responseJson.addProperty("status", "DEGRADED");
+                responseJson.addProperty("databaseStatus", "DISCONNECTED");
+            }
+            responseJson.addProperty("check", isReadiness ? "readiness" : "full");
+        }
 
         try (PrintWriter out = resp.getWriter()) {
             out.print(gson.toJson(responseJson));

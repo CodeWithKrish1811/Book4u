@@ -1,5 +1,6 @@
 package com.bookexchange.servlet;
 
+import com.bookexchange.config.DBConnection;
 import com.bookexchange.model.User;
 import com.bookexchange.service.UserService;
 import com.google.gson.Gson;
@@ -126,7 +127,7 @@ public class AuthServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             sendJson(resp, createErrorJson(e.getMessage()));
         } catch (SQLException e) {
-            System.err.println("[AuthServlet] SQL error during registration: " + e.getMessage());
+            System.err.println(DBConnection.formatSqlException("AuthServlet.register", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             sendJson(resp, createErrorJson("Registration could not be completed due to an internal database error. Please try again later."));
         }
@@ -179,7 +180,7 @@ public class AuthServlet extends HttpServlet {
             }
 
         } catch (SQLException e) {
-            System.err.println("[AuthServlet] SQL error during authentication: " + e.getMessage());
+            System.err.println(DBConnection.formatSqlException("AuthServlet.login", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             sendJson(resp, createErrorJson("Authentication service is temporarily unavailable. Please try again later."));
         }
@@ -197,6 +198,16 @@ public class AuthServlet extends HttpServlet {
             session.removeAttribute("userName");
             session.invalidate();
         }
+
+        // Expire the session cookie in browser client
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("JSESSIONID", "");
+        cookie.setPath(req.getContextPath().isEmpty() ? "/" : req.getContextPath());
+        cookie.setMaxAge(0);
+        cookie.setHttpOnly(true);
+        if (DBConnection.isProductionEnvironment()) {
+            cookie.setSecure(true);
+        }
+        resp.addCookie(cookie);
 
         if (isBrowserRedirect) {
             String contextPath = req.getContextPath();

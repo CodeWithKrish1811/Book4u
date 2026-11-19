@@ -1,5 +1,6 @@
 package com.bookexchange.servlet;
 
+import com.bookexchange.config.DBConnection;
 import com.bookexchange.model.User;
 import com.bookexchange.service.UserService;
 import com.google.gson.Gson;
@@ -60,7 +61,7 @@ public class ProfileServlet extends HttpServlet {
             sendJson(resp, res);
 
         } catch (SQLException e) {
-            System.err.println("[ProfileServlet] SQL error fetching profile: " + e.getMessage());
+            System.err.println(DBConnection.formatSqlException("ProfileServlet.doGet", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             sendJson(resp, createErrorJson("Unable to load student profile due to an internal database error. Please try again later."));
         }
@@ -129,7 +130,7 @@ public class ProfileServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             sendJson(resp, createErrorJson(e.getMessage()));
         } catch (SQLException e) {
-            System.err.println("[ProfileServlet] SQL error updating profile: " + e.getMessage());
+            System.err.println(DBConnection.formatSqlException("ProfileServlet.updateProfile", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             sendJson(resp, createErrorJson("Unable to update profile due to an internal database error. Please try again later."));
         }
@@ -160,7 +161,7 @@ public class ProfileServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             sendJson(resp, createErrorJson(e.getMessage()));
         } catch (SQLException e) {
-            System.err.println("[ProfileServlet] SQL error changing password: " + e.getMessage());
+            System.err.println(DBConnection.formatSqlException("ProfileServlet.changePassword", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             sendJson(resp, createErrorJson("Unable to change password due to an internal database error. Please try again later."));
         }
