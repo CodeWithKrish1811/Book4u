@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
+import java.util.function.BooleanSupplier;
 
 /**
  * ============================================================================
@@ -29,6 +30,16 @@ import java.time.LocalDateTime;
 public class HealthCheckServlet extends HttpServlet {
 
     private final Gson gson = new Gson();
+    private final BooleanSupplier dbConnectionChecker;
+
+    public HealthCheckServlet() {
+        this(DBConnection::testConnection);
+    }
+
+    // Package-private constructor for dependency injection during unit tests
+    HealthCheckServlet(BooleanSupplier dbConnectionChecker) {
+        this.dbConnectionChecker = (dbConnectionChecker != null) ? dbConnectionChecker : DBConnection::testConnection;
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -37,7 +48,7 @@ public class HealthCheckServlet extends HttpServlet {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
 
-        boolean dbConnected = DBConnection.testConnection();
+        boolean dbConnected = dbConnectionChecker.getAsBoolean();
 
         JsonObject responseJson = new JsonObject();
         if (dbConnected) {

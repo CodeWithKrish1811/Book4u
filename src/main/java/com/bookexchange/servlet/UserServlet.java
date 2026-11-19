@@ -126,10 +126,10 @@ public class UserServlet extends HttpServlet {
             err.addProperty("error", e.getMessage());
             resp.getWriter().print(gson.toJson(err));
         } catch (SQLException e) {
-            System.err.println("[UserServlet] SQL error in doGet: " + e.getMessage());
+            System.err.println("[UserServlet] SQL error in doPost: " + e.getMessage());
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             JsonObject err = new JsonObject();
-            err.addProperty("error", "Unable to retrieve student record due to an internal database error. Please try again later.");
+            err.addProperty("error", "Unable to process student registration due to an internal database error. Please try again later.");
             resp.getWriter().print(gson.toJson(err));
         }
     }

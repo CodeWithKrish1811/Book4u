@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -17,10 +18,11 @@ import java.util.Properties;
  * Technology: Core Java, JDBC (Java Database Connectivity), MySQL 8.x
  *
  * Production Hardening:
- * 1. Prioritizes cloud environment variables (Railway: MYSQLHOST, MYSQLPORT, MYSQLDATABASE, etc.).
- * 2. Strict validation: Rejects insecure localhost fallback in production environments.
- * 3. Credential masking: Never logs passwords, credential lengths, or unmasked JDBC URLs.
- * 4. Preserves backward-compatible local development configuration via db.properties / db.properties.local.
+ * 1. Prioritizes cloud environment variables (DB_URL, MYSQL_URL, DATABASE_URL, MYSQLHOST).
+ * 2. Parses and extracts embedded credentials without overwriting with empty values.
+ * 3. Strict validation: Rejects insecure localhost fallback in production environments.
+ * 4. Credential masking: Never logs passwords, credential lengths, or unmasked JDBC URLs.
+ * 5. Preserves backward-compatible local development configuration via db.properties / db.properties.local.
  * ============================================================================
  */
 public class DBConnection {
@@ -36,6 +38,9 @@ public class DBConnection {
     private static boolean configured = false;
     private static String configurationError = null;
 
+    // Test hook for simulating connection state in automated tests without running MySQL
+    private static volatile Boolean testConnectionOverride = null;
+
     // Static initialization block
     static {
         loadProperties();
@@ -44,6 +49,54 @@ public class DBConnection {
 
     // Private constructor prevents direct instantiation of utility class
     private DBConnection() {
+    }
+
+    /**
+     * Data transfer object representing a parsed database URL and any extracted credentials.
+     */
+    public static class ParsedDatabaseUrl {
+        private final String cleanJdbcUrl;
+        private final String username;
+        private final String password;
+
+        public ParsedDatabaseUrl(String cleanJdbcUrl, String username, String password) {
+            this.cleanJdbcUrl = cleanJdbcUrl;
+            this.username = username;
+            this.password = password;
+        }
+
+        public String getCleanJdbcUrl() {
+            return cleanJdbcUrl;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+    }
+
+    /**
+     * Data transfer object representing the outcome of database configuration validation.
+     */
+    public static class ValidationResult {
+        private final boolean valid;
+        private final String error;
+
+        public ValidationResult(boolean valid, String error) {
+            this.valid = valid;
+            this.error = error;
+        }
+
+        public boolean isValid() {
+            return valid;
+        }
+
+        public String getError() {
+            return error;
+        }
     }
 
     /**
@@ -57,14 +110,162 @@ public class DBConnection {
     }
 
     /**
+     * Sanitizes any database connection URL by redacting embedded passwords and query credentials.
+     */
+    public static String sanitizeUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isBlank()) {
+            return "[NOT CONFIGURED]";
+        }
+        String sanitized = rawUrl;
+
+        // Mask query string password parameter: ?password=... or &pwd=...
+        sanitized = sanitized.replaceAll("(?i)([?&](?:password|pwd)=)[^&]*", "$1***");
+
+        // Handle authority userInfo: between :// and the last @ before the first / or ?
+        int schemeEnd = sanitized.indexOf("://");
+        if (schemeEnd != -1) {
+            int authStart = schemeEnd + 3;
+            int pathStart = sanitized.indexOf('/', authStart);
+            int queryStart = sanitized.indexOf('?', authStart);
+            int limit = sanitized.length();
+            if (pathStart != -1 && pathStart < limit) {
+                limit = pathStart;
+            }
+            if (queryStart != -1 && queryStart < limit) {
+                limit = queryStart;
+            }
+
+            String authority = sanitized.substring(authStart, limit);
+            int atIndex = authority.lastIndexOf('@');
+            if (atIndex != -1) {
+                String userInfo = authority.substring(0, atIndex);
+                String hostPart = authority.substring(atIndex + 1);
+                String maskedUserInfo = userInfo.contains(":") ? "***:***" : "***";
+                sanitized = sanitized.substring(0, authStart) + maskedUserInfo + "@" + hostPart + sanitized.substring(limit);
+            }
+        }
+
+        return sanitized;
+    }
+
+    /**
      * Returns a safe, redacted version of the active JDBC URL with any credentials stripped.
      */
     public static String getSanitizedUrl() {
-        if (url == null || url.isBlank()) {
-            return "[NOT CONFIGURED]";
+        return sanitizeUrl(url);
+    }
+
+    /**
+     * Parses a database URL (e.g. mysql://user:pass@host:port/db or jdbc:mysql://...)
+     * and extracts any embedded credentials, returning a clean JDBC URL.
+     */
+    public static ParsedDatabaseUrl parseDatabaseUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isBlank()) {
+            return new ParsedDatabaseUrl(rawUrl, null, null);
         }
-        // Redacts user:password@ if embedded inside connection string
-        return url.replaceAll("(?i)(://)([^:@/]+):([^@/]+)@", "$1***:***@");
+
+        String urlStr = rawUrl.trim();
+        int schemeEnd = urlStr.indexOf("://");
+        if (schemeEnd == -1) {
+            String clean = urlStr.startsWith("jdbc:") ? urlStr : "jdbc:" + urlStr;
+            return new ParsedDatabaseUrl(clean, null, null);
+        }
+
+        String scheme = urlStr.substring(0, schemeEnd);
+        int authStart = schemeEnd + 3;
+        int pathStart = urlStr.indexOf('/', authStart);
+        int queryStart = urlStr.indexOf('?', authStart);
+
+        int limit = urlStr.length();
+        if (pathStart != -1 && pathStart < limit) {
+            limit = pathStart;
+        }
+        if (queryStart != -1 && queryStart < limit) {
+            limit = queryStart;
+        }
+
+        String authority = urlStr.substring(authStart, limit);
+        String pathAndQuery = urlStr.substring(limit);
+
+        String user = null;
+        String pass = null;
+        String hostPart = authority;
+
+        int atIndex = authority.lastIndexOf('@');
+        if (atIndex != -1) {
+            String userInfo = authority.substring(0, atIndex);
+            hostPart = authority.substring(atIndex + 1);
+
+            int colonIndex = userInfo.indexOf(':');
+            if (colonIndex != -1) {
+                user = userInfo.substring(0, colonIndex);
+                pass = userInfo.substring(colonIndex + 1);
+            } else {
+                user = userInfo;
+            }
+
+            if (user != null) {
+                try {
+                    user = java.net.URLDecoder.decode(user, StandardCharsets.UTF_8);
+                } catch (Exception ignored) {
+                }
+            }
+            if (pass != null) {
+                try {
+                    pass = java.net.URLDecoder.decode(pass, StandardCharsets.UTF_8);
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
+        // Clean JDBC URL prefix
+        String cleanJdbcUrl;
+        if (scheme.equalsIgnoreCase("jdbc:mysql") || scheme.equalsIgnoreCase("mysql")) {
+            cleanJdbcUrl = "jdbc:mysql://" + hostPart + pathAndQuery;
+        } else if (scheme.startsWith("jdbc:")) {
+            cleanJdbcUrl = scheme + "://" + hostPart + pathAndQuery;
+        } else {
+            cleanJdbcUrl = "jdbc:" + scheme + "://" + hostPart + pathAndQuery;
+        }
+
+        return new ParsedDatabaseUrl(cleanJdbcUrl, user, pass);
+    }
+
+    /**
+     * Resolves the first non-null, non-blank credential candidate.
+     */
+    public static String resolveCredential(String... candidates) {
+        if (candidates == null) {
+            return "";
+        }
+        for (String c : candidates) {
+            if (c != null && !c.isBlank()) {
+                return c.trim();
+            }
+        }
+        return "";
+    }
+
+    /**
+     * Validates database configuration values independently of a live MySQL connection.
+     */
+    public static ValidationResult validateConfig(String checkUrl, String checkUser, String checkPass, boolean checkProd) {
+        if (checkUrl == null || checkUrl.isBlank()) {
+            return new ValidationResult(false, "Database JDBC URL is missing or blank.");
+        }
+        if (checkUser == null || checkUser.isBlank()) {
+            return new ValidationResult(false, "Database username is missing or blank.");
+        }
+        if (checkProd) {
+            String lowerUrl = checkUrl.toLowerCase();
+            if (lowerUrl.contains("localhost") || lowerUrl.contains("127.0.0.1") || lowerUrl.contains("::1")) {
+                return new ValidationResult(false, "Insecure localhost database URL detected in production environment.");
+            }
+            if (checkPass == null || checkPass.isBlank()) {
+                return new ValidationResult(false, "Database password is required for production database connectivity.");
+            }
+        }
+        return new ValidationResult(true, null);
     }
 
     /**
@@ -88,38 +289,41 @@ public class DBConnection {
         String envUser = System.getenv("DB_USERNAME");
         String envPass = System.getenv("DB_PASSWORD");
 
+        String railwayUrl = System.getenv("MYSQL_URL");
+        String databaseUrl = System.getenv("DATABASE_URL");
         String railwayHost = System.getenv("MYSQLHOST");
         String railwayPort = System.getenv("MYSQLPORT");
         String railwayDb = System.getenv("MYSQLDATABASE");
         String railwayUser = System.getenv("MYSQLUSER");
         String railwayPass = System.getenv("MYSQLPASSWORD");
-        String railwayUrl = System.getenv("MYSQL_URL");
-        String databaseUrl = System.getenv("DATABASE_URL");
 
         if (envUrl != null && !envUrl.isBlank()) {
-            url = envUrl;
-            username = (envUser != null) ? envUser : "";
-            password = (envPass != null) ? envPass : "";
+            ParsedDatabaseUrl parsed = parseDatabaseUrl(envUrl);
+            url = parsed.getCleanJdbcUrl();
+            username = resolveCredential(envUser, parsed.getUsername(), railwayUser);
+            password = resolveCredential(envPass, parsed.getPassword(), railwayPass);
+        } else if (railwayUrl != null && !railwayUrl.isBlank()) {
+            ParsedDatabaseUrl parsed = parseDatabaseUrl(railwayUrl);
+            url = parsed.getCleanJdbcUrl();
+            username = resolveCredential(envUser, railwayUser, parsed.getUsername());
+            password = resolveCredential(envPass, railwayPass, parsed.getPassword());
+        } else if (databaseUrl != null && !databaseUrl.isBlank()) {
+            ParsedDatabaseUrl parsed = parseDatabaseUrl(databaseUrl);
+            url = parsed.getCleanJdbcUrl();
+            username = resolveCredential(envUser, railwayUser, parsed.getUsername());
+            password = resolveCredential(envPass, railwayPass, parsed.getPassword());
         } else if (railwayHost != null && !railwayHost.isBlank()) {
             String port = (railwayPort != null && !railwayPort.isBlank()) ? railwayPort : "3306";
             String db = (railwayDb != null && !railwayDb.isBlank()) ? railwayDb : "railway";
             url = "jdbc:mysql://" + railwayHost + ":" + port + "/" + db + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-            username = (railwayUser != null && !railwayUser.isBlank()) ? railwayUser : "root";
-            password = (railwayPass != null) ? railwayPass : "";
-        } else if (railwayUrl != null && !railwayUrl.isBlank()) {
-            url = railwayUrl.startsWith("jdbc:") ? railwayUrl : "jdbc:" + railwayUrl;
-            username = (railwayUser != null) ? railwayUser : "";
-            password = (railwayPass != null) ? railwayPass : "";
-        } else if (databaseUrl != null && !databaseUrl.isBlank()) {
-            url = databaseUrl.startsWith("jdbc:") ? databaseUrl : "jdbc:" + databaseUrl;
-            username = (railwayUser != null) ? railwayUser : "";
-            password = (railwayPass != null) ? railwayPass : "";
+            username = resolveCredential(envUser, railwayUser, "root");
+            password = resolveCredential(envPass, railwayPass);
         } else {
             // ================================================================
             // Priority 2: Local Development Files (Localhost only)
             // ================================================================
             if (isProductionEnvironment()) {
-                configurationError = "Missing required Railway database environment variables (MYSQLHOST, MYSQLPORT, MYSQLDATABASE, etc.). Insecure localhost fallback is disabled in production.";
+                configurationError = "Missing required Railway database environment variables (MYSQLHOST, MYSQL_URL, DATABASE_URL, etc.). Insecure localhost fallback is disabled in production.";
                 System.err.println("[DBConnection] CRITICAL: " + configurationError);
                 return;
             }
@@ -157,9 +361,11 @@ public class DBConnection {
 
             if (fileLoaded) {
                 driver = properties.getProperty("db.driver", "com.mysql.cj.jdbc.Driver");
-                url = properties.getProperty("db.url", "");
-                username = properties.getProperty("db.username", "");
-                password = properties.getProperty("db.password", "");
+                String rawLocalUrl = properties.getProperty("db.url", "");
+                ParsedDatabaseUrl parsed = parseDatabaseUrl(rawLocalUrl);
+                url = parsed.getCleanJdbcUrl();
+                username = resolveCredential(properties.getProperty("db.username", ""), parsed.getUsername());
+                password = resolveCredential(properties.getProperty("db.password", ""), parsed.getPassword());
             } else {
                 configurationError = "No database configuration found (neither environment variables nor db.properties exist).";
                 System.err.println("[DBConnection] ERROR: " + configurationError);
@@ -167,33 +373,19 @@ public class DBConnection {
             }
         }
 
+        // Ensure cloud URL has necessary MySQL connection flags if query is empty
+        if (url != null && !url.isBlank() && !url.contains("?")) {
+            url += "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+        }
+
         // ====================================================================
         // Priority 3: Configuration Validation
         // ====================================================================
-        if (url == null || url.isBlank()) {
-            configurationError = "Database JDBC URL is missing or blank.";
-            System.err.println("[DBConnection] ERROR: " + configurationError);
+        ValidationResult validation = validateConfig(url, username, password, isProductionEnvironment());
+        if (!validation.isValid()) {
+            configurationError = validation.getError();
+            System.err.println("[DBConnection] " + (isProductionEnvironment() ? "CRITICAL: " : "ERROR: ") + configurationError);
             return;
-        }
-
-        if (username == null || username.isBlank()) {
-            configurationError = "Database username is missing or blank.";
-            System.err.println("[DBConnection] ERROR: " + configurationError);
-            return;
-        }
-
-        if (isProductionEnvironment()) {
-            String lowerUrl = url.toLowerCase();
-            if (lowerUrl.contains("localhost") || lowerUrl.contains("127.0.0.1")) {
-                configurationError = "Insecure localhost database URL detected in production environment.";
-                System.err.println("[DBConnection] CRITICAL: " + configurationError);
-                return;
-            }
-            if (password == null || password.isBlank()) {
-                configurationError = "Database password is required for production database connectivity.";
-                System.err.println("[DBConnection] CRITICAL: " + configurationError);
-                return;
-            }
         }
 
         configured = true;
@@ -206,7 +398,7 @@ public class DBConnection {
     private static void logConfigurationSummary() {
         String passStatus = (password != null && !password.isEmpty()) ? "[CONFIGURED]" : "[NOT SET]";
         System.out.println("[DBConnection] Database active: URL=" + getSanitizedUrl()
-                + " | User=" + (username != null ? username : "[NOT SET]")
+                + " | User=" + (username != null && !username.isBlank() ? username : "[NOT SET]")
                 + " | Password=" + passStatus
                 + " | Mode=" + (isProductionEnvironment() ? "PRODUCTION" : "LOCAL"));
     }
@@ -230,6 +422,20 @@ public class DBConnection {
      */
     public static String getConfigurationError() {
         return configurationError;
+    }
+
+    /**
+     * Set a mock/override value for testConnection() during unit tests.
+     */
+    public static void setTestConnectionOverride(Boolean override) {
+        testConnectionOverride = override;
+    }
+
+    /**
+     * Reset the mock/override value for testConnection().
+     */
+    public static void resetTestConnectionOverride() {
+        testConnectionOverride = null;
     }
 
     /**
@@ -274,6 +480,9 @@ public class DBConnection {
      * @return true if connection was successfully opened and verified, false otherwise
      */
     public static boolean testConnection() {
+        if (testConnectionOverride != null) {
+            return testConnectionOverride;
+        }
         if (!configured) {
             loadProperties();
             if (!configured) {
