@@ -9,6 +9,9 @@
 [![Connectivity](https://img.shields.io/badge/Connectivity-Core%20JDBC-green.svg)](#)
 [![Frontend](https://img.shields.io/badge/Frontend-HTML5%20%7C%20CSS3%20%7C%20JS-red.svg)](#)
 [![Build](https://img.shields.io/badge/Build-Maven%203.x-purple.svg)](#)
+[![Railway](https://img.shields.io/badge/Railway-Live%20Demo-0B0D0E?logo=railway&logoColor=white)](https://book4u-web-production.up.railway.app)
+
+> 🌐 **Live Web Application:** [https://book4u-web-production.up.railway.app](https://book4u-web-production.up.railway.app)
 
 ---
 
