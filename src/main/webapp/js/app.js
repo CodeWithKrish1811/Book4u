@@ -1,29 +1,95 @@
 /**
  * ============================================================================
- * Student Peer-to-Peer Book Exchange System - Frontend Client Application
+ * Book4u - Frontend Client Application & Global Controller
  * Technology: Vanilla JavaScript (ES6+), Fetch API, DOM Manipulation
  * Integrates directly with Java Servlets (/api/health, /api/books)
  * ============================================================================
  */
 
+function getContextPath() {
+    const path = window.location.pathname;
+    const segments = path.split('/');
+    if (segments.length > 1 && segments[1] !== '' && !segments[1].endsWith('.html') && segments[1] !== 'api') {
+        return '/' + segments[1];
+    }
+    return '';
+}
+
+const CONTEXT_PATH = getContextPath();
+
+// Wishlist Management via localStorage
+const WishlistManager = {
+    STORAGE_KEY: 'book4u_wishlist',
+
+    getAll() {
+        try {
+            return JSON.parse(localStorage.getItem(this.STORAGE_KEY)) || [];
+        } catch (e) {
+            return [];
+        }
+    },
+
+    has(bookId) {
+        const list = this.getAll();
+        return list.some(item => String(item.id) === String(bookId));
+    },
+
+    toggle(book) {
+        let list = this.getAll();
+        const index = list.findIndex(item => String(item.id) === String(book.id));
+        let added = false;
+
+        if (index > -1) {
+            list.splice(index, 1);
+        } else {
+            list.push({
+                id: book.id,
+                title: book.title,
+                author: book.author,
+                subject: book.subject,
+                sharingMode: book.sharingMode,
+                imageUrl: book.imageUrl
+            });
+            added = true;
+        }
+
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
+        this.updateBadge();
+        return added;
+    },
+
+    updateBadge() {
+        const count = this.getAll().length;
+        const badges = document.querySelectorAll('.wishlist-counter-badge');
+        badges.forEach(b => {
+            b.innerText = count;
+            b.style.display = count > 0 ? 'flex' : 'none';
+        });
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize components
     checkSystemHealth();
-    loadAvailableBooks();
-    setupEventListeners();
+    WishlistManager.updateBadge();
+    initGlobalSearch();
+    initWishlistModal();
+
+    // If on homepage, load the multiple shelf sections
+    if (document.getElementById('recent-books-row') || document.getElementById('popular-books-row') || document.getElementById('book-grid')) {
+        loadHomepageSections();
+    }
 });
 
 /**
- * Pings the Java Servlet health check endpoint: GET /api/health
- * Tests Tomcat container status and live MySQL JDBC connectivity.
+ * Pings the Java Servlet health check endpoint: GET /api/health/live and /api/health/ready
  */
 async function checkSystemHealth() {
-    const healthPill = document.getElementById('system-health-pill');
-    const healthText = document.getElementById('health-text');
     const healthDot = document.getElementById('health-dot');
+    const healthText = document.getElementById('health-text');
+    if (!healthDot || !healthText) return;
 
     try {
-        const response = await fetch('api/health');
+        const response = await fetch(`${CONTEXT_PATH}/api/health/ready`);
         if (response.ok) {
             const data = await response.json();
             if (data.databaseStatus === 'CONNECTED') {
@@ -31,7 +97,7 @@ async function checkSystemHealth() {
                 healthText.textContent = 'Tomcat & MySQL: Online';
             } else {
                 healthDot.className = 'health-dot dot-amber';
-                healthText.textContent = 'Server: Up | DB: Awaiting Connection';
+                healthText.textContent = 'Server: Up | DB: Standby';
             }
         } else {
             healthDot.className = 'health-dot dot-amber';
@@ -39,186 +105,249 @@ async function checkSystemHealth() {
         }
     } catch (err) {
         healthDot.className = 'health-dot dot-amber';
-        healthText.textContent = 'Server Offline (Deploy to Tomcat)';
+        healthText.textContent = 'Connecting to Server...';
     }
 }
 
 /**
- * Fetches available books from GET /api/books and renders them on the page.
+ * Global Search in Navigation Bar
  */
-async function loadAvailableBooks(subject = '', mode = '') {
-    const grid = document.getElementById('book-grid');
-    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Loading campus books...</p>';
+function initGlobalSearch() {
+    const searchForm = document.getElementById('nav-search-form');
+    if (!searchForm) return;
 
-    let url = 'api/books';
-    const params = new URLSearchParams();
-    if (subject) params.append('subject', subject);
-    if (mode) params.append('mode', mode);
-    if (params.toString()) url += '?' + params.toString();
+    searchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('nav-search-input');
+        if (input && input.value.trim()) {
+            window.location.href = `${CONTEXT_PATH}/explore.html?query=${encodeURIComponent(input.value.trim())}`;
+        }
+    });
+}
+
+/**
+ * Loads and partitions books across homepage bookstore shelves
+ */
+async function loadHomepageSections() {
+    const recentRow = document.getElementById('recent-books-row');
+    const popularRow = document.getElementById('popular-books-row');
+    const defaultGrid = document.getElementById('book-grid');
 
     try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error('Server returned HTTP ' + response.status);
+        const response = await fetch(`${CONTEXT_PATH}/api/books`);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+
+        const data = await response.json();
+        const books = Array.isArray(data) ? data : (data.books || []);
+
+        if (recentRow) {
+            renderBookShelf(recentRow, books.slice(0, 5));
+        }
+        if (popularRow) {
+            // Pick available SWAP and LENDING books for popular shelf
+            const popularBooks = books.filter(b => b.sharingMode === 'SWAP' || b.conditionGrade === 'LIKE_NEW');
+            renderBookShelf(popularRow, (popularBooks.length >= 3 ? popularBooks : books).slice(0, 5));
+        }
+        if (defaultGrid && !recentRow) {
+            renderBookShelf(defaultGrid, books);
         }
 
-        const res = await response.json();
-        const books = Array.isArray(res) ? res : (res.books || []);
-        renderBookCards(books);
-
     } catch (err) {
-        grid.innerHTML = `
-            <div style="grid-column: 1/-1; background-color: #fffbeb; border: 1px solid #fde68a; padding: 1.5rem; border-radius: 12px; text-align: center;">
-                <p style="color: #92400e; font-weight: 600; margin-bottom: 0.5rem;">Preview Mode (API endpoint unreachable)</p>
-                <p style="color: #78350f; font-size: 0.9rem;">To connect live to Servlets and MySQL, package the project with <code>mvn package</code> and deploy <code>target/Book4u.war</code> into Tomcat's <code>webapps/</code> folder.</p>
+        console.error('Failed to load homepage book sections:', err);
+        const errorHtml = `
+            <div class="empty-state-box">
+                <span class="empty-state-icon">⚠️</span>
+                <h3>Welcome to Book4u</h3>
+                <p>Academic book exchange system is active. Start exploring catalog listings or sign in to list textbooks.</p>
+                <a href="${CONTEXT_PATH}/explore.html" class="btn btn-primary">Explore All Books</a>
             </div>
         `;
+        if (recentRow) recentRow.innerHTML = errorHtml;
+        if (popularRow) popularRow.innerHTML = '';
+        if (defaultGrid) defaultGrid.innerHTML = errorHtml;
     }
 }
 
 /**
- * Generates DOM cards for books.
+ * Generates commercial bookstore product cards (Screenshot 1 Layout)
  */
-function renderBookCards(books) {
-    const grid = document.getElementById('book-grid');
+function renderBookShelf(container, books) {
+    if (!container) return;
+
     if (!books || books.length === 0) {
-        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">No books currently match this filter.</p>';
+        container.innerHTML = `
+            <div class="empty-state-box">
+                <span class="empty-state-icon">📚</span>
+                <h3>No Books Currently Listed</h3>
+                <p>Be the first student to list a textbook for exchange this semester!</p>
+                <a href="${CONTEXT_PATH}/add-book.html" class="btn btn-primary">+ List a Book</a>
+            </div>
+        `;
         return;
     }
 
-    grid.innerHTML = '';
+    container.innerHTML = '';
     books.forEach(book => {
         const card = document.createElement('div');
         card.className = 'book-card';
 
-        let badgeClass = 'badge-swap';
-        if (book.sharingMode === 'GIVEAWAY') badgeClass = 'badge-giveaway';
-        if (book.sharingMode === 'LENDING') badgeClass = 'badge-lending';
+        const isWishlisted = WishlistManager.has(book.id);
+        const wishlistClass = isWishlisted ? 'card-wishlist-btn active' : 'card-wishlist-btn';
+        const wishlistHeart = isWishlisted ? '♥' : '♡';
 
-        let lendingInfo = '';
-        if (book.sharingMode === 'LENDING' && book.lendingMaxDurationDays) {
-            lendingInfo = `<div><strong>Max Duration:</strong> ${book.lendingMaxDurationDays} Days</div>`;
+        // Aspect ratio 2:3 Cover presentation with fallback
+        const coverHtml = book.imageUrl
+            ? `<div class="book-cover-container">
+                 <img src="${escapeHtml(book.imageUrl)}" alt="${escapeHtml(book.title)}" class="book-cover-img" 
+                      onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'book-cover-placeholder\\'><span class=\\'subject-pill\\'>${escapeHtml(book.subject || 'Academics')}</span><p class=\\'placeholder-title\\'>${escapeHtml(book.title)}</p><span class=\\'placeholder-icon\\'>📖</span></div>';">
+               </div>`
+            : `<div class="book-cover-container">
+                 <div class="book-cover-placeholder">
+                   <span class="subject-pill">${escapeHtml(book.subject || 'Academics')}</span>
+                   <p class="placeholder-title">${escapeHtml(book.title)}</p>
+                   <span class="placeholder-icon">📖</span>
+                 </div>
+               </div>`;
+
+        // Pricing line matching reference screenshot (Strikethrough estimate + Mode/Free + Savings pill)
+        let priceTag = 'FREE';
+        let originalEstimate = '₹ 650';
+        let discountPill = '100% Free';
+
+        if (book.sharingMode === 'SWAP') {
+            priceTag = 'SWAP';
+            originalEstimate = '₹ 750';
+            discountPill = 'Trade Ready';
+        } else if (book.sharingMode === 'LENDING') {
+            priceTag = book.lendingMaxDurationDays ? `${book.lendingMaxDurationDays}d Loan` : 'Loan';
+            originalEstimate = '₹ 500';
+            discountPill = 'Zero Fee';
         }
 
-        let swapPref = '';
-        if (book.sharingMode === 'SWAP' && book.swapPreferences) {
-            swapPref = `<div><strong>Looking for:</strong> ${escapeHtml(book.swapPreferences)}</div>`;
-        }
+        let badgeModeClass = 'badge-swap';
+        if (book.sharingMode === 'GIVEAWAY') badgeModeClass = 'badge-giveaway';
+        if (book.sharingMode === 'LENDING') badgeModeClass = 'badge-lending';
 
         card.innerHTML = `
-            <div class="book-card-top">
-                <span class="mode-badge ${badgeClass}">${book.sharingMode}</span>
-                <span class="book-subject-pill">${escapeHtml(book.subject || 'General')}</span>
-            </div>
-            <h4 class="book-title">${escapeHtml(book.title)}</h4>
-            <p class="book-author">by ${escapeHtml(book.author)}</p>
-            <div class="book-meta">
-                <div><strong>Course:</strong> ${escapeHtml(book.courseCode || 'N/A')}</div>
-                ${lendingInfo}
-                ${swapPref}
-            </div>
-            <p class="book-desc">${escapeHtml(book.description || 'No description provided.')}</p>
-            <div class="book-footer">
-                <span class="owner-info">Owner: <strong>${escapeHtml(book.ownerName || 'Campus Student')}</strong></span>
-                <a href="book-details.html?id=${book.id}" class="btn btn-outline btn-sm">Details</a>
+            <button type="button" class="${wishlistClass}" title="Save to Wishlist" 
+                    onclick="handleWishlistClick(event, ${JSON.stringify(book).replace(/"/g, '&quot;')})">
+                ${wishlistHeart}
+            </button>
+
+            ${coverHtml}
+
+            <div class="book-card-body">
+                <span class="mode-badge ${badgeModeClass}">${escapeHtml(book.sharingMode)}</span>
+                <a href="${CONTEXT_PATH}/book-details.html?id=${book.id}" class="book-title" title="${escapeHtml(book.title)}">
+                    ${escapeHtml(book.title)}
+                </a>
+                <p class="book-author">By ${escapeHtml(book.author || 'Author not specified')}</p>
+
+                <div class="book-pricing-line">
+                    <span class="price-strikethrough">${originalEstimate}</span>
+                    <span class="price-active">${priceTag}</span>
+                    <span class="price-discount-badge">${discountPill}</span>
+                </div>
+
+                <a href="${CONTEXT_PATH}/book-details.html?id=${book.id}" class="card-action-btn">
+                    <span>View Details</span> <span>↗</span>
+                </a>
             </div>
         `;
-        grid.appendChild(card);
+
+        container.appendChild(card);
     });
 }
 
-function handleRequest(bookId, mode) {
-    alert(`Requesting book #${bookId} in ${mode} mode.\nThis triggers exchange negotiation between students on campus.`);
+function handleWishlistClick(event, book) {
+    event.preventDefault();
+    event.stopPropagation();
+    const btn = event.currentTarget;
+    const added = WishlistManager.toggle(book);
+
+    if (added) {
+        btn.classList.add('active');
+        btn.innerText = '♥';
+    } else {
+        btn.classList.remove('active');
+        btn.innerText = '♡';
+    }
 }
 
-function setupEventListeners() {
-    // Filter by subject
-    const subjectFilter = document.getElementById('filter-subject');
-    const modeFilter = document.getElementById('filter-mode');
+/**
+ * Wishlist Modal Drawer Management
+ */
+function initWishlistModal() {
+    const openBtn = document.getElementById('nav-wishlist-btn');
+    const modal = document.getElementById('wishlist-modal');
+    const closeBtn = document.getElementById('wishlist-close-btn');
 
-    const applyFilters = () => {
-        const subject = subjectFilter.value;
-        const mode = modeFilter.value;
-        loadAvailableBooks(subject, mode);
-    };
-
-    if (subjectFilter) subjectFilter.addEventListener('change', applyFilters);
-    if (modeFilter) modeFilter.addEventListener('change', applyFilters);
-
-    // Modal controls
-    const listModal = document.getElementById('list-modal');
-    const openModalBtn = document.getElementById('btn-open-list-modal');
-    const closeModalBtn = document.getElementById('btn-close-modal');
-    const newBookForm = document.getElementById('new-book-form');
-
-    if (openModalBtn) {
-        openModalBtn.addEventListener('click', () => {
-            listModal.classList.add('active');
-        });
-    }
-
-    if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', () => {
-            listModal.classList.remove('active');
-        });
-    }
-
-    // Toggle conditional lending days input
-    const modeSelect = document.getElementById('book-mode-select');
-    const lendingGroup = document.getElementById('lending-duration-group');
-    if (modeSelect && lendingGroup) {
-        modeSelect.addEventListener('change', () => {
-            if (modeSelect.value === 'LENDING') {
-                lendingGroup.style.display = 'block';
-            } else {
-                lendingGroup.style.display = 'none';
-            }
-        });
-    }
-
-    // Submit new book form to POST /api/books
-    if (newBookForm) {
-        newBookForm.addEventListener('submit', async (e) => {
+    if (openBtn && modal) {
+        openBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            renderWishlistModalItems();
+            modal.style.display = 'flex';
+        });
+    }
 
-            const payload = {
-                title: document.getElementById('book-title-input').value,
-                author: document.getElementById('book-author-input').value,
-                subject: document.getElementById('book-subject-input').value,
-                courseCode: document.getElementById('book-course-input').value,
-                sharingMode: document.getElementById('book-mode-select').value,
-                conditionGrade: document.getElementById('book-condition-select').value,
-                lendingMaxDurationDays: modeSelect.value === 'LENDING' ? parseInt(document.getElementById('book-days-input').value, 10) : null,
-                description: document.getElementById('book-desc-input').value,
-                swapPreferences: document.getElementById('book-swap-input').value
-            };
+    if (closeBtn && modal) {
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
 
-            try {
-                const response = await fetch('api/books', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-                if (response.status === 401) {
-                    alert('Authentication required! Please sign in with your student account to list a book.');
-                    window.location.href = 'login.html?authRequired=true';
-                    return;
-                }
-                if (response.ok) {
-                    alert('Success! Your book listing has been added to the campus catalog.');
-                    newBookForm.reset();
-                    listModal.classList.remove('active');
-                    loadAvailableBooks();
-                } else {
-                    alert('Error: ' + (result.error || 'Failed to list book'));
-                }
-            } catch (err) {
-                alert('Connection error: ' + err.message);
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
             }
         });
     }
+}
+
+function renderWishlistModalItems() {
+    const listContainer = document.getElementById('wishlist-items-container');
+    if (!listContainer) return;
+
+    const items = WishlistManager.getAll();
+    if (items.length === 0) {
+        listContainer.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                <p style="font-size: 2rem; margin-bottom: 0.5rem;">♡</p>
+                <p>Your wishlist is empty.</p>
+                <p style="font-size: 0.85rem; margin-top: 0.25rem;">Click the heart icon on any book card to save it here.</p>
+            </div>
+        `;
+        return;
+    }
+
+    listContainer.innerHTML = '';
+    items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'wishlist-item';
+        row.innerHTML = `
+            <div class="wishlist-item-info">
+                <h4><a href="${CONTEXT_PATH}/book-details.html?id=${item.id}" style="color: var(--text-main); text-decoration: none;">${escapeHtml(item.title)}</a></h4>
+                <p>By ${escapeHtml(item.author || '')} • <strong>${escapeHtml(item.sharingMode || 'SWAP')}</strong></p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <a href="${CONTEXT_PATH}/book-details.html?id=${item.id}" class="btn btn-outline btn-sm">View</a>
+                <button type="button" class="btn btn-sm" style="color: var(--danger-color); border: none; background: transparent; cursor: pointer;" 
+                        onclick="removeWishlistItem(${item.id})">✕</button>
+            </div>
+        `;
+        listContainer.appendChild(row);
+    });
+}
+
+function removeWishlistItem(bookId) {
+    WishlistManager.toggle({ id: bookId });
+    renderWishlistModalItems();
+    // Update all matching cards on page
+    document.querySelectorAll('.card-wishlist-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.innerText = '♡';
+    });
 }
 
 function escapeHtml(text) {

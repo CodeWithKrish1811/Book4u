@@ -5,36 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Sign In — Book4u</title>
     <meta name="description" content="Sign in to your Book4u student account for peer-to-peer textbook sharing.">
+    <!-- Commercial Bookstore Design System -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-    <!-- Navigation Header -->
+    <!-- Top Notice Bar -->
+    <div class="top-notice-bar">
+        🎓 University Peer-to-Peer Book Exchange • 100% Non-Commercial • Zero Retail Markups • On-Campus Handover
+    </div>
+
+    <!-- Navigation Header (Screenshot 1 Layout) -->
     <header class="navbar">
         <div class="nav-container">
-            <a href="index.html" class="brand-link">
-                <div class="brand-logo-icon">📚</div>
-                <div class="brand-details">
+            <!-- Brand Logo -->
+            <a href="index.html" class="brand-link" aria-label="Book4u Home">
+                <div class="brand-icon">B</div>
+                <div class="brand-text">
                     <h1>Book4u</h1>
-                    <p>Student Peer-to-Peer Book Exchange</p>
+                    <p>Student Book Exchange</p>
                 </div>
             </a>
 
+            <!-- Nav Links -->
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="explore.html">Explore Books</a></li>
+                <li><a href="my-books.html">My Listings</a></li>
+                <li><a href="index.html#categories">Categories</a></li>
+                <li><a href="index.html#how-it-works">How It Works</a></li>
+            </ul>
+
+            <!-- Right Actions -->
             <div class="nav-actions">
-                <a href="index.html" class="btn btn-outline btn-sm">← Back to Catalog</a>
-                <a href="register.html" class="btn btn-primary btn-sm">Register</a>
+                <a href="explore.html" class="btn btn-outline btn-sm">Explore Books</a>
+                <a href="register.html" class="btn btn-primary btn-sm">Create Account</a>
             </div>
         </div>
     </header>
 
     <!-- Sign In Container -->
     <main class="main-content">
-        <div class="auth-wrapper" style="max-width: 460px;">
-            <div class="auth-card">
-                <div class="auth-header">
-                    <span class="auth-icon">🔐</span>
-                    <h2>Student Sign In</h2>
-                    <p>Access your book listings and campus exchange requests</p>
+        <div class="auth-wrapper" style="max-width: 480px; margin: 2.5rem auto;">
+            <div class="auth-card" style="box-shadow: var(--shadow-card); border-radius: var(--radius-md); padding: 2.5rem 2rem;">
+                <div class="auth-header" style="text-align: center; margin-bottom: 1.75rem;">
+                    <span class="auth-icon" style="background-color: var(--badge-swap-bg); color: var(--primary); width: 56px; height: 56px; border-radius: var(--radius-full); display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 0.75rem;">🔐</span>
+                    <h2 style="font-family: var(--font-editorial); font-size: 1.75rem; color: var(--text-main);">Student Sign In</h2>
+                    <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 0.25rem;">Access your book listings and campus exchange requests</p>
                 </div>
 
                 <!-- Alert Message Box -->
@@ -42,58 +59,90 @@
 
                 <form id="login-form" novalidate>
                     <!-- College Email -->
-                    <div class="form-group">
-                        <label for="login-email">College Email Address *</label>
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label for="login-email" style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">College Email Address *</label>
                         <input type="email" id="login-email" class="form-control" placeholder="student@campus.edu" required autofocus>
                     </div>
 
                     <!-- Password -->
-                    <div class="form-group">
-                        <label for="login-password">Password *</label>
-                        <div class="password-toggle-wrapper">
-                            <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
-                            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('login-password', this)" title="Show/Hide Password">👁️</button>
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label for="login-password" style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">Password *</label>
+                        <div class="password-toggle-wrapper" style="position: relative; display: flex; align-items: center;">
+                            <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required style="padding-right: 2.75rem;">
+                            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('login-password', this)" title="Show/Hide Password" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-muted);">👁️</button>
                         </div>
                     </div>
 
                     <!-- Demo Credentials Helper -->
-                    <div style="background: #f8fafc; border: 1px dashed var(--border-color); border-radius: var(--radius-md); padding: 0.75rem; margin-bottom: 1.25rem; font-size: 0.8rem; color: var(--text-muted);">
-                        <strong>Academic Demo Login:</strong><br>
+                    <div style="background: #F8F9FA; border: 1px dashed var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1.5rem; font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+                        <strong style="color: var(--primary);">Academic Demo Credentials:</strong><br>
                         Email: <code>aarav.sharma@campus.edu</code><br>
                         Password: <code>Password@123</code>
                     </div>
 
                     <!-- Submit Button -->
-                    <button type="submit" id="btn-submit-login" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
+                    <button type="submit" id="btn-submit-login" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem; font-weight: 700;">
                         Sign In to Book4u
                     </button>
                 </form>
 
-                <div class="auth-footer">
-                    New to Book4u? <a href="register.html">Create a Student Account</a>
+                <div class="auth-footer" style="text-align: center; margin-top: 1.75rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem; font-size: 0.88rem; color: var(--text-muted);">
+                    New to Book4u? <a href="register.html" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Create a Student Account</a>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
+    <!-- Commercial Bookstore Footer (Forest Green Theme) -->
+    <footer class="bookstore-footer">
         <div class="footer-container">
-            <div>
-                <p><strong>Student Peer-to-Peer Book Exchange System (Book4u)</strong></p>
-                <p style="font-size: 0.85rem; color: #64748b;">Phase 2: Authentication & Profile Management</p>
+            <div class="footer-col footer-col-brand">
+                <div class="footer-brand-title">
+                    <span class="footer-brand-badge">B</span>
+                    <span>Book4u</span>
+                </div>
+                <p class="footer-brand-desc">
+                    An independent student-to-student academic textbook repository built to eliminate commercial retail markups and foster scholarly collaboration across campus.
+                </p>
+                <div class="footer-badge-row">
+                    <span class="tech-tag">Java 21</span>
+                    <span class="tech-tag">Jakarta Servlet 6.0</span>
+                    <span class="tech-tag">Apache Tomcat 10.1</span>
+                    <span class="tech-tag">MySQL 8.0</span>
+                    <span class="tech-tag">Pure JDBC</span>
+                </div>
             </div>
-            <div class="footer-tech-stack">
-                <span class="tag">Java 21</span>
-                <span class="tag">PBKDF2WithHmacSHA256</span>
-                <span class="tag">Jakarta Servlet 6.0</span>
-                <span class="tag">JDBC</span>
-                <span class="tag">MySQL 8</span>
+
+            <div class="footer-col">
+                <h5>Navigation</h5>
+                <ul class="footer-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="explore.html">Explore Catalog</a></li>
+                    <li><a href="my-books.html">My Listed Books</a></li>
+                    <li><a href="add-book.html">List a Textbook</a></li>
+                    <li><a href="profile.html">Student Profile</a></li>
+                </ul>
             </div>
+
+            <div class="footer-col">
+                <h5>Protocols &amp; Health</h5>
+                <ul class="footer-links">
+                    <li><a href="index.html#how-it-works">How It Works</a></li>
+                    <li><a href="api/health/live" target="_blank" rel="noopener">Liveness Health Probe</a></li>
+                    <li><a href="api/health/ready" target="_blank" rel="noopener">Readiness Health Probe</a></li>
+                    <li><a href="login.html">Sign In</a></li>
+                    <li><a href="register.html">Student Registration</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 Book4u — Student Peer-to-Peer Academic Book Exchange. All rights reserved.</p>
         </div>
     </footer>
 
-    <!-- Scripts -->
+    <!-- Client Scripts -->
+    <script src="js/app.js"></script>
     <script src="js/auth.js"></script>
 </body>
 </html>
