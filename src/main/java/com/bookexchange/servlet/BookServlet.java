@@ -110,8 +110,12 @@ public class BookServlet extends HttpServlet {
                 return;
             }
 
-            // For initial demonstration, fallback owner ID if not provided
-            if (newBook.getOwnerId() == null) {
+            // Associate listing with authenticated student, or fallback to ownerId
+            jakarta.servlet.http.HttpSession session = req.getSession(false);
+            if (session != null && session.getAttribute("currentUser") != null) {
+                com.bookexchange.model.User user = (com.bookexchange.model.User) session.getAttribute("currentUser");
+                newBook.setOwnerId(user.getId());
+            } else if (newBook.getOwnerId() == null) {
                 newBook.setOwnerId(1L);
             }
 

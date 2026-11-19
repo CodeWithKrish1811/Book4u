@@ -19,11 +19,12 @@ public class User implements Serializable {
     private String fullName;
     private String email;
     private String phone;
-    private String passwordHash;
+    private transient String passwordHash; // transient prevents accidental session serialization
     private String department;
     private int semester;
     private String campusName;
     private Timestamp createdAt;
+    private Timestamp updatedAt;
 
     // Default no-argument constructor (required for Java Beans)
     public User() {
@@ -121,6 +122,14 @@ public class User implements Serializable {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     @Override

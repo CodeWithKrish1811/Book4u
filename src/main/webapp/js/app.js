@@ -200,6 +200,11 @@ function setupEventListeners() {
                 });
 
                 const result = await response.json();
+                if (response.status === 401) {
+                    alert('Authentication required! Please sign in with your student account to list a book.');
+                    window.location.href = 'login.html?authRequired=true';
+                    return;
+                }
                 if (response.ok) {
                     alert('Success! Your book listing has been added to the campus catalog.');
                     newBookForm.reset();

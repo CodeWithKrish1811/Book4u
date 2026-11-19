@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Sign In — Book4u</title>
+    <meta name="description" content="Sign in to your Book4u student account for peer-to-peer textbook sharing.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand-link">
+                <div class="brand-logo-icon">📚</div>
+                <div class="brand-details">
+                    <h1>Book4u</h1>
+                    <p>Student Peer-to-Peer Book Exchange</p>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <a href="index.html" class="btn btn-outline btn-sm">← Back to Catalog</a>
+                <a href="register.html" class="btn btn-primary btn-sm">Register</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sign In Container -->
+    <main class="main-content">
+        <div class="auth-wrapper" style="max-width: 460px;">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <span class="auth-icon">🔐</span>
+                    <h2>Student Sign In</h2>
+                    <p>Access your book listings and campus exchange requests</p>
+                </div>
+
+                <!-- Alert Message Box -->
+                <div id="login-alert" class="alert" style="display: none;"></div>
+
+                <form id="login-form" novalidate>
+                    <!-- College Email -->
+                    <div class="form-group">
+                        <label for="login-email">College Email Address *</label>
+                        <input type="email" id="login-email" class="form-control" placeholder="student@campus.edu" required autofocus>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group">
+                        <label for="login-password">Password *</label>
+                        <div class="password-toggle-wrapper">
+                            <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
+                            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('login-password', this)" title="Show/Hide Password">👁️</button>
+                        </div>
+                    </div>
+
+                    <!-- Demo Credentials Helper -->
+                    <div style="background: #f8fafc; border: 1px dashed var(--border-color); border-radius: var(--radius-md); padding: 0.75rem; margin-bottom: 1.25rem; font-size: 0.8rem; color: var(--text-muted);">
+                        <strong>Academic Demo Login:</strong><br>
+                        Email: <code>aarav.sharma@campus.edu</code><br>
+                        Password: <code>Password@123</code>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="btn-submit-login" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
+                        Sign In to Book4u
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    New to Book4u? <a href="register.html">Create a Student Account</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div>
+                <p><strong>Student Peer-to-Peer Book Exchange System (Book4u)</strong></p>
+                <p style="font-size: 0.85rem; color: #64748b;">Phase 2: Authentication & Profile Management</p>
+            </div>
+            <div class="footer-tech-stack">
+                <span class="tag">Java 21</span>
+                <span class="tag">PBKDF2WithHmacSHA256</span>
+                <span class="tag">Jakarta Servlet 6.0</span>
+                <span class="tag">JDBC</span>
+                <span class="tag">MySQL 8</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+</body>
+</html>

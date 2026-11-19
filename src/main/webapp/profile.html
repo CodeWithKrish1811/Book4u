@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile & Settings — Book4u</title>
+    <meta name="description" content="Manage your Book4u university student profile and account credentials.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand-link">
+                <div class="brand-logo-icon">📚</div>
+                <div class="brand-details">
+                    <h1>Book4u</h1>
+                    <p>Student Peer-to-Peer Book Exchange</p>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <div id="system-health-pill" class="health-pill" title="Servlet & MySQL Health Status">
+                    <span id="health-dot" class="health-dot dot-amber"></span>
+                    <span id="health-text">Checking System...</span>
+                </div>
+                <a href="index.html" class="btn btn-outline btn-sm">Explore Books</a>
+                <button type="button" class="btn btn-danger btn-sm" onclick="logoutStudent()">Sign Out</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Profile Content -->
+    <main class="main-content">
+        <div class="profile-container">
+
+            <!-- Left Sidebar: Student Identity Card -->
+            <aside class="profile-card">
+                <div class="student-avatar" id="avatar-initials">--</div>
+
+                <div class="student-meta">
+                    <h3 id="card-fullname">Loading Profile...</h3>
+                    <p class="student-email" id="card-email">...</p>
+                    <span class="univ-id-badge" id="card-univ-id">ID: ...</span>
+                </div>
+
+                <div class="profile-detail-list">
+                    <div class="profile-detail-row">
+                        <span class="label">Department:</span>
+                        <span class="value" id="card-dept">--</span>
+                    </div>
+                    <div class="profile-detail-row">
+                        <span class="label">Semester:</span>
+                        <span class="value" id="card-semester">--</span>
+                    </div>
+                    <div class="profile-detail-row">
+                        <span class="label">Campus:</span>
+                        <span class="value" id="card-campus">--</span>
+                    </div>
+                    <div class="profile-detail-row">
+                        <span class="label">Phone:</span>
+                        <span class="value" id="card-phone">Not specified</span>
+                    </div>
+                    <div class="profile-detail-row">
+                        <span class="label">Joined:</span>
+                        <span class="value" id="card-created-at">--</span>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 1.5rem; color: var(--danger-color); border-color: #fca5a5;" onclick="logoutStudent()">
+                    🚪 Sign Out
+                </button>
+            </aside>
+
+            <!-- Right Column: Profile Editing & Password Management -->
+            <div class="profile-sections">
+
+                <!-- Section 1: Edit Profile Information -->
+                <section class="profile-tab-card">
+                    <div class="tab-card-header">
+                        <h3>👤 Edit Profile Details</h3>
+                        <p>Update your display name, contact phone, department, and academic semester.</p>
+                    </div>
+
+                    <!-- Profile Update Alert -->
+                    <div id="profile-alert" class="alert" style="display: none;"></div>
+
+                    <form id="profile-form" novalidate>
+                        <!-- Immutable Academic Identifiers -->
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label for="prof-univ-id">University ID (Institutional Identifier)</label>
+                                <input type="text" id="prof-univ-id" class="form-control" style="background-color: #f1f5f9; cursor: not-allowed;" readonly disabled>
+                                <div class="form-hint">🔒 Managed by university registrar; cannot be changed</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="prof-email">College Email Address</label>
+                                <input type="email" id="prof-email" class="form-control" style="background-color: #f1f5f9; cursor: not-allowed;" readonly disabled>
+                                <div class="form-hint">🔒 Bound to verified campus credentials</div>
+                            </div>
+                        </div>
+
+                        <!-- Editable Personal Details -->
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label for="prof-fullname">Full Name *</label>
+                                <input type="text" id="prof-fullname" class="form-control" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="prof-phone">Contact Phone Number</label>
+                                <input type="tel" id="prof-phone" class="form-control" placeholder="+91 98765 43210">
+                            </div>
+                        </div>
+
+                        <!-- Editable Academic Progress -->
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label for="prof-dept">Academic Department *</label>
+                                <select id="prof-dept" class="form-control" required>
+                                    <option value="Computer Science">Computer Science & Engineering</option>
+                                    <option value="Information Science">Information Science & Engineering</option>
+                                    <option value="Electronics & Communication">Electronics & Communication</option>
+                                    <option value="Electrical Engineering">Electrical & Electronics</option>
+                                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                    <option value="Civil Engineering">Civil Engineering</option>
+                                    <option value="Biotechnology">Biotechnology</option>
+                                    <option value="Mathematics & Sciences">Mathematics & Basic Sciences</option>
+                                    <option value="Business & Management">Management Studies</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="prof-semester">Current Semester *</label>
+                                <select id="prof-semester" class="form-control" required>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                    <option value="6">Semester 6</option>
+                                    <option value="7">Semester 7</option>
+                                    <option value="8">Semester 8</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="prof-campus">Campus Location</label>
+                            <select id="prof-campus" class="form-control">
+                                <option value="Main Campus">Main Campus</option>
+                                <option value="North Campus">North Campus</option>
+                                <option value="South Campus">South Campus</option>
+                                <option value="Engineering Block">Engineering Block</option>
+                            </select>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                            <button type="submit" id="btn-save-profile" class="btn btn-primary">
+                                Save Profile Changes
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Section 2: Change Password Securely -->
+                <section class="profile-tab-card">
+                    <div class="tab-card-header">
+                        <h3>🔑 Change Password</h3>
+                        <p>Protect your account by creating a new strong password (hashed with PBKDF2WithHmacSHA256).</p>
+                    </div>
+
+                    <!-- Password Update Alert -->
+                    <div id="password-alert" class="alert" style="display: none;"></div>
+
+                    <form id="password-form" novalidate>
+                        <!-- Current Password -->
+                        <div class="form-group">
+                            <label for="pwd-current">Current Password *</label>
+                            <div class="password-toggle-wrapper">
+                                <input type="password" id="pwd-current" class="form-control" placeholder="Enter your current password" required>
+                                <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('pwd-current', this)">👁️</button>
+                            </div>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <!-- New Password -->
+                            <div class="form-group">
+                                <label for="pwd-new">New Password *</label>
+                                <div class="password-toggle-wrapper">
+                                    <input type="password" id="pwd-new" class="form-control" placeholder="Min. 6 characters" minlength="6" required>
+                                    <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('pwd-new', this)">👁️</button>
+                                </div>
+                                <div class="form-hint">At least 6 characters</div>
+                            </div>
+
+                            <!-- Confirm New Password -->
+                            <div class="form-group">
+                                <label for="pwd-confirm">Confirm New Password *</label>
+                                <div class="password-toggle-wrapper">
+                                    <input type="password" id="pwd-confirm" class="form-control" placeholder="Re-type new password" minlength="6" required>
+                                    <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('pwd-confirm', this)">👁️</button>
+                                </div>
+                                <div class="form-hint">Must match new password</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                            <button type="submit" id="btn-change-password" class="btn btn-primary">
+                                Update Password
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div>
+                <p><strong>Student Peer-to-Peer Book Exchange System (Book4u)</strong></p>
+                <p style="font-size: 0.85rem; color: #64748b;">Phase 2: Authentication & Profile Management</p>
+            </div>
+            <div class="footer-tech-stack">
+                <span class="tag">Java 21</span>
+                <span class="tag">PBKDF2WithHmacSHA256</span>
+                <span class="tag">Jakarta Servlet 6.0</span>
+                <span class="tag">JDBC</span>
+                <span class="tag">MySQL 8</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+</body>
+</html>

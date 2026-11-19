@@ -34,6 +34,7 @@ CREATE TABLE students (
     semester TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Current semester (1-12)',
     campus_name VARCHAR(128) NOT NULL DEFAULT 'Main Campus' COMMENT 'Specific university branch/campus',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_students_email (email),
     INDEX idx_students_dept (department)
 ) ENGINE=InnoDB COMMENT='Registered university student accounts';
@@ -59,6 +60,7 @@ CREATE TABLE books (
     lending_max_duration_days INT UNSIGNED NULL COMMENT 'Maximum allowed loan days (if mode is LENDING)',
     swap_preferences TEXT NULL COMMENT 'Books or topics the student desires in return (if mode is SWAP)',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_books_owner FOREIGN KEY (owner_id) REFERENCES students(id) ON DELETE CASCADE,
     INDEX idx_books_owner (owner_id),
     INDEX idx_books_title (title),
@@ -84,6 +86,7 @@ CREATE TABLE exchange_requests (
     handover_location VARCHAR(255) NULL COMMENT 'Proposed campus handover spot (e.g. Central Library)',
     handover_time DATETIME NULL COMMENT 'Proposed meeting date and time',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_requests_book FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
     CONSTRAINT fk_requests_requester FOREIGN KEY (requester_id) REFERENCES students(id) ON DELETE CASCADE,
     CONSTRAINT fk_requests_owner FOREIGN KEY (owner_id) REFERENCES students(id) ON DELETE CASCADE,
@@ -110,6 +113,7 @@ CREATE TABLE exchanges (
     due_date DATE NULL COMMENT 'Agreed return deadline (for LENDING mode)',
     return_date DATE NULL COMMENT 'Actual return date (for LENDING mode)',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_exchanges_request FOREIGN KEY (request_id) REFERENCES exchange_requests(id) ON DELETE RESTRICT,
     CONSTRAINT fk_exchanges_book FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE RESTRICT,
     CONSTRAINT fk_exchanges_owner FOREIGN KEY (owner_id) REFERENCES students(id) ON DELETE RESTRICT,
@@ -129,6 +133,7 @@ CREATE TABLE reviews (
     rating TINYINT UNSIGNED NOT NULL CHECK (rating BETWEEN 1 AND 5) COMMENT '1 to 5 star rating',
     review_text TEXT NULL COMMENT 'Feedback comments',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_reviews_exchange FOREIGN KEY (exchange_id) REFERENCES exchanges(id) ON DELETE CASCADE,
     CONSTRAINT fk_reviews_reviewer FOREIGN KEY (reviewer_id) REFERENCES students(id) ON DELETE CASCADE,
     CONSTRAINT fk_reviews_reviewee FOREIGN KEY (reviewee_id) REFERENCES students(id) ON DELETE CASCADE,
@@ -138,14 +143,14 @@ CREATE TABLE reviews (
 -- =====================================================================
 -- SEED DATA (For Academic Testing & Demo)
 -- =====================================================================
--- 1. Sample Students (Passwords hashed for 'Password@123' using SHA-256)
--- Hash: a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3
+-- 1. Sample Students (Passwords hashed for 'Password@123' using PBKDF2WithHmacSHA256)
+-- Hash: PBKDF2:65536:0123456789abcdef0123456789abcdef:e363d54d6489d14c40c0e57fbe90e7fe6256665c2c73d3e7b7e7ad663c8256e6
 INSERT INTO students (id, university_id, full_name, email, phone, password_hash, department, semester, campus_name)
 VALUES
-(1, 'U2023CS001', 'Aarav Sharma', 'aarav.sharma@campus.edu', '+919876543210', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'Computer Science', 5, 'Main Campus'),
-(2, 'U2023EC015', 'Priya Patel', 'priya.patel@campus.edu', '+919876543211', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'Electronics & Communication', 4, 'Main Campus'),
-(3, 'U2022ME042', 'Rohan Verma', 'rohan.verma@campus.edu', '+919876543212', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'Mechanical Engineering', 6, 'North Campus'),
-(4, 'U2024IS030', 'Ananya Iyer', 'ananya.iyer@campus.edu', '+919876543213', 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3', 'Information Science', 3, 'Main Campus');
+(1, 'U2023CS001', 'Aarav Sharma', 'aarav.sharma@campus.edu', '+919876543210', 'PBKDF2:65536:0123456789abcdef0123456789abcdef:e363d54d6489d14c40c0e57fbe90e7fe6256665c2c73d3e7b7e7ad663c8256e6', 'Computer Science', 5, 'Main Campus'),
+(2, 'U2023EC015', 'Priya Patel', 'priya.patel@campus.edu', '+919876543211', 'PBKDF2:65536:0123456789abcdef0123456789abcdef:e363d54d6489d14c40c0e57fbe90e7fe6256665c2c73d3e7b7e7ad663c8256e6', 'Electronics & Communication', 4, 'Main Campus'),
+(3, 'U2022ME042', 'Rohan Verma', 'rohan.verma@campus.edu', '+919876543212', 'PBKDF2:65536:0123456789abcdef0123456789abcdef:e363d54d6489d14c40c0e57fbe90e7fe6256665c2c73d3e7b7e7ad663c8256e6', 'Mechanical Engineering', 6, 'North Campus'),
+(4, 'U2024IS030', 'Ananya Iyer', 'ananya.iyer@campus.edu', '+919876543213', 'PBKDF2:65536:0123456789abcdef0123456789abcdef:e363d54d6489d14c40c0e57fbe90e7fe6256665c2c73d3e7b7e7ad663c8256e6', 'Information Science', 3, 'Main Campus');
 
 -- 2. Sample Academic Books (Java, DBMS, DSA, Networks)
 INSERT INTO books (id, owner_id, title, author, isbn, edition, course_code, subject, condition_grade, sharing_mode, status, description, lending_max_duration_days, swap_preferences)
