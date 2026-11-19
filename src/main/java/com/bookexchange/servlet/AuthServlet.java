@@ -126,8 +126,9 @@ public class AuthServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             sendJson(resp, createErrorJson(e.getMessage()));
         } catch (SQLException e) {
+            System.err.println("[AuthServlet] SQL error during registration: " + e.getMessage());
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            sendJson(resp, createErrorJson("Database error during registration: " + e.getMessage()));
+            sendJson(resp, createErrorJson("Registration could not be completed due to an internal database error. Please try again later."));
         }
     }
 
@@ -178,8 +179,9 @@ public class AuthServlet extends HttpServlet {
             }
 
         } catch (SQLException e) {
+            System.err.println("[AuthServlet] SQL error during authentication: " + e.getMessage());
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            sendJson(resp, createErrorJson("Database error during authentication: " + e.getMessage()));
+            sendJson(resp, createErrorJson("Authentication service is temporarily unavailable. Please try again later."));
         }
     }
 

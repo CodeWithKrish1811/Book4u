@@ -13,8 +13,8 @@ COPY pom.xml .
 COPY src ./src
 COPY database ./database
 
-# Build the production WAR archive
-RUN mvn clean package -DskipTests
+# Run comprehensive automated tests and build the production WAR artifact (fails build on any test failure)
+RUN mvn clean verify
 
 # Stage 2: Deploy and run on Apache Tomcat 10.1 (Jakarta Servlet 6.0 compatible)
 FROM tomcat:10.1-jdk21-temurin

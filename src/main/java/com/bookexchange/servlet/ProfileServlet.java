@@ -60,8 +60,9 @@ public class ProfileServlet extends HttpServlet {
             sendJson(resp, res);
 
         } catch (SQLException e) {
+            System.err.println("[ProfileServlet] SQL error fetching profile: " + e.getMessage());
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            sendJson(resp, createErrorJson("Database error fetching profile: " + e.getMessage()));
+            sendJson(resp, createErrorJson("Unable to load student profile due to an internal database error. Please try again later."));
         }
     }
 
@@ -128,8 +129,9 @@ public class ProfileServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             sendJson(resp, createErrorJson(e.getMessage()));
         } catch (SQLException e) {
+            System.err.println("[ProfileServlet] SQL error updating profile: " + e.getMessage());
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            sendJson(resp, createErrorJson("Database error updating profile: " + e.getMessage()));
+            sendJson(resp, createErrorJson("Unable to update profile due to an internal database error. Please try again later."));
         }
     }
 
@@ -158,8 +160,9 @@ public class ProfileServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             sendJson(resp, createErrorJson(e.getMessage()));
         } catch (SQLException e) {
+            System.err.println("[ProfileServlet] SQL error changing password: " + e.getMessage());
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            sendJson(resp, createErrorJson("Database error changing password: " + e.getMessage()));
+            sendJson(resp, createErrorJson("Unable to change password due to an internal database error. Please try again later."));
         }
     }
 

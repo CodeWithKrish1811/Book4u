@@ -50,7 +50,7 @@
         <session-timeout>30</session-timeout>
         <cookie-config>
             <http-only>true</http-only>
-            <secure>false</secure>
+            <!-- Note: Secure flag is dynamically configured by SecurityConfigListener based on production vs local HTTP environment -->
         </cookie-config>
         <tracking-mode>COOKIE</tracking-mode>
     </session-config>

@@ -15,12 +15,14 @@ import java.time.LocalDateTime;
 
 /**
  * ============================================================================
- * HealthCheckServlet
+ * HealthCheckServlet - System Diagnostic Endpoint
  * ============================================================================
  * Endpoint: GET /api/health
- * Verifies that the Java Servlet container (Apache Tomcat 10.1+) is running
- * and tests live JDBC database connectivity to MySQL.
- * Demonstrates: HttpServlet lifecycle, doGet method, JSON serialization with Gson.
+ *
+ * Production Hardening:
+ * 1. Returns HTTP 200 (OK) when Tomcat and MySQL are healthy and connected.
+ * 2. Returns HTTP 503 (Service Unavailable) when the database is disconnected.
+ * 3. Returns accurate JSON diagnostic metrics for cloud load balancers and container probes.
  * ============================================================================
  */
 @WebServlet(name = "HealthCheckServlet", urlPatterns = "/api/health")
@@ -38,11 +40,19 @@ public class HealthCheckServlet extends HttpServlet {
         boolean dbConnected = DBConnection.testConnection();
 
         JsonObject responseJson = new JsonObject();
-        responseJson.addProperty("status", "UP");
+        if (dbConnected) {
+            resp.setStatus(HttpServletResponse.SC_OK); // 200
+            responseJson.addProperty("status", "UP");
+        } else {
+            resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE); // 503
+            responseJson.addProperty("status", "DEGRADED");
+        }
+
         responseJson.addProperty("project", "Student Peer-to-Peer Book Exchange System (Book4u)");
         responseJson.addProperty("server", "Apache Tomcat 10.1+ (Jakarta Servlet 6.0)");
         responseJson.addProperty("javaVersion", System.getProperty("java.version"));
         responseJson.addProperty("databaseStatus", dbConnected ? "CONNECTED" : "DISCONNECTED");
+        responseJson.addProperty("environment", DBConnection.isProductionEnvironment() ? "PRODUCTION" : "LOCAL");
         responseJson.addProperty("timestamp", LocalDateTime.now().toString());
 
         try (PrintWriter out = resp.getWriter()) {

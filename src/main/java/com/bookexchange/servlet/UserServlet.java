@@ -67,9 +67,10 @@ public class UserServlet extends HttpServlet {
             err.addProperty("error", "Invalid numeric ID format: " + idParam);
             resp.getWriter().print(gson.toJson(err));
         } catch (SQLException e) {
+            System.err.println("[UserServlet] SQL error in doGet: " + e.getMessage());
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             JsonObject err = new JsonObject();
-            err.addProperty("error", "Database error: " + e.getMessage());
+            err.addProperty("error", "Unable to retrieve student record due to an internal database error. Please try again later.");
             resp.getWriter().print(gson.toJson(err));
         }
     }
@@ -125,9 +126,10 @@ public class UserServlet extends HttpServlet {
             err.addProperty("error", e.getMessage());
             resp.getWriter().print(gson.toJson(err));
         } catch (SQLException e) {
+            System.err.println("[UserServlet] SQL error in doGet: " + e.getMessage());
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             JsonObject err = new JsonObject();
-            err.addProperty("error", "Database error: " + e.getMessage());
+            err.addProperty("error", "Unable to retrieve student record due to an internal database error. Please try again later.");
             resp.getWriter().print(gson.toJson(err));
         }
     }

@@ -1,5 +1,7 @@
 package com.bookexchange.config;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -11,27 +13,30 @@ import java.util.Properties;
  * ============================================================================
  * DBConnection - JDBC Database Connection Factory
  * ============================================================================
- * University Academic Project: Student Peer-to-Peer Book Exchange System
+ * University Academic Project: Student Peer-to-Peer Book Exchange System (Book4u)
  * Technology: Core Java, JDBC (Java Database Connectivity), MySQL 8.x
  *
- * Concepts Demonstrated:
- * 1. Singleton Design Pattern / Static Utility: Centralized connection creation.
- * 2. Separation of Concerns: Database credentials loaded from db.properties file.
- * 3. Driver Registration: Loads MySQL Connector/J driver dynamically via reflection.
- * 4. Exception Handling: Structured handling of ClassNotFoundException and SQLException.
+ * Production Hardening:
+ * 1. Prioritizes cloud environment variables (Railway: MYSQLHOST, MYSQLPORT, MYSQLDATABASE, etc.).
+ * 2. Strict validation: Rejects insecure localhost fallback in production environments.
+ * 3. Credential masking: Never logs passwords, credential lengths, or unmasked JDBC URLs.
+ * 4. Preserves backward-compatible local development configuration via db.properties / db.properties.local.
  * ============================================================================
  */
 public class DBConnection {
 
     private static final String PROPERTIES_FILE = "db.properties";
-    private static Properties properties = new Properties();
+    private static final Properties properties = new Properties();
 
     private static String url;
     private static String username;
     private static String password;
-    private static String driver;
+    private static String driver = "com.mysql.cj.jdbc.Driver";
 
-    // Static initialization block: Executes once when the class is loaded into memory
+    private static boolean configured = false;
+    private static String configurationError = null;
+
+    // Static initialization block
     static {
         loadProperties();
         loadDriver();
@@ -42,66 +47,47 @@ public class DBConnection {
     }
 
     /**
-     * Reads database configuration from the db.properties file on the classpath.
-     * Also checks for system environment variables (DB_URL, DB_USERNAME, DB_PASSWORD)
-     * as optional overrides.
+     * Checks if current runtime is a production environment (Railway / Cloud container).
+     */
+    public static boolean isProductionEnvironment() {
+        return System.getenv("RAILWAY_ENVIRONMENT") != null
+                || System.getenv("RAILWAY_PROJECT_ID") != null
+                || "production".equalsIgnoreCase(System.getenv("APP_ENV"))
+                || "production".equalsIgnoreCase(System.getenv("ENVIRONMENT"));
+    }
+
+    /**
+     * Returns a safe, redacted version of the active JDBC URL with any credentials stripped.
+     */
+    public static String getSanitizedUrl() {
+        if (url == null || url.isBlank()) {
+            return "[NOT CONFIGURED]";
+        }
+        // Redacts user:password@ if embedded inside connection string
+        return url.replaceAll("(?i)(://)([^:@/]+):([^@/]+)@", "$1***:***@");
+    }
+
+    /**
+     * Loads and validates database configuration.
+     * Prioritizes Railway cloud environment variables over static local property files.
+     * Insecure localhost fallbacks are strictly rejected in production.
      */
     public static synchronized void loadProperties() {
         properties.clear();
-        boolean loaded = false;
+        configured = false;
+        configurationError = null;
+        driver = "com.mysql.cj.jdbc.Driver";
+        url = null;
+        username = null;
+        password = null;
 
-        // 1. Attempt loading from ClassLoader classpath (standard in Tomcat WAR)
-        try (InputStream input = DBConnection.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
-            if (input != null) {
-                properties.load(input);
-                loaded = true;
-            }
-        } catch (IOException e) {
-            System.err.println("[DBConnection] Note: Classpath resource read: " + e.getMessage());
-        }
+        // ====================================================================
+        // Priority 1: Cloud & Container Environment Variables (Railway / Cloud)
+        // ====================================================================
+        String envUrl = System.getenv("DB_URL");
+        String envUser = System.getenv("DB_USERNAME");
+        String envPass = System.getenv("DB_PASSWORD");
 
-        // 2. Direct file fallback for local IDE / Maven embedded runtime (checks local overrides first)
-        String[] fallbackPaths = {
-            "src/main/resources/db.properties.local",
-            "db.properties.local",
-            "src/main/resources/" + PROPERTIES_FILE,
-            "target/classes/" + PROPERTIES_FILE,
-            PROPERTIES_FILE
-        };
-
-        for (String path : fallbackPaths) {
-            java.io.File file = new java.io.File(path);
-            if (file.exists() && file.isFile()) {
-                try (InputStream fis = new java.io.FileInputStream(file)) {
-                    Properties diskProps = new Properties();
-                    diskProps.load(fis);
-                    for (String key : diskProps.stringPropertyNames()) {
-                        String val = diskProps.getProperty(key);
-                        if (val != null && !val.isBlank()) {
-                            properties.setProperty(key, val);
-                        }
-                    }
-                    loaded = true;
-                    break;
-                } catch (IOException ignored) {
-                }
-            }
-        }
-
-        if (!loaded) {
-            System.err.println("[DBConnection] WARNING: Unable to find " + PROPERTIES_FILE + ". Using default fallback settings.");
-            driver = "com.mysql.cj.jdbc.Driver";
-            url = "jdbc:mysql://localhost:3306/book_exchange_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-            username = "root";
-            password = "";
-        } else {
-            driver = properties.getProperty("db.driver", "com.mysql.cj.jdbc.Driver");
-            url = properties.getProperty("db.url", "jdbc:mysql://localhost:3306/book_exchange_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
-            username = properties.getProperty("db.username", "root");
-            password = properties.getProperty("db.password", "");
-        }
-
-        // 1. Cloud & Container Environment Variables (Railway, Render, Docker)
         String railwayHost = System.getenv("MYSQLHOST");
         String railwayPort = System.getenv("MYSQLPORT");
         String railwayDb = System.getenv("MYSQLDATABASE");
@@ -110,41 +96,119 @@ public class DBConnection {
         String railwayUrl = System.getenv("MYSQL_URL");
         String databaseUrl = System.getenv("DATABASE_URL");
 
-        if (railwayHost != null && !railwayHost.isBlank()) {
+        if (envUrl != null && !envUrl.isBlank()) {
+            url = envUrl;
+            username = (envUser != null) ? envUser : "";
+            password = (envPass != null) ? envPass : "";
+        } else if (railwayHost != null && !railwayHost.isBlank()) {
             String port = (railwayPort != null && !railwayPort.isBlank()) ? railwayPort : "3306";
             String db = (railwayDb != null && !railwayDb.isBlank()) ? railwayDb : "railway";
             url = "jdbc:mysql://" + railwayHost + ":" + port + "/" + db + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+            username = (railwayUser != null && !railwayUser.isBlank()) ? railwayUser : "root";
+            password = (railwayPass != null) ? railwayPass : "";
         } else if (railwayUrl != null && !railwayUrl.isBlank()) {
             url = railwayUrl.startsWith("jdbc:") ? railwayUrl : "jdbc:" + railwayUrl;
+            username = (railwayUser != null) ? railwayUser : "";
+            password = (railwayPass != null) ? railwayPass : "";
         } else if (databaseUrl != null && !databaseUrl.isBlank()) {
             url = databaseUrl.startsWith("jdbc:") ? databaseUrl : "jdbc:" + databaseUrl;
+            username = (railwayUser != null) ? railwayUser : "";
+            password = (railwayPass != null) ? railwayPass : "";
+        } else {
+            // ================================================================
+            // Priority 2: Local Development Files (Localhost only)
+            // ================================================================
+            if (isProductionEnvironment()) {
+                configurationError = "Missing required Railway database environment variables (MYSQLHOST, MYSQLPORT, MYSQLDATABASE, etc.). Insecure localhost fallback is disabled in production.";
+                System.err.println("[DBConnection] CRITICAL: " + configurationError);
+                return;
+            }
+
+            boolean fileLoaded = false;
+            String[] fallbackPaths = {
+                "src/main/resources/db.properties.local",
+                "db.properties.local",
+                "src/main/resources/" + PROPERTIES_FILE,
+                "target/classes/" + PROPERTIES_FILE,
+                PROPERTIES_FILE
+            };
+
+            for (String path : fallbackPaths) {
+                File file = new File(path);
+                if (file.exists() && file.isFile()) {
+                    try (InputStream fis = new FileInputStream(file)) {
+                        properties.load(fis);
+                        fileLoaded = true;
+                        break;
+                    } catch (IOException ignored) {
+                    }
+                }
+            }
+
+            if (!fileLoaded) {
+                try (InputStream input = DBConnection.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
+                    if (input != null) {
+                        properties.load(input);
+                        fileLoaded = true;
+                    }
+                } catch (IOException ignored) {
+                }
+            }
+
+            if (fileLoaded) {
+                driver = properties.getProperty("db.driver", "com.mysql.cj.jdbc.Driver");
+                url = properties.getProperty("db.url", "");
+                username = properties.getProperty("db.username", "");
+                password = properties.getProperty("db.password", "");
+            } else {
+                configurationError = "No database configuration found (neither environment variables nor db.properties exist).";
+                System.err.println("[DBConnection] ERROR: " + configurationError);
+                return;
+            }
         }
 
-        if (railwayUser != null && !railwayUser.isBlank()) {
-            username = railwayUser;
-        }
-        if (railwayPass != null) {
-            password = railwayPass;
-        }
-
-        // 2. Direct environment variable overrides (highest precedence)
-        String envUrl = System.getenv("DB_URL");
-        if (envUrl != null && !envUrl.isBlank()) {
-            url = envUrl;
+        // ====================================================================
+        // Priority 3: Configuration Validation
+        // ====================================================================
+        if (url == null || url.isBlank()) {
+            configurationError = "Database JDBC URL is missing or blank.";
+            System.err.println("[DBConnection] ERROR: " + configurationError);
+            return;
         }
 
-        String envUser = System.getenv("DB_USERNAME");
-        if (envUser != null && !envUser.isBlank()) {
-            username = envUser;
+        if (username == null || username.isBlank()) {
+            configurationError = "Database username is missing or blank.";
+            System.err.println("[DBConnection] ERROR: " + configurationError);
+            return;
         }
 
-        String envPass = System.getenv("DB_PASSWORD");
-        if (envPass != null) {
-            password = envPass;
+        if (isProductionEnvironment()) {
+            String lowerUrl = url.toLowerCase();
+            if (lowerUrl.contains("localhost") || lowerUrl.contains("127.0.0.1")) {
+                configurationError = "Insecure localhost database URL detected in production environment.";
+                System.err.println("[DBConnection] CRITICAL: " + configurationError);
+                return;
+            }
+            if (password == null || password.isBlank()) {
+                configurationError = "Database password is required for production database connectivity.";
+                System.err.println("[DBConnection] CRITICAL: " + configurationError);
+                return;
+            }
         }
 
-        String passIndicator = (password == null || password.isEmpty()) ? "[EMPTY - No password configured]" : "[CONFIGURED - " + password.length() + " chars]";
-        System.out.println("[DBConnection] Configuration loaded. Target URL: " + url + " | User: " + username + " | Password: " + passIndicator);
+        configured = true;
+        logConfigurationSummary();
+    }
+
+    /**
+     * Safely logs configuration without exposing passwords or credentials.
+     */
+    private static void logConfigurationSummary() {
+        String passStatus = (password != null && !password.isEmpty()) ? "[CONFIGURED]" : "[NOT SET]";
+        System.out.println("[DBConnection] Database active: URL=" + getSanitizedUrl()
+                + " | User=" + (username != null ? username : "[NOT SET]")
+                + " | Password=" + passStatus
+                + " | Mode=" + (isProductionEnvironment() ? "PRODUCTION" : "LOCAL"));
     }
 
     /**
@@ -152,6 +216,20 @@ public class DBConnection {
      */
     public static synchronized void reloadProperties() {
         loadProperties();
+    }
+
+    /**
+     * Returns true if database configuration passed validation.
+     */
+    public static boolean isConfigured() {
+        return configured;
+    }
+
+    /**
+     * Returns the configuration error reason if validation failed.
+     */
+    public static String getConfigurationError() {
+        return configurationError;
     }
 
     /**
@@ -172,20 +250,20 @@ public class DBConnection {
      * Establishes and returns a new active Connection to the MySQL database.
      *
      * @return Active java.sql.Connection object
-     * @throws SQLException If database access error occurs or credentials fail
+     * @throws SQLException If database access error occurs, credentials fail, or configuration is invalid
      */
     public static Connection getConnection() throws SQLException {
+        if (!configured) {
+            loadProperties();
+            if (!configured) {
+                throw new SQLException("Database is not properly configured: "
+                        + (configurationError != null ? configurationError : "Validation failed."));
+            }
+        }
         try {
             return DriverManager.getConnection(url, username, password);
         } catch (SQLException e) {
-            // If connection failed due to missing/empty password, reload properties once in case config file was updated
-            if (password == null || password.isEmpty() || (e.getMessage() != null && e.getMessage().contains("using password: NO"))) {
-                loadProperties();
-                if (password != null && !password.isEmpty()) {
-                    return DriverManager.getConnection(url, username, password);
-                }
-            }
-            System.err.println("[DBConnection] Connection failed: " + e.getMessage());
+            System.err.println("[DBConnection] Connection failed to " + getSanitizedUrl() + ": " + e.getMessage());
             throw e;
         }
     }
@@ -196,6 +274,12 @@ public class DBConnection {
      * @return true if connection was successfully opened and verified, false otherwise
      */
     public static boolean testConnection() {
+        if (!configured) {
+            loadProperties();
+            if (!configured) {
+                return false;
+            }
+        }
         try (Connection conn = getConnection()) {
             return conn != null && !conn.isClosed();
         } catch (SQLException e) {
