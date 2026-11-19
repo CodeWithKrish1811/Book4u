@@ -46,44 +46,86 @@ public class DBConnection {
      * Also checks for system environment variables (DB_URL, DB_USERNAME, DB_PASSWORD)
      * as optional overrides.
      */
-    private static void loadProperties() {
+    public static synchronized void loadProperties() {
+        properties.clear();
+        boolean loaded = false;
+
+        // 1. Attempt loading from ClassLoader classpath (standard in Tomcat WAR)
         try (InputStream input = DBConnection.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
-            if (input == null) {
-                System.err.println("[DBConnection] WARNING: Unable to find " + PROPERTIES_FILE + ". Using default fallback settings.");
-                driver = "com.mysql.cj.jdbc.Driver";
-                url = "jdbc:mysql://localhost:3306/book_exchange_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-                username = "root";
-                password = "";
-            } else {
+            if (input != null) {
                 properties.load(input);
-                driver = properties.getProperty("db.driver", "com.mysql.cj.jdbc.Driver");
-                url = properties.getProperty("db.url", "jdbc:mysql://localhost:3306/book_exchange_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
-                username = properties.getProperty("db.username", "root");
-                password = properties.getProperty("db.password", "");
+                loaded = true;
             }
-
-            // Allow environment variable overrides if provided
-            String envUrl = System.getenv("DB_URL");
-            if (envUrl != null && !envUrl.isBlank()) {
-                url = envUrl;
-            }
-
-            String envUser = System.getenv("DB_USERNAME");
-            if (envUser != null && !envUser.isBlank()) {
-                username = envUser;
-            }
-
-            String envPass = System.getenv("DB_PASSWORD");
-            if (envPass != null) {
-                password = envPass;
-            }
-
-            System.out.println("[DBConnection] Configuration loaded successfully. Target URL: " + url + " | User: " + username);
-
         } catch (IOException e) {
-            System.err.println("[DBConnection] ERROR: Failed to load properties file: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("[DBConnection] Note: Classpath resource read: " + e.getMessage());
         }
+
+        // 2. Direct file fallback for local IDE / Maven embedded runtime (checks local overrides first)
+        String[] fallbackPaths = {
+            "src/main/resources/db.properties.local",
+            "db.properties.local",
+            "src/main/resources/" + PROPERTIES_FILE,
+            "target/classes/" + PROPERTIES_FILE,
+            PROPERTIES_FILE
+        };
+
+        for (String path : fallbackPaths) {
+            java.io.File file = new java.io.File(path);
+            if (file.exists() && file.isFile()) {
+                try (InputStream fis = new java.io.FileInputStream(file)) {
+                    Properties diskProps = new Properties();
+                    diskProps.load(fis);
+                    for (String key : diskProps.stringPropertyNames()) {
+                        String val = diskProps.getProperty(key);
+                        if (val != null && !val.isBlank()) {
+                            properties.setProperty(key, val);
+                        }
+                    }
+                    loaded = true;
+                    break;
+                } catch (IOException ignored) {
+                }
+            }
+        }
+
+        if (!loaded) {
+            System.err.println("[DBConnection] WARNING: Unable to find " + PROPERTIES_FILE + ". Using default fallback settings.");
+            driver = "com.mysql.cj.jdbc.Driver";
+            url = "jdbc:mysql://localhost:3306/book_exchange_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+            username = "root";
+            password = "";
+        } else {
+            driver = properties.getProperty("db.driver", "com.mysql.cj.jdbc.Driver");
+            url = properties.getProperty("db.url", "jdbc:mysql://localhost:3306/book_exchange_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
+            username = properties.getProperty("db.username", "root");
+            password = properties.getProperty("db.password", "");
+        }
+
+        // Allow environment variable overrides if provided
+        String envUrl = System.getenv("DB_URL");
+        if (envUrl != null && !envUrl.isBlank()) {
+            url = envUrl;
+        }
+
+        String envUser = System.getenv("DB_USERNAME");
+        if (envUser != null && !envUser.isBlank()) {
+            username = envUser;
+        }
+
+        String envPass = System.getenv("DB_PASSWORD");
+        if (envPass != null) {
+            password = envPass;
+        }
+
+        String passIndicator = (password == null || password.isEmpty()) ? "[EMPTY - No password configured]" : "[CONFIGURED - " + password.length() + " chars]";
+        System.out.println("[DBConnection] Configuration loaded. Target URL: " + url + " | User: " + username + " | Password: " + passIndicator);
+    }
+
+    /**
+     * Public method to allow hot-reloading credentials without restarting JVM.
+     */
+    public static synchronized void reloadProperties() {
+        loadProperties();
     }
 
     /**
@@ -110,6 +152,13 @@ public class DBConnection {
         try {
             return DriverManager.getConnection(url, username, password);
         } catch (SQLException e) {
+            // If connection failed due to missing/empty password, reload properties once in case config file was updated
+            if (password == null || password.isEmpty() || (e.getMessage() != null && e.getMessage().contains("using password: NO"))) {
+                loadProperties();
+                if (password != null && !password.isEmpty()) {
+                    return DriverManager.getConnection(url, username, password);
+                }
+            }
             System.err.println("[DBConnection] Connection failed: " + e.getMessage());
             throw e;
         }

@@ -62,7 +62,8 @@ async function loadAvailableBooks(subject = '', mode = '') {
             throw new Error('Server returned HTTP ' + response.status);
         }
 
-        const books = await response.json();
+        const res = await response.json();
+        const books = Array.isArray(res) ? res : (res.books || []);
         renderBookCards(books);
 
     } catch (err) {
