@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Book Listing — Book4u</title>
+    <meta name="description" content="Update details of your listed academic textbook.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand-link">
+                <div class="brand-logo-icon">📚</div>
+                <div class="brand-details">
+                    <h1>Book4u</h1>
+                    <p>Student Peer-to-Peer Book Exchange</p>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <div id="system-health-pill" class="health-pill" title="Servlet & MySQL Health Status">
+                    <span id="health-dot" class="health-dot dot-amber"></span>
+                    <span id="health-text">Checking System...</span>
+                </div>
+
+                <a href="explore.html" class="btn btn-outline btn-sm">Explore</a>
+                <a href="my-books.html" class="btn btn-outline btn-sm">My Books</a>
+                <a href="login.html" class="btn btn-outline btn-sm guest-auth-btn">Sign In</a>
+                <a href="register.html" class="btn btn-primary btn-sm guest-auth-btn">Register</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="auth-wrapper" style="max-width: 680px;">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <span class="auth-icon">✏️</span>
+                    <h2>Edit Textbook Listing</h2>
+                    <p>Update condition, availability status, or sharing preferences</p>
+                </div>
+
+                <!-- Alert Message Box -->
+                <div id="edit-book-alert" class="alert" style="display: none;"></div>
+
+                <form id="edit-book-form" novalidate>
+                    <input type="hidden" id="edit-book-id">
+
+                    <!-- Title & Author -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="edit-title">Textbook Title *</label>
+                            <input type="text" id="edit-title" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit-author">Author(s) *</label>
+                            <input type="text" id="edit-author" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <!-- Subject & Course Code -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="edit-subject">Subject Area *</label>
+                            <select id="edit-subject" class="form-control" required>
+                                <option value="Java">Java & Object-Oriented</option>
+                                <option value="DBMS">Database Management (DBMS)</option>
+                                <option value="DSA">Data Structures & Algorithms</option>
+                                <option value="Networks">Computer Networks</option>
+                                <option value="Operating Systems">Operating Systems</option>
+                                <option value="Mathematics">Mathematics & Discrete Math</option>
+                                <option value="Electronics">Electronics & Circuits</option>
+                                <option value="Machine Learning">Machine Learning & AI</option>
+                                <option value="Mechanical">Mechanical Engineering</option>
+                                <option value="Civil">Civil Engineering</option>
+                                <option value="Other">Other Academic Subject</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit-course">Course Code</label>
+                            <input type="text" id="edit-course" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Condition & Availability Status -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="edit-condition">Condition Grade *</label>
+                            <select id="edit-condition" class="form-control" required>
+                                <option value="LIKE_NEW">Like New</option>
+                                <option value="GOOD">Good</option>
+                                <option value="FAIR">Fair</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit-status">Availability Status *</label>
+                            <select id="edit-status" class="form-control" required>
+                                <option value="AVAILABLE">AVAILABLE (Open for requests)</option>
+                                <option value="RESERVED">RESERVED (Handover agreed)</option>
+                                <option value="ON_LOAN">ON_LOAN (Currently borrowed)</option>
+                                <option value="UNAVAILABLE">UNAVAILABLE (Archived/Hidden)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sharing Mode & ISBN -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="edit-mode">Sharing Mode *</label>
+                            <select id="edit-mode" class="form-control" required>
+                                <option value="SWAP">SWAP (Exchange)</option>
+                                <option value="GIVEAWAY">GIVEAWAY (Free)</option>
+                                <option value="LENDING">LENDING (Temporary)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit-edition">Edition</label>
+                            <input type="text" id="edit-edition" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Conditional Lending Duration -->
+                    <div id="edit-lending-duration-wrapper" class="form-group" style="display: none;">
+                        <label for="edit-lending-days">Max Lending Duration (Days) *</label>
+                        <input type="number" id="edit-lending-days" class="form-control" min="1" max="180">
+                    </div>
+
+                    <!-- Swap Preferences -->
+                    <div class="form-group">
+                        <label for="edit-swap">Swap Preferences (If swapping)</label>
+                        <input type="text" id="edit-swap" class="form-control">
+                    </div>
+
+                    <!-- Image URL & ISBN -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="edit-isbn">ISBN</label>
+                            <input type="text" id="edit-isbn" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit-image">Cover Image URL</label>
+                            <input type="url" id="edit-image" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label for="edit-desc">Description & Syllabus Notes</label>
+                        <textarea id="edit-desc" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                        <a href="my-books.html" class="btn btn-outline">Cancel</a>
+                        <button type="submit" id="btn-save-edit" class="btn btn-primary" style="padding: 0.75rem 2rem;">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div>
+                <p><strong>Student Peer-to-Peer Book Exchange System (Book4u)</strong></p>
+                <p style="font-size: 0.85rem; color: #64748b;">Phase 3: Book Management & Discovery</p>
+            </div>
+            <div class="footer-tech-stack">
+                <span class="tag">Java 21</span>
+                <span class="tag">Jakarta Servlet 6.0</span>
+                <span class="tag">JDBC</span>
+                <span class="tag">MySQL 8</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/books.js"></script>
+</body>
+</html>

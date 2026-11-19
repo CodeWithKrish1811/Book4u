@@ -18,24 +18,24 @@ import java.security.spec.KeySpec;
  *
  * Security Concepts Demonstrated:
  * 1. PBKDF2 (Password-Based Key Derivation Function 2):
- *    Recommended by NIST / OWASP for password storage. Applies HMAC-SHA256
- *    repeatedly (default 65,536 iterations) to slow down brute-force attacks.
+ * Recommended by NIST / OWASP for password storage. Applies HMAC-SHA256
+ * repeatedly (default 65,536 iterations) to slow down brute-force attacks.
  * 2. Cryptographic Salt:
- *    Each password gets a unique, cryptographically random 16-byte salt from
- *    SecureRandom. This neutralizes Rainbow Table attacks.
+ * Each password gets a unique, cryptographically random 16-byte salt from
+ * SecureRandom. This neutralizes Rainbow Table attacks.
  * 3. Constant-Time Verification:
- *    Uses MessageDigest.isEqual() to eliminate timing attack vulnerabilities.
+ * Uses MessageDigest.isEqual() to eliminate timing attack vulnerabilities.
  * 4. Backward Compatibility:
- *    Supports verifying legacy Phase 1 SHA-256 seed passwords alongside PBKDF2.
+ * Supports verifying legacy Phase 1 SHA-256 seed passwords alongside PBKDF2.
  * ============================================================================
  */
 public class PasswordUtil {
 
     // PBKDF2 Configuration Parameters
     private static final String PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256";
-    private static final int SALT_BYTES = 16;        // 128-bit salt
-    private static final int ITERATIONS = 65536;     // Recommended iteration count
-    private static final int KEY_LENGTH_BITS = 256;  // 256-bit derived key length
+    private static final int SALT_BYTES = 16; // 128-bit salt
+    private static final int ITERATIONS = 65536; // Recommended iteration count
+    private static final int KEY_LENGTH_BITS = 256; // 256-bit derived key length
     private static final String PREFIX = "PBKDF2";
 
     // Legacy Phase 1 salt for backwards compatibility with initial seed data
@@ -74,7 +74,7 @@ public class PasswordUtil {
      * Handles both PBKDF2 hashes and legacy SHA-256 hashes seamlessly.
      *
      * @param rawPassword The plaintext candidate password
-     * @param storedHash The stored password hash from the database
+     * @param storedHash  The stored password hash from the database
      * @return true if password matches, false otherwise
      */
     public static boolean verifyPassword(String rawPassword, String storedHash) {
@@ -94,7 +94,8 @@ public class PasswordUtil {
                 byte[] salt = hexToBytes(parts[2]);
                 byte[] expectedHash = hexToBytes(parts[3]);
 
-                byte[] candidateHash = computePBKDF2(rawPassword.toCharArray(), salt, iterations, expectedHash.length * 8);
+                byte[] candidateHash = computePBKDF2(rawPassword.toCharArray(), salt, iterations,
+                        expectedHash.length * 8);
 
                 // Constant-time byte array comparison against timing attacks
                 return MessageDigest.isEqual(candidateHash, expectedHash);
@@ -122,12 +123,13 @@ public class PasswordUtil {
     }
 
     /**
-     * Verifies against legacy SHA-256 (both raw seed hash and Phase 1 salted format).
+     * Verifies against legacy SHA-256 (both raw seed hash and Phase 1 salted
+     * format).
      */
     private static boolean verifyLegacySha256(String rawPassword, String storedHash) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            
+
             // Check raw SHA-256 (matches SQL seed data)
             byte[] rawHash = digest.digest(rawPassword.getBytes(StandardCharsets.UTF_8));
             if (bytesToHex(rawHash).equalsIgnoreCase(storedHash.trim())) {

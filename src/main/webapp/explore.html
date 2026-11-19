@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Textbooks — Book4u</title>
+    <meta name="description" content="Discover textbooks offered by university peers for swap, giveaway, and temporary lending on campus.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand-link">
+                <div class="brand-logo-icon">📚</div>
+                <div class="brand-details">
+                    <h1>Book4u</h1>
+                    <p>Student Peer-to-Peer Book Exchange</p>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <div id="system-health-pill" class="health-pill" title="Servlet & MySQL Health Status">
+                    <span id="health-dot" class="health-dot dot-amber"></span>
+                    <span id="health-text">Checking System...</span>
+                </div>
+
+                <a href="explore.html" class="btn btn-outline btn-sm" style="font-weight: 700; color: var(--primary-color);">Explore</a>
+                <a href="my-books.html" class="btn btn-outline btn-sm">My Books</a>
+                <a href="add-book.html" class="btn btn-primary btn-sm">+ List a Book</a>
+
+                <a href="login.html" class="btn btn-outline btn-sm guest-auth-btn">Sign In</a>
+                <a href="register.html" class="btn btn-primary btn-sm guest-auth-btn">Register</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="catalog-container">
+
+            <!-- Banner Header -->
+            <div class="catalog-header">
+                <h2>Campus Textbook Discovery</h2>
+                <p>Browse books shared by fellow students across your university. Exchange for required semester textbooks or borrow exam preparation copies for $0 cost.</p>
+            </div>
+
+            <!-- Search and Multi-Criteria Filtering Box -->
+            <div class="search-box-card">
+                <form id="search-filter-form" novalidate>
+                    <!-- Search Bar -->
+                    <div class="search-input-group">
+                        <div class="search-input-wrapper">
+                            <span class="search-icon-inside">🔍</span>
+                            <input type="text" id="search-query" class="form-control" placeholder="Search by title, author, subject, or ISBN...">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="padding: 0 1.5rem; height: 48px;">
+                            Search
+                        </button>
+                    </div>
+
+                    <!-- Filter Dropdowns Row -->
+                    <div class="filter-controls-row">
+                        <div>
+                            <label for="filter-subject" style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Subject Area</label>
+                            <select id="filter-subject" class="form-control">
+                                <option value="ALL">All Subjects</option>
+                                <option value="Java">Java & Object-Oriented</option>
+                                <option value="DBMS">Database Systems (DBMS)</option>
+                                <option value="DSA">Data Structures & Algorithms</option>
+                                <option value="Networks">Computer Networks</option>
+                                <option value="Operating Systems">Operating Systems</option>
+                                <option value="Mathematics">Mathematics & Discrete Math</option>
+                                <option value="Electronics">Electronics & Circuits</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="filter-condition" style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Condition</label>
+                            <select id="filter-condition" class="form-control">
+                                <option value="ALL">All Conditions</option>
+                                <option value="LIKE_NEW">Like New</option>
+                                <option value="GOOD">Good</option>
+                                <option value="FAIR">Fair</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="filter-mode" style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Sharing Mode</label>
+                            <select id="filter-mode" class="form-control">
+                                <option value="ALL">All Modes</option>
+                                <option value="SWAP">SWAP (Exchange)</option>
+                                <option value="GIVEAWAY">GIVEAWAY (Free)</option>
+                                <option value="LENDING">LENDING (Temporary)</option>
+                            </select>
+                        </div>
+
+                        <div style="align-self: flex-end;">
+                            <button type="button" id="btn-clear-filters" class="btn btn-outline" style="height: 40px; width: 100%;">
+                                Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Meta Line -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.2rem; color: var(--text-dark);">Available Textbooks</h3>
+                <span id="catalog-count" style="font-size: 0.9rem; color: var(--text-muted); font-weight: 600;">Loading catalog...</span>
+            </div>
+
+            <!-- Dynamic Book Grid -->
+            <div id="explore-book-grid" class="book-grid">
+                <!-- Rendered dynamically by books.js -->
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div>
+                <p><strong>Student Peer-to-Peer Book Exchange System (Book4u)</strong></p>
+                <p style="font-size: 0.85rem; color: #64748b;">Phase 3: Book Management & Discovery</p>
+            </div>
+            <div class="footer-tech-stack">
+                <span class="tag">Java 21</span>
+                <span class="tag">Jakarta Servlet 6.0</span>
+                <span class="tag">JDBC</span>
+                <span class="tag">MySQL 8</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/books.js"></script>
+</body>
+</html>

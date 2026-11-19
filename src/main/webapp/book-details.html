@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Details — Book4u</title>
+    <meta name="description" content="View textbook specifications, peer owner info, and campus exchange details on Book4u.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand-link">
+                <div class="brand-logo-icon">📚</div>
+                <div class="brand-details">
+                    <h1>Book4u</h1>
+                    <p>Student Peer-to-Peer Book Exchange</p>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <div id="system-health-pill" class="health-pill" title="Servlet & MySQL Health Status">
+                    <span id="health-dot" class="health-dot dot-amber"></span>
+                    <span id="health-text">Checking System...</span>
+                </div>
+
+                <a href="explore.html" class="btn btn-outline btn-sm">← Back to Catalog</a>
+                <a href="my-books.html" class="btn btn-outline btn-sm">My Books</a>
+                <a href="add-book.html" class="btn btn-primary btn-sm">+ List a Book</a>
+
+                <a href="login.html" class="btn btn-outline btn-sm guest-auth-btn">Sign In</a>
+                <a href="register.html" class="btn btn-primary btn-sm guest-auth-btn">Register</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Rendered dynamically by books.js based on ?id=... -->
+        <div id="book-details-view" class="book-details-layout">
+            <p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 3rem;">Loading book details...</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div>
+                <p><strong>Student Peer-to-Peer Book Exchange System (Book4u)</strong></p>
+                <p style="font-size: 0.85rem; color: #64748b;">Phase 3: Book Management & Discovery</p>
+            </div>
+            <div class="footer-tech-stack">
+                <span class="tag">Java 21</span>
+                <span class="tag">Jakarta Servlet 6.0</span>
+                <span class="tag">JDBC</span>
+                <span class="tag">MySQL 8</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/books.js"></script>
+</body>
+</html>

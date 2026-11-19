@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Book Listings — Book4u</title>
+    <meta name="description" content="Manage the textbooks you have listed for campus swap, giveaway, and lending.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand-link">
+                <div class="brand-logo-icon">📚</div>
+                <div class="brand-details">
+                    <h1>Book4u</h1>
+                    <p>Student Peer-to-Peer Book Exchange</p>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <div id="system-health-pill" class="health-pill" title="Servlet & MySQL Health Status">
+                    <span id="health-dot" class="health-dot dot-amber"></span>
+                    <span id="health-text">Checking System...</span>
+                </div>
+
+                <a href="explore.html" class="btn btn-outline btn-sm">Explore</a>
+                <a href="my-books.html" class="btn btn-outline btn-sm" style="font-weight: 700; color: var(--primary-color);">My Books</a>
+                <a href="add-book.html" class="btn btn-primary btn-sm">+ List a Book</a>
+
+                <a href="login.html" class="btn btn-outline btn-sm guest-auth-btn">Sign In</a>
+                <a href="register.html" class="btn btn-primary btn-sm guest-auth-btn">Register</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="catalog-container">
+
+            <!-- Banner Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="font-size: 1.8rem; color: var(--text-dark); font-weight: 800;">My Textbook Listings</h2>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">Manage the books you've offered to campus peers for exchange, giveaway, or lending.</p>
+                </div>
+                <a href="add-book.html" class="btn btn-primary">+ Add New Book</a>
+            </div>
+
+            <!-- Status Alert Banner -->
+            <div id="my-books-alert" class="alert" style="display: none;"></div>
+
+            <!-- Status Filter Tabs -->
+            <div class="filter-tabs-bar">
+                <button type="button" class="tab-btn active" data-status="ALL">All Listings</button>
+                <button type="button" class="tab-btn" data-status="AVAILABLE">Available</button>
+                <button type="button" class="tab-btn" data-status="RESERVED">Reserved</button>
+                <button type="button" class="tab-btn" data-status="ON_LOAN">On Loan</button>
+                <button type="button" class="tab-btn" data-status="UNAVAILABLE">Unavailable</button>
+            </div>
+
+            <!-- Dynamic My Books Grid -->
+            <div id="my-books-grid" class="book-grid">
+                <!-- Rendered dynamically by books.js -->
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div>
+                <p><strong>Student Peer-to-Peer Book Exchange System (Book4u)</strong></p>
+                <p style="font-size: 0.85rem; color: #64748b;">Phase 3: Book Management & Discovery</p>
+            </div>
+            <div class="footer-tech-stack">
+                <span class="tag">Java 21</span>
+                <span class="tag">Jakarta Servlet 6.0</span>
+                <span class="tag">JDBC</span>
+                <span class="tag">MySQL 8</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/books.js"></script>
+</body>
+</html>

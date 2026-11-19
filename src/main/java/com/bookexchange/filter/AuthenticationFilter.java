@@ -63,7 +63,7 @@ public class AuthenticationFilter implements Filter {
         }
 
         // 3. Whitelist public pages and endpoints
-        if (isPublicResource(path, req.getMethod())) {
+        if (isPublicResource(path, req.getMethod(), req)) {
             chain.doFilter(request, response);
             return;
         }
@@ -113,9 +113,10 @@ public class AuthenticationFilter implements Filter {
     /**
      * Determines if an endpoint or page is open to the public / unauthenticated users.
      */
-    private boolean isPublicResource(String path, String method) {
-        // Welcome and public catalog pages
+    private boolean isPublicResource(String path, String method, HttpServletRequest req) {
+        // Welcome and public exploration catalog pages
         if (path.equals("") || path.equals("/") || path.equals("/index.html") ||
+            path.equals("/explore.html") || path.equals("/book-details.html") ||
             path.equals("/login.html") || path.equals("/register.html")) {
             return true;
         }
@@ -133,12 +134,20 @@ public class AuthenticationFilter implements Filter {
             return true;
         }
 
-        // Public Book Catalog Browsing (GET is public, POST requires login)
+        // Public Book Catalog Browsing (GET is public, UNLESS requesting student's own ?myBooks=true)
         if (path.startsWith("/api/books") && "GET".equalsIgnoreCase(method)) {
+            if (req != null && "true".equalsIgnoreCase(req.getParameter("myBooks"))) {
+                return false; // My Books requires authentication!
+            }
             return true;
         }
 
         return false;
+    }
+
+    // Overload for tests without full HttpServletRequest
+    public boolean isPublicResource(String path, String method) {
+        return isPublicResource(path, method, null);
     }
 
     @Override

@@ -119,7 +119,7 @@ function renderBookCards(books) {
             <p class="book-desc">${escapeHtml(book.description || 'No description provided.')}</p>
             <div class="book-footer">
                 <span class="owner-info">Owner: <strong>${escapeHtml(book.ownerName || 'Campus Student')}</strong></span>
-                <button class="btn btn-outline btn-sm" onclick="handleRequest(${book.id}, '${book.sharingMode}')">Request</button>
+                <a href="book-details.html?id=${book.id}" class="btn btn-outline btn-sm">Details</a>
             </div>
         `;
         grid.appendChild(card);

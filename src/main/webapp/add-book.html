@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List a Textbook — Book4u</title>
+    <meta name="description" content="Share an academic textbook with fellow students for swap, giveaway, or lending.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand-link">
+                <div class="brand-logo-icon">📚</div>
+                <div class="brand-details">
+                    <h1>Book4u</h1>
+                    <p>Student Peer-to-Peer Book Exchange</p>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <div id="system-health-pill" class="health-pill" title="Servlet & MySQL Health Status">
+                    <span id="health-dot" class="health-dot dot-amber"></span>
+                    <span id="health-text">Checking System...</span>
+                </div>
+
+                <a href="explore.html" class="btn btn-outline btn-sm">Explore</a>
+                <a href="my-books.html" class="btn btn-outline btn-sm">My Books</a>
+                <a href="login.html" class="btn btn-outline btn-sm guest-auth-btn">Sign In</a>
+                <a href="register.html" class="btn btn-primary btn-sm guest-auth-btn">Register</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="auth-wrapper" style="max-width: 680px;">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <span class="auth-icon">📖</span>
+                    <h2>List an Academic Textbook</h2>
+                    <p>Make your completed coursework books available to university peers</p>
+                </div>
+
+                <!-- Alert Message Box -->
+                <div id="add-book-alert" class="alert" style="display: none;"></div>
+
+                <form id="add-book-form" novalidate>
+                    <!-- Book Title & Author -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="book-title">Textbook Title *</label>
+                            <input type="text" id="book-title" class="form-control" placeholder="e.g. Operating System Concepts" required autofocus>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="book-author">Author(s) *</label>
+                            <input type="text" id="book-author" class="form-control" placeholder="e.g. Silberschatz, Galvin, Gagne" required>
+                        </div>
+                    </div>
+
+                    <!-- Subject & Course Code -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="book-subject">Academic Subject Area *</label>
+                            <select id="book-subject" class="form-control" required>
+                                <option value="" disabled selected>Select Subject</option>
+                                <option value="Java">Java & Object-Oriented</option>
+                                <option value="DBMS">Database Management (DBMS)</option>
+                                <option value="DSA">Data Structures & Algorithms</option>
+                                <option value="Networks">Computer Networks</option>
+                                <option value="Operating Systems">Operating Systems</option>
+                                <option value="Mathematics">Mathematics & Discrete Math</option>
+                                <option value="Electronics">Electronics & Circuits</option>
+                                <option value="Machine Learning">Machine Learning & AI</option>
+                                <option value="Mechanical">Mechanical Engineering</option>
+                                <option value="Civil">Civil Engineering</option>
+                                <option value="Other">Other Academic Subject</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="book-course">Course Code (Optional)</label>
+                            <input type="text" id="book-course" class="form-control" placeholder="e.g. CS302, EC401">
+                        </div>
+                    </div>
+
+                    <!-- ISBN & Edition -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="book-isbn">ISBN (10 or 13 digits)</label>
+                            <input type="text" id="book-isbn" class="form-control" placeholder="e.g. 9780134685991">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="book-edition">Edition</label>
+                            <input type="text" id="book-edition" class="form-control" placeholder="e.g. 10th Edition, 2024">
+                        </div>
+                    </div>
+
+                    <!-- Condition & Sharing Mode -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="book-condition">Physical Condition *</label>
+                            <select id="book-condition" class="form-control" required>
+                                <option value="LIKE_NEW">Like New (Unmarked, crisp pages)</option>
+                                <option value="GOOD" selected>Good (Minor pencil marks or highlighted)</option>
+                                <option value="FAIR">Fair (Visible wear, all pages intact)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="book-mode">Sharing Mode *</label>
+                            <select id="book-mode" class="form-control" required>
+                                <option value="SWAP" selected>SWAP (Exchange for another book)</option>
+                                <option value="GIVEAWAY">GIVEAWAY (Free gift to junior/peer)</option>
+                                <option value="LENDING">LENDING (Temporary exam/semester loan)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Conditional Lending Duration -->
+                    <div id="lending-duration-wrapper" class="form-group" style="display: none;">
+                        <label for="book-lending-days">Maximum Loan Duration (Days) *</label>
+                        <input type="number" id="book-lending-days" class="form-control" min="1" max="180" placeholder="e.g. 30 (Max 180 days)">
+                        <div class="form-hint">Agreed period before the borrowing student must return the book</div>
+                    </div>
+
+                    <!-- Swap Preferences -->
+                    <div class="form-group">
+                        <label for="book-swap">Swap Preferences (If swapping)</label>
+                        <input type="text" id="book-swap" class="form-control" placeholder="e.g. Looking for Computer Networks or Compiler Design">
+                    </div>
+
+                    <!-- Optional Cover Image URL -->
+                    <div class="form-group">
+                        <label for="book-image">Cover Image URL (Optional)</label>
+                        <input type="url" id="book-image" class="form-control" placeholder="https://example.com/cover.jpg">
+                        <div class="form-hint">Paste a link to a book cover photo or textbook preview image</div>
+                    </div>
+
+                    <!-- Description & Notes -->
+                    <div class="form-group">
+                        <label for="book-desc">Description & Syllabus Notes</label>
+                        <textarea id="book-desc" class="form-control" rows="3" placeholder="Highlight chapters included, semester notes, pencil annotations, or library binding..."></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                        <a href="my-books.html" class="btn btn-outline">Cancel</a>
+                        <button type="submit" id="btn-submit-book" class="btn btn-primary" style="padding: 0.75rem 2rem;">
+                            Publish Book Listing
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div>
+                <p><strong>Student Peer-to-Peer Book Exchange System (Book4u)</strong></p>
+                <p style="font-size: 0.85rem; color: #64748b;">Phase 3: Book Management & Discovery</p>
+            </div>
+            <div class="footer-tech-stack">
+                <span class="tag">Java 21</span>
+                <span class="tag">Jakarta Servlet 6.0</span>
+                <span class="tag">JDBC</span>
+                <span class="tag">MySQL 8</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/books.js"></script>
+</body>
+</html>

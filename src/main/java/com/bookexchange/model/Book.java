@@ -7,11 +7,17 @@ import java.sql.Timestamp;
  * ============================================================================
  * Book Model (Java Bean / POJO)
  * ============================================================================
- * Represents an academic book listed for peer-to-peer sharing.
+ * Represents an academic textbook listed for peer-to-peer sharing.
  * Supported sharing modes:
  * - SWAP: Direct book-for-book trade
  * - GIVEAWAY: Altruistic free gift
  * - LENDING: Time-bound temporary loan
+ *
+ * Availability Statuses:
+ * - AVAILABLE: Open for peer exchange requests
+ * - RESERVED: Active exchange agreed, handover pending
+ * - ON_LOAN: Currently borrowed under a lending agreement
+ * - UNAVAILABLE: Archived or temporarily taken down by the owner
  * ============================================================================
  */
 public class Book implements Serializable {
@@ -19,20 +25,24 @@ public class Book implements Serializable {
 
     private Long id;
     private Long ownerId;
-    private String ownerName; // Joined from students table for UI convenience
+    private String ownerName;       // Joined from students table
+    private String ownerDepartment; // Joined from students table for detailed view
+    private String ownerCampus;     // Joined from students table
     private String title;
     private String author;
     private String isbn;
     private String edition;
     private String courseCode;
     private String subject;
-    private String conditionGrade; // NEW, LIKE_NEW, GOOD, FAIR
-    private String sharingMode;    // SWAP, GIVEAWAY, LENDING
-    private String status;         // AVAILABLE, RESERVED, ON_LOAN, UNAVAILABLE
+    private String conditionGrade;  // LIKE_NEW, GOOD, FAIR
+    private String sharingMode;     // SWAP, GIVEAWAY, LENDING
+    private String status;          // AVAILABLE, RESERVED, ON_LOAN, UNAVAILABLE
     private String description;
+    private String imageUrl;        // Optional textbook cover image URL
     private Integer lendingMaxDurationDays;
     private String swapPreferences;
     private Timestamp createdAt;
+    private Timestamp updatedAt;
 
     public Book() {
     }
@@ -78,6 +88,22 @@ public class Book implements Serializable {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getOwnerDepartment() {
+        return ownerDepartment;
+    }
+
+    public void setOwnerDepartment(String ownerDepartment) {
+        this.ownerDepartment = ownerDepartment;
+    }
+
+    public String getOwnerCampus() {
+        return ownerCampus;
+    }
+
+    public void setOwnerCampus(String ownerCampus) {
+        this.ownerCampus = ownerCampus;
     }
 
     public String getTitle() {
@@ -160,6 +186,14 @@ public class Book implements Serializable {
         this.description = description;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public Integer getLendingMaxDurationDays() {
         return lendingMaxDurationDays;
     }
@@ -182,6 +216,14 @@ public class Book implements Serializable {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     @Override

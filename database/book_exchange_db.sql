@@ -57,6 +57,7 @@ CREATE TABLE books (
     sharing_mode ENUM('SWAP', 'GIVEAWAY', 'LENDING') NOT NULL COMMENT 'Supported sharing mechanism',
     status ENUM('AVAILABLE', 'RESERVED', 'ON_LOAN', 'UNAVAILABLE') NOT NULL DEFAULT 'AVAILABLE' COMMENT 'Availability status',
     description TEXT NULL COMMENT 'Annotations, highlighted chapters, and condition notes',
+    image_url VARCHAR(512) NULL COMMENT 'Optional cover image or photo URL',
     lending_max_duration_days INT UNSIGNED NULL COMMENT 'Maximum allowed loan days (if mode is LENDING)',
     swap_preferences TEXT NULL COMMENT 'Books or topics the student desires in return (if mode is SWAP)',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
