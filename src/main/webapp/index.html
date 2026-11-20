@@ -3,84 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book4u — Premium Student Bookstore & Campus Exchange</title>
-    <meta name="description" content="Discover, buy, swap, borrow and gift books. Inspired by Crossword.in with student peer-to-peer textbook exchange.">
+    <title>Book4u — Campus Peer-to-Peer Book Exchange</title>
+    <meta name="description" content="Your Books. Your Campus. Your Community. Connect with university students to swap, giveaway, or borrow academic textbooks.">
     
-    <!-- Google Fonts: Playfair Display (Editorial) & Plus Jakarta Sans / Inter (Modern UI) -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Design System Stylesheet with Cache-Busting -->
-    <link rel="stylesheet" href="css/style.css?v=3.0">
-
-    <!-- Critical CSS Baseline (Failsafe against stale browser cache) -->
+    <!-- Critical Inlined CSS Baseline -->
     <style>
-        :root { --cw-yellow: #FED600; --cw-dark: #111827; }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; background: #FAF9F6; color: #1F2937; line-height: 1.6; }
-        img { max-width: 100%; height: auto; display: block; }
-        a { text-decoration: none; color: inherit; }
-        ul { list-style: none; margin: 0; padding: 0; }
-        .announcement-bar { background: #0E2922; color: #FFF; font-size: 0.8rem; padding: 0.45rem 1rem; text-align: center; }
-        header.cw-header { background: #FED600; color: #111827; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-        .cw-header-container { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 0.75rem 1.5rem; max-width: 1320px; margin: 0 auto; }
-        .cw-logo { display: flex; align-items: center; gap: 0.75rem; color: #111827; }
-        .cw-logo-icon { width: 40px; height: 40px; background: #111827; color: #FED600; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 800; font-size: 1.4rem; }
-        .cw-logo-title { font-size: 1.4rem; font-weight: 800; }
-        .cw-search-wrapper { flex: 1; max-width: 520px; }
-        .cw-search-form { display: flex; width: 100%; }
-        .cw-search-input { width: 100%; height: 44px; padding: 0 3rem 0 1.25rem; border-radius: 9999px; border: 1px solid rgba(0,0,0,0.12); background: #FFF; outline: none; }
-        .cw-header-actions { display: flex; align-items: center; gap: 0.85rem; }
-        .cw-nav-bar { background: #FFF; border-bottom: 1px solid #E5E7EB; }
-        .cw-nav-container { display: flex; padding: 0.5rem 1.5rem; max-width: 1320px; margin: 0 auto; overflow-x: auto; }
-        .cw-nav-list { display: flex; flex-direction: row; gap: 1.5rem; list-style: none; white-space: nowrap; }
-        .cw-dropdown-menu { display: none; }
-        .cw-product-row { display: flex; gap: 1.5rem; overflow-x: auto; }
-        .book-card-cw { background: #FFF; border: 1px solid #E5E7EB; border-radius: 12px; padding: 1rem; min-width: 230px; display: flex; flex-direction: column; }
-        .cw-card-image-wrap { width: 100%; aspect-ratio: 2/2.7; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        .cw-card-img { max-height: 100%; object-fit: contain; }
-        .cw-add-bag-btn { background: #FED600 !important; color: #111827 !important; border: none; border-radius: 8px; padding: 0.7rem 1rem; font-weight: 700; cursor: pointer; width: 100%; margin-top: auto; }
+        :root {
+            --color-navy: #0F172A;
+            --color-blue: #2563EB;
+            --color-bg-page: #F8FAFC;
+        }
+        body { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--color-bg-page); color: #1E293B; }
+        header.b4u-header { background: #FFFFFF; border-bottom: 1px solid #E2E8F0; }
+        .b4u-header-container { max-width: 1240px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.5rem; gap: 1rem; }
+        .b4u-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+        .b4u-logo-icon { width: 44px; height: 44px; background: #0F172A; color: #FFF; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 800; font-size: 1.5rem; }
+        .b4u-logo-title { font-size: 1.45rem; font-weight: 800; color: #0F172A; }
     </style>
+
+    <!-- Design System Stylesheet -->
+    <link rel="stylesheet" href="css/style.css?v=3.0">
 </head>
 <body>
 
-    <!-- 1. Top Announcement Bar -->
+    <!-- Top Announcement Bar -->
     <div class="announcement-bar">
         <div class="announcement-content">
-            <span class="announcement-pill">CAMPUS SPECIAL</span>
-            <span>✨ <strong>Welcome to Book4u:</strong> Peer-to-Peer University Textbook Exchange • Free Sharing for Students • Zero Platform Commission!</span>
-            <a href="explore.html" class="announcement-link">Explore Catalog &rarr;</a>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="announcement-pill">CAMPUS EXCHANGE</span>
+                <span>🎓 <strong>Your Books. Your Campus. Your Community.</strong> 100% Free Peer-to-Peer Academic Sharing.</span>
+            </div>
+            <div class="health-status-badge" id="system-health-pill">
+                <span class="health-dot dot-green" id="health-dot"></span>
+                <span id="health-text">Checking System Status...</span>
+            </div>
         </div>
     </div>
 
-    <!-- 2. Signature Crossword Yellow Header -->
-    <header class="cw-header">
-        <div class="cw-header-container">
+    <!-- Main Navigation Header -->
+    <header class="b4u-header">
+        <div class="b4u-header-container">
             <!-- Brand Logo -->
-            <a href="index.html" class="cw-logo">
-                <div class="cw-logo-icon">
-                    <span>B</span>
-                </div>
-                <div class="cw-logo-text">
-                    <span class="cw-logo-title">BOOK4U</span>
-                    <span class="cw-logo-sub">STUDENT BOOKSTORE</span>
+            <a href="index.html" class="b4u-logo">
+                <div class="b4u-logo-icon">B</div>
+                <div class="b4u-logo-text">
+                    <span class="b4u-logo-title">Book4u</span>
+                    <span class="b4u-logo-tagline">Campus Book Exchange</span>
                 </div>
             </a>
 
-            <!-- Prominent Search Bar (Inspired by Crossword.in) -->
-            <div class="cw-search-wrapper">
-                <form action="explore.html" method="GET" class="cw-search-form" id="global-search-form">
+            <!-- Search Bar -->
+            <div class="b4u-search-wrapper">
+                <form action="explore.html" method="GET" class="b4u-search-form">
                     <input 
                         type="text" 
                         name="query" 
-                        class="cw-search-input" 
-                        placeholder="Search by Title, Author, ISBN, Subject or Course..."
-                        aria-label="Search bookstore"
-                        autocomplete="off"
+                        class="b4u-search-input" 
+                        placeholder="Search textbooks, courses, authors, ISBN..."
+                        aria-label="Search campus catalog"
                     >
-                    <button type="submit" class="cw-search-btn" aria-label="Submit search">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <button type="submit" class="b4u-search-btn" aria-label="Submit search">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
@@ -88,870 +76,305 @@
                 </form>
             </div>
 
-            <!-- Action Controls (Health status, Wishlist, Bag, Auth, List Book) -->
-            <div class="cw-header-actions nav-actions">
-                <!-- Live System Diagnostic Pill -->
-                <div id="system-health-pill" class="health-pill" title="Tomcat Container & MySQL Connectivity">
-                    <span id="health-dot" class="health-dot dot-amber"></span>
-                    <span id="health-text">DB Check...</span>
-                </div>
-
-                <!-- Wishlist Icon with Dynamic Badge -->
-                <a href="wishlist.html" class="cw-action-item" title="My Wishlist">
-                    <div class="cw-icon-badge-wrap">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                        </svg>
-                        <span class="cw-badge wishlist-count-badge" style="display: none;">0</span>
-                    </div>
-                    <span class="cw-action-label">Wishlist</span>
+            <!-- Header Actions -->
+            <div class="b4u-header-actions nav-actions">
+                <a href="wishlist.html" class="b4u-action-btn" title="Saved Books">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span class="b4u-action-label">Saved</span>
+                    <span class="b4u-badge saved-count-badge" style="display: none;">0</span>
                 </a>
 
-                <!-- Shopping Bag Icon with Dynamic Badge -->
-                <a href="cart.html" class="cw-action-item" title="My Shopping Bag">
-                    <div class="cw-icon-badge-wrap">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <path d="M16 10a4 4 0 0 1-8 0"></path>
-                        </svg>
-                        <span class="cw-badge cart-count-badge" style="display: none;">0</span>
-                    </div>
-                    <span class="cw-action-label">Bag</span>
-                </a>
+                <a href="login.html" class="btn btn-outline guest-auth-btn">Sign In</a>
+                <a href="register.html" class="btn btn-primary guest-auth-btn">Register</a>
 
-                <!-- Guest Sign In / Register (Replaced dynamically by auth.js) -->
-                <a href="login.html" class="cw-btn cw-btn-outline guest-auth-btn">Sign In</a>
-                <a href="register.html" class="cw-btn cw-btn-dark guest-auth-btn">Register</a>
-
-                <!-- List a Book Primary Action -->
-                <button id="btn-open-list-modal" class="cw-btn cw-btn-primary" type="button">
-                    <span>+ List Book</span>
-                </button>
+                <a href="add-book.html" class="btn btn-navy">+ List a Book</a>
             </div>
         </div>
 
-        <!-- 3. Category Navigation Bar (Sub-header) -->
-        <nav class="cw-nav-bar">
-            <div class="cw-nav-container">
-                <ul class="cw-nav-list">
-                    <li class="cw-nav-item has-dropdown">
-                        <a href="explore.html" class="cw-nav-link active">All Books <span class="caret">▾</span></a>
-                        <div class="cw-dropdown-menu">
-                            <div class="cw-dropdown-grid">
-                                <div>
-                                    <div class="cw-dropdown-heading">By Sharing Mode</div>
-                                    <a href="explore.html?mode=SWAP" class="cw-dropdown-item">🔄 Student Book Swap</a>
-                                    <a href="explore.html?mode=GIVEAWAY" class="cw-dropdown-item">🎁 Free Book Giveaway</a>
-                                    <a href="explore.html?mode=LENDING" class="cw-dropdown-item">⏱️ Semester Lending</a>
-                                </div>
-                                <div>
-                                    <div class="cw-dropdown-heading">Curated Lists</div>
-                                    <a href="#bestsellers" class="cw-dropdown-item">🔥 Crossword Bestsellers</a>
-                                    <a href="#new-arrivals" class="cw-dropdown-item">✨ New Arrivals</a>
-                                    <a href="#manga-section" class="cw-dropdown-item">⚔️ Manga & Light Novels</a>
-                                    <a href="#campus-textbooks" class="cw-dropdown-item">🎓 University Textbooks</a>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="cw-nav-item"><a href="explore.html?subject=Fiction" class="cw-nav-link">Fiction</a></li>
-                    <li class="cw-nav-item"><a href="explore.html?subject=Non-Fiction" class="cw-nav-link">Non-Fiction</a></li>
-                    <li class="cw-nav-item"><a href="explore.html?subject=Comics" class="cw-nav-link">Comics & Manga</a></li>
-                    <li class="cw-nav-item"><a href="explore.html?subject=Academic" class="cw-nav-link">Academic Textbooks</a></li>
-                    <li class="cw-nav-item"><a href="#bestsellers" class="cw-nav-link">Bestsellers</a></li>
-                    <li class="cw-nav-item"><a href="#new-arrivals" class="cw-nav-link">New Arrivals</a></li>
-                    <li class="cw-nav-item"><a href="my-books.html" class="cw-nav-link">My Listings</a></li>
+        <!-- Navigation Bar -->
+        <nav class="b4u-nav-bar">
+            <div class="b4u-nav-container">
+                <ul class="b4u-nav-list">
+                    <li class="b4u-nav-item"><a href="index.html" class="b4u-nav-link active">Home</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html" class="b4u-nav-link">Explore Books</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html?mode=SWAP" class="b4u-nav-link">Swap</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html?mode=GIVEAWAY" class="b4u-nav-link">Giveaways</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html?mode=LENDING" class="b4u-nav-link">Lending</a></li>
+                    <li class="b4u-nav-item"><a href="my-books.html" class="b4u-nav-link">My Listings</a></li>
+                    <li class="b4u-nav-item"><a href="profile.html#requests" class="b4u-nav-link">My Requests</a></li>
+                    <li class="b4u-nav-item"><a href="profile.html" class="b4u-nav-link">Profile</a></li>
                 </ul>
             </div>
         </nav>
     </header>
 
-    <!-- Main Content Stream -->
+    <!-- Main Content -->
     <main class="main-content">
 
-        <!-- 4. Hero Carousel / Promotional Slider (Editorial Bookstore Style) -->
-        <section class="cw-hero-slider" id="hero-slider">
-            <div class="cw-slider-track" id="slider-track">
-                <!-- Slide 1: Harry Potter Special Feature -->
-                <div class="cw-slide active" style="background: linear-gradient(135deg, #0e1e38 0%, #173259 50%, #204172 100%);">
-                    <div class="cw-slide-container">
-                        <div class="cw-slide-copy">
-                            <span class="cw-slide-badge">FEATURED BESTSELLER</span>
-                            <h1 class="cw-slide-title">Harry Potter & The Philosopher's Stone</h1>
-                            <p class="cw-slide-author">By J.K. Rowling • Bloomsbury Publishing</p>
-                            <p class="cw-slide-desc">Step into the magical world of Hogwarts. Available now for university reading circles, student book swap, and immediate campus purchase.</p>
-                            <div class="cw-slide-pricing">
-                                <span class="cw-slide-mrp">MRP: ₹ 599</span>
-                                <span class="cw-slide-price">₹ 450</span>
-                                <span class="cw-slide-discount">₹ 149 Off</span>
-                            </div>
-                            <div class="cw-slide-ctas">
-                                <a href="book-details.html?demo=harry-potter" class="cw-btn cw-btn-primary cw-btn-lg">View Book Details ↗</a>
-                                <button type="button" class="cw-btn cw-btn-outline-light cw-btn-lg" onclick="Store.addToCart({id: 'demo-hp1', title: 'Harry Potter And The Philosopher\'s Stone', author: 'J.K. Rowling', price: 450, mrp: 599, discount: '₹ 149 Off', image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=400&q=80'})">Add to Bag 🛍️</button>
-                            </div>
-                        </div>
-                        <div class="cw-slide-media">
-                            <div class="cw-book-glow-wrap">
-                                <img src="https://upload.wikimedia.org/wikipedia/en/6/6b/Harry_Potter_and_the_Philosopher%27s_Stone_Book_Cover.jpg" alt="Harry Potter and the Philosopher's Stone" class="cw-hero-book-cover">
-                            </div>
-                        </div>
+        <!-- A. HERO SECTION -->
+        <section class="b4u-hero">
+            <div class="b4u-container">
+                <div class="b4u-hero-content">
+                    <div class="b4u-hero-tag">
+                        <span>🏛️</span> University Student Peer-to-Peer Network
                     </div>
-                </div>
-
-                <!-- Slide 2: Discover Your Next Favourite Book -->
-                <div class="cw-slide" style="background: linear-gradient(135deg, #4A121A 0%, #721B27 60%, #8B1E2D 100%);">
-                    <div class="cw-slide-container">
-                        <div class="cw-slide-copy">
-                            <span class="cw-slide-badge">EDITORIAL CURATION</span>
-                            <h1 class="cw-slide-title">Discover Your Next Favourite Book</h1>
-                            <p class="cw-slide-author">Crossword Selection • Handpicked for Curious Minds</p>
-                            <p class="cw-slide-desc">From page-turning psychological thrillers by Freida McFadden to timeless memoirs, explore our bestselling collection at genuine student-friendly rates.</p>
-                            <div class="cw-slide-pricing">
-                                <span class="cw-slide-price">Up to 40% Off</span>
-                                <span class="cw-slide-discount">Zero Campus Shipping</span>
-                            </div>
-                            <div class="cw-slide-ctas">
-                                <a href="#bestsellers" class="cw-btn cw-btn-primary cw-btn-lg">Browse Bestsellers 📚</a>
-                                <a href="explore.html" class="cw-btn cw-btn-outline-light cw-btn-lg">Explore Full Catalog</a>
-                            </div>
-                        </div>
-                        <div class="cw-slide-media">
-                            <div class="cw-book-glow-wrap">
-                                <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=600&q=80" alt="Bookstack Curation" class="cw-hero-book-cover">
-                            </div>
-                        </div>
+                    <h1 class="b4u-hero-title">
+                        Pass Books Forward.<br>Keep Knowledge Moving.
+                    </h1>
+                    <p class="b4u-hero-desc">
+                        Discover academic textbooks shared by students across your university. Swap a book, get one for free, or borrow it for your semester.
+                    </p>
+                    <div class="b4u-hero-ctas">
+                        <a href="explore.html" class="btn btn-primary btn-lg">
+                            Explore Books &rarr;
+                        </a>
+                        <a href="add-book.html" class="btn btn-outline btn-lg">
+                            + List Your Book
+                        </a>
                     </div>
-                </div>
-
-                <!-- Slide 3: Peer-to-Peer Academic Exchange -->
-                <div class="cw-slide" style="background: linear-gradient(135deg, #132A13 0%, #1F421F 60%, #2D5A27 100%);">
-                    <div class="cw-slide-container">
-                        <div class="cw-slide-copy">
-                            <span class="cw-slide-badge">UNIVERSITY PEER NETWORK</span>
-                            <h1 class="cw-slide-title">Academic Book Sharing for Students</h1>
-                            <p class="cw-slide-author">Swap • Giveaway • Lending • 100% Free</p>
-                            <p class="cw-slide-desc">Exchange textbooks you have finished with juniors or peers needing them for this semester. Zero commercial middlemen — verified students on campus.</p>
-                            <div class="cw-slide-pricing">
-                                <span class="cw-slide-price">Free Student Exchange</span>
-                                <span class="cw-slide-discount">100% Free</span>
-                            </div>
-                            <div class="cw-slide-ctas">
-                                <button type="button" class="cw-btn cw-btn-primary cw-btn-lg" onclick="document.getElementById('btn-open-list-modal').click()">+ List Your Book</button>
-                                <a href="#campus-textbooks" class="cw-btn cw-btn-outline-light cw-btn-lg">View Campus Listings</a>
-                            </div>
-                        </div>
-                        <div class="cw-slide-media">
-                            <div class="cw-book-glow-wrap">
-                                <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=600&q=80" alt="Academic Textbooks" class="cw-hero-book-cover">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slider Controls -->
-            <button class="cw-slider-arrow cw-slider-prev" id="slider-prev" aria-label="Previous Slide">&#10094;</button>
-            <button class="cw-slider-arrow cw-slider-next" id="slider-next" aria-label="Next Slide">&#10095;</button>
-
-            <!-- Dots Indicator -->
-            <div class="cw-slider-dots" id="slider-dots">
-                <button class="cw-dot active" data-index="0" aria-label="Slide 1"></button>
-                <button class="cw-dot" data-index="1" aria-label="Slide 2"></button>
-                <button class="cw-dot" data-index="2" aria-label="Slide 3"></button>
-            </div>
-        </section>
-
-        <!-- 5. Peer Sharing Modes Cards -->
-        <section class="cw-section cw-modes-section">
-            <div class="cw-container">
-                <div class="cw-section-header text-center">
-                    <span class="cw-section-kicker">COMMUNITY EXCHANGE PLATFORM</span>
-                    <h2 class="cw-section-title">Three Ways to Share Books on Campus</h2>
-                    <p class="cw-section-subtitle">Zero cost, zero commercial sales — strictly student-to-student collaboration.</p>
-                </div>
-
-                <div class="cw-modes-grid">
-                    <!-- SWAP -->
-                    <div class="cw-mode-card">
-                        <div class="cw-mode-badge badge-swap">SWAP</div>
-                        <div class="cw-mode-icon">🔄</div>
-                        <h3 class="cw-mode-title">Direct Textbook Exchange</h3>
-                        <p class="cw-mode-text">Trade a textbook from a completed semester directly for one required for your current coursework.</p>
-                        <div class="cw-mode-footer">
-                            <span class="cw-mode-cost">Cost: <strong>$0 / Free Trade</strong></span>
-                            <a href="explore.html?mode=SWAP" class="cw-mode-link">Find Swaps &rarr;</a>
-                        </div>
-                    </div>
-
-                    <!-- GIVEAWAY -->
-                    <div class="cw-mode-card">
-                        <div class="cw-mode-badge badge-giveaway">GIVEAWAY</div>
-                        <div class="cw-mode-icon">🎁</div>
-                        <h3 class="cw-mode-title">Altruistic Gifting</h3>
-                        <p class="cw-mode-text">Graduating seniors and alumni pass down reference manuals and notes to juniors with zero return obligation.</p>
-                        <div class="cw-mode-footer">
-                            <span class="cw-mode-cost">Cost: <strong>$0 / Free Gift</strong></span>
-                            <a href="explore.html?mode=GIVEAWAY" class="cw-mode-link">Claim Books &rarr;</a>
-                        </div>
-                    </div>
-
-                    <!-- LENDING -->
-                    <div class="cw-mode-card">
-                        <div class="cw-mode-badge badge-lending">LENDING</div>
-                        <div class="cw-mode-icon">⏱️</div>
-                        <h3 class="cw-mode-title">Time-Bound Semester Loan</h3>
-                        <p class="cw-mode-text">Temporarily lend rare reference texts or exam guides with an agreed return date and condition assurance.</p>
-                        <div class="cw-mode-footer">
-                            <span class="cw-mode-cost">Cost: <strong>$0 / Borrow & Return</strong></span>
-                            <a href="explore.html?mode=LENDING" class="cw-mode-link">Borrow Books &rarr;</a>
-                        </div>
+                    <div class="b4u-hero-trust">
+                        <span>🎓 Verified Students</span>
+                        <span>🤝 100% Peer-to-Peer</span>
+                        <span>⚡ Zero Platform Fees</span>
+                        <span>📍 Campus Handover</span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 6. Shop by Category Visual Tiles -->
-        <section class="cw-section cw-categories-section">
-            <div class="cw-container">
-                <div class="cw-section-header">
+        <!-- B. THREE SHARING MODES SECTION -->
+        <section class="b4u-section">
+            <div class="b4u-container">
+                <div class="b4u-section-header">
                     <div>
-                        <span class="cw-section-kicker">EXPLORE GENRES</span>
-                        <h2 class="cw-section-title">Shop by Category</h2>
+                        <h2 class="b4u-section-title">Three Ways to Share on Campus</h2>
+                        <p class="b4u-section-subtitle">Choose the exchange mode that fits your academic semester.</p>
                     </div>
-                    <a href="explore.html" class="cw-view-all-link">Browse All &rarr;</a>
+                    <a href="explore.html" class="mode-card-link" style="color: var(--color-blue);">
+                        View Full Catalog &rarr;
+                    </a>
                 </div>
 
-                <div class="cw-category-tiles-grid">
-                    <a href="explore.html?subject=Fiction" class="cw-category-tile">
-                        <div class="cw-tile-icon">📖</div>
-                        <h4 class="cw-tile-name">Fiction</h4>
-                        <span class="cw-tile-count">120+ Titles</span>
-                    </a>
-                    <a href="explore.html?subject=Non-Fiction" class="cw-category-tile">
-                        <div class="cw-tile-icon">💡</div>
-                        <h4 class="cw-tile-name">Non-Fiction</h4>
-                        <span class="cw-tile-count">85+ Titles</span>
-                    </a>
-                    <a href="explore.html?subject=Comics" class="cw-category-tile">
-                        <div class="cw-tile-icon">⚡</div>
-                        <h4 class="cw-tile-name">Comics & Manga</h4>
-                        <span class="cw-tile-count">150+ Volumes</span>
-                    </a>
-                    <a href="explore.html?subject=Java" class="cw-category-tile">
-                        <div class="cw-tile-icon">💻</div>
-                        <h4 class="cw-tile-name">Computer Science</h4>
-                        <span class="cw-tile-count">94+ Textbooks</span>
-                    </a>
-                    <a href="explore.html?subject=DSA" class="cw-category-tile">
-                        <div class="cw-tile-icon">⚙️</div>
-                        <h4 class="cw-tile-name">Engineering & Math</h4>
-                        <span class="cw-tile-count">78+ Books</span>
-                    </a>
-                    <a href="explore.html?subject=DBMS" class="cw-category-tile">
-                        <div class="cw-tile-icon">📊</div>
-                        <h4 class="cw-tile-name">Business & Finance</h4>
-                        <span class="cw-tile-count">62+ Books</span>
-                    </a>
-                    <a href="explore.html?subject=Networks" class="cw-category-tile">
-                        <div class="cw-tile-icon">🔬</div>
-                        <h4 class="cw-tile-name">Science & Tech</h4>
-                        <span class="cw-tile-count">53+ Books</span>
-                    </a>
-                    <a href="explore.html?subject=Other" class="cw-category-tile">
-                        <div class="cw-tile-icon">🌱</div>
-                        <h4 class="cw-tile-name">Self-Help & Mindset</h4>
-                        <span class="cw-tile-count">45+ Books</span>
-                    </a>
+                <div class="b4u-modes-grid">
+                    <!-- SWAP Card -->
+                    <div class="b4u-mode-card card-swap">
+                        <div class="mode-card-icon">🔄</div>
+                        <h3 class="mode-card-title">SWAP</h3>
+                        <p class="mode-card-desc">
+                            Exchange your unused textbook for a book you need. Trade course materials directly with peers taking related subjects.
+                        </p>
+                        <a href="explore.html?mode=SWAP" class="mode-card-link" style="color: var(--color-blue);">
+                            Explore Book Swaps &rarr;
+                        </a>
+                    </div>
+
+                    <!-- GIVEAWAY Card -->
+                    <div class="b4u-mode-card card-giveaway">
+                        <div class="mode-card-icon">🎁</div>
+                        <h3 class="mode-card-title">GIVEAWAY</h3>
+                        <p class="mode-card-desc">
+                            Give your old books to another student for free. Pass finished course guides forward to juniors starting their journey.
+                        </p>
+                        <a href="explore.html?mode=GIVEAWAY" class="mode-card-link" style="color: var(--color-teal);">
+                            Explore Free Books &rarr;
+                        </a>
+                    </div>
+
+                    <!-- LENDING Card -->
+                    <div class="b4u-mode-card card-lending">
+                        <div class="mode-card-icon">⏱️</div>
+                        <h3 class="mode-card-title">LENDING</h3>
+                        <p class="mode-card-desc">
+                            Lend your books temporarily and get them back after the agreed period. Perfect for exam revisions or semester project references.
+                        </p>
+                        <a href="explore.html?mode=LENDING" class="mode-card-link" style="color: var(--color-warning);">
+                            Explore Book Loans &rarr;
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- 7. Best Sellers Horizontal Showcase (MATCHING SCREENSHOT 1 FROM USER) -->
-        <section class="cw-section cw-bestsellers-section" id="bestsellers">
-            <div class="cw-container">
-                <div class="cw-section-header">
+        <!-- C. RECENTLY LISTED BOOKS SECTION -->
+        <section class="b4u-section" style="background-color: #FFFFFF; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);">
+            <div class="b4u-container">
+                <div class="b4u-section-header">
                     <div>
-                        <h2 class="cw-section-title" style="font-size: 2.2rem; font-family: var(--font-sans); font-weight: 800; letter-spacing: -0.02em;">Best Sellers</h2>
-                        <p class="cw-section-subtitle" style="font-size: 1.05rem; color: #4B5563; margin-top: 4px;">Read What Millions Have Loved!</p>
+                        <h2 class="b4u-section-title">Recently Listed on Campus</h2>
+                        <p class="b4u-section-subtitle">Real academic textbooks posted by verified students across departments.</p>
                     </div>
-                    <div class="cw-header-nav-controls">
-                        <div class="cw-nav-arrow-group">
-                            <button class="cw-round-arrow" id="bestseller-prev" aria-label="Previous">&lsaquo;</button>
-                            <button class="cw-round-arrow" id="bestseller-next" aria-label="Next">&rsaquo;</button>
-                        </div>
-                        <a href="explore.html" class="cw-show-all-btn">Show All ↗</a>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <a href="explore.html" class="btn btn-outline btn-sm">
+                            View All Catalog
+                        </a>
+                        <a href="add-book.html" class="btn btn-primary btn-sm">
+                            + Share a Book
+                        </a>
                     </div>
                 </div>
 
-                <!-- Product Grid (Exact Match to Screenshot 1) -->
-                <div class="cw-product-row" id="bestseller-row">
-                    <!-- Card 1: Belonging: A Journey of Love -->
-                    <div class="book-card-cw">
-                        <div class="cw-card-image-wrap">
-                            <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80" alt="Belonging: A Journey of Love" class="cw-card-img" loading="lazy">
-                            <button class="cw-heart-btn" type="button" aria-label="Add to Wishlist" onclick="Store.toggleWishlist({id: 'bs-1', title: 'Belonging: A Journey of Love', author: 'Sonia Gandhi', price: 998, mrp: 1299, discount: '₹ 301 Off', image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80'})">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="cw-card-info">
-                            <h3 class="cw-card-title"><a href="book-details.html?demo=belonging">Belonging: A Journey of Love</a></h3>
-                            <p class="cw-card-author">Sonia Gandhi</p>
-                            <div class="cw-card-price-row">
-                                <span class="cw-mrp-strike">₹ 1,299</span>
-                                <span class="cw-deal-price">₹ 998</span>
-                                <span class="cw-discount-pill">₹ 301 Off</span>
-                            </div>
-                            <button class="cw-add-bag-btn" type="button" onclick="Store.addToCart({id: 'bs-1', title: 'Belonging: A Journey of Love', author: 'Sonia Gandhi', price: 998, mrp: 1299, discount: '₹ 301 Off', image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80'})">
-                                <span>🛍️</span> Add to Bag
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Card 2: Harry Potter And The Philosopher's Stone (Screenshot 1 & 2) -->
-                    <div class="book-card-cw">
-                        <div class="cw-card-image-wrap">
-                            <img src="https://upload.wikimedia.org/wikipedia/en/6/6b/Harry_Potter_and_the_Philosopher%27s_Stone_Book_Cover.jpg" alt="Harry Potter And The Philosopher's Stone" class="cw-card-img" loading="lazy">
-                            <button class="cw-heart-btn" type="button" aria-label="Add to Wishlist" onclick="Store.toggleWishlist({id: 'bs-2', title: 'Harry Potter And The Philosopher\'s Stone', author: 'J.K. Rowling', price: 450, mrp: 599, discount: '₹ 149 Off', image: 'https://upload.wikimedia.org/wikipedia/en/6/6b/Harry_Potter_and_the_Philosopher%27s_Stone_Book_Cover.jpg'})">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="cw-card-info">
-                            <h3 class="cw-card-title"><a href="book-details.html?demo=harry-potter">Harry Potter And The Philosopher's...</a></h3>
-                            <p class="cw-card-author">J.K. Rowling</p>
-                            <div class="cw-card-price-row">
-                                <span class="cw-mrp-strike">₹ 599</span>
-                                <span class="cw-deal-price">₹ 450</span>
-                                <span class="cw-discount-pill">₹ 149 Off</span>
-                            </div>
-                            <button class="cw-add-bag-btn" type="button" onclick="Store.addToCart({id: 'bs-2', title: 'Harry Potter And The Philosopher\'s Stone', author: 'J.K. Rowling', price: 450, mrp: 599, discount: '₹ 149 Off', image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=400&q=80'})">
-                                <span>🛍️</span> Add to Bag
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Card 3: Ward D by Freida McFadden -->
-                    <div class="book-card-cw">
-                        <div class="cw-card-image-wrap">
-                            <img src="https://images.unsplash.com/photo-1518373714866-3f1478910cc0?auto=format&fit=crop&w=400&q=80" alt="Ward D" class="cw-card-img" loading="lazy">
-                            <button class="cw-heart-btn" type="button" aria-label="Add to Wishlist" onclick="Store.toggleWishlist({id: 'bs-3', title: 'Ward D', author: 'Freida McFadden', price: 413, mrp: 550, discount: '₹ 137 Off', image: 'https://images.unsplash.com/photo-1518373714866-3f1478910cc0?auto=format&fit=crop&w=400&q=80'})">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="cw-card-info">
-                            <h3 class="cw-card-title"><a href="book-details.html?demo=ward-d">Ward D</a></h3>
-                            <p class="cw-card-author">Freida McFadden</p>
-                            <div class="cw-card-price-row">
-                                <span class="cw-mrp-strike">₹ 550</span>
-                                <span class="cw-deal-price">₹ 413</span>
-                                <span class="cw-discount-pill">₹ 137 Off</span>
-                            </div>
-                            <button class="cw-add-bag-btn" type="button" onclick="Store.addToCart({id: 'bs-3', title: 'Ward D', author: 'Freida McFadden', price: 413, mrp: 550, discount: '₹ 137 Off', image: 'https://images.unsplash.com/photo-1518373714866-3f1478910cc0?auto=format&fit=crop&w=400&q=80'})">
-                                <span>🛍️</span> Add to Bag
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Card 4: The Teacher by Freida McFadden -->
-                    <div class="book-card-cw">
-                        <div class="cw-card-image-wrap">
-                            <img src="https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=400&q=80" alt="The Teacher" class="cw-card-img" loading="lazy">
-                            <button class="cw-heart-btn" type="button" aria-label="Add to Wishlist" onclick="Store.toggleWishlist({id: 'bs-4', title: 'The Teacher', author: 'Freida McFadden', price: 413, mrp: 550, discount: '₹ 137 Off', image: 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=400&q=80'})">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="cw-card-info">
-                            <h3 class="cw-card-title"><a href="book-details.html?demo=the-teacher">The Teacher</a></h3>
-                            <p class="cw-card-author">Freida McFadden</p>
-                            <div class="cw-card-price-row">
-                                <span class="cw-mrp-strike">₹ 550</span>
-                                <span class="cw-deal-price">₹ 413</span>
-                                <span class="cw-discount-pill">₹ 137 Off</span>
-                            </div>
-                            <button class="cw-add-bag-btn" type="button" onclick="Store.addToCart({id: 'bs-4', title: 'The Teacher', author: 'Freida McFadden', price: 413, mrp: 550, discount: '₹ 137 Off', image: 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=400&q=80'})">
-                                <span>🛍️</span> Add to Bag
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Card 5: The Boyfriend by Freida McFadden -->
-                    <div class="book-card-cw">
-                        <div class="cw-card-image-wrap">
-                            <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80" alt="The Boyfriend" class="cw-card-img" loading="lazy">
-                            <button class="cw-heart-btn" type="button" aria-label="Add to Wishlist" onclick="Store.toggleWishlist({id: 'bs-5', title: 'The Boyfriend', author: 'Freida McFadden', price: 413, mrp: 550, discount: '₹ 137 Off', image: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80'})">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="cw-card-info">
-                            <h3 class="cw-card-title"><a href="book-details.html?demo=the-boyfriend">The Boyfriend</a></h3>
-                            <p class="cw-card-author">Freida McFadden</p>
-                            <div class="cw-card-price-row">
-                                <span class="cw-mrp-strike">₹ 550</span>
-                                <span class="cw-deal-price">₹ 413</span>
-                                <span class="cw-discount-pill">₹ 137 Off</span>
-                            </div>
-                            <button class="cw-add-bag-btn" type="button" onclick="Store.addToCart({id: 'bs-5', title: 'The Boyfriend', author: 'Freida McFadden', price: 413, mrp: 550, discount: '₹ 137 Off', image: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80'})">
-                                <span>🛍️</span> Add to Bag
-                            </button>
-                        </div>
-                    </div>
+                <!-- Dynamic Catalog Grid -->
+                <div id="book-grid" class="b4u-book-grid">
+                    <!-- Populated dynamically by app.js from /api/books -->
                 </div>
             </div>
         </section>
 
-        <!-- 8. New Arrivals & Trending Spotlight -->
-        <section class="cw-section cw-new-arrivals-section" id="new-arrivals" style="background-color: var(--cw-cream);">
-            <div class="cw-container">
-                <div class="cw-section-header">
+        <!-- D. HOW BOOK4U WORKS SECTION -->
+        <section class="b4u-section b4u-steps-section">
+            <div class="b4u-container">
+                <div class="b4u-section-header" style="justify-content: center; text-align: center;">
                     <div>
-                        <span class="cw-section-kicker">JUST IN</span>
-                        <h2 class="cw-section-title">New Arrivals & Rising Voices</h2>
-                        <p class="cw-section-subtitle">Freshly listed books and campus additions this week.</p>
+                        <h2 class="b4u-section-title">How Book4u Works</h2>
+                        <p class="b4u-section-subtitle">Simple, safe, and transparent textbook exchange in 4 straightforward steps.</p>
                     </div>
-                    <a href="explore.html" class="cw-view-all-link">View All New Arrivals &rarr;</a>
                 </div>
 
-                <div class="cw-product-row">
-                    <!-- New Arrival 1 -->
-                    <div class="book-card-cw">
-                        <div class="cw-card-image-wrap">
-                            <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=400&q=80" alt="Atomic Habits" class="cw-card-img" loading="lazy">
-                            <button class="cw-heart-btn" type="button" aria-label="Add to Wishlist" onclick="Store.toggleWishlist({id: 'na-1', title: 'Atomic Habits', author: 'James Clear', price: 499, mrp: 799, discount: '₹ 300 Off', image: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=400&q=80'})">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                            </button>
-                        </div>
-                        <div class="cw-card-info">
-                            <h3 class="cw-card-title"><a href="book-details.html?demo=atomic-habits">Atomic Habits</a></h3>
-                            <p class="cw-card-author">James Clear</p>
-                            <div class="cw-card-price-row">
-                                <span class="cw-mrp-strike">₹ 799</span>
-                                <span class="cw-deal-price">₹ 499</span>
-                                <span class="cw-discount-pill">₹ 300 Off</span>
-                            </div>
-                            <button class="cw-add-bag-btn" type="button" onclick="Store.addToCart({id: 'na-1', title: 'Atomic Habits', author: 'James Clear', price: 499, mrp: 799, discount: '₹ 300 Off', image: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=400&q=80'})">
-                                <span>🛍️</span> Add to Bag
-                            </button>
-                        </div>
+                <div class="b4u-steps-grid">
+                    <!-- Step 1 -->
+                    <div class="b4u-step-card">
+                        <div class="step-num">1</div>
+                        <h3 class="step-title">Register as a Student</h3>
+                        <p class="step-desc">
+                            Create your campus profile using your university credentials to verify your peer identity within our student community.
+                        </p>
                     </div>
 
-                    <!-- New Arrival 2 -->
-                    <div class="book-card-cw">
-                        <div class="cw-card-image-wrap">
-                            <img src="https://images.unsplash.com/photo-1532012164546-f432f2e3777f?auto=format&fit=crop&w=400&q=80" alt="Clean Code" class="cw-card-img" loading="lazy">
-                            <button class="cw-heart-btn" type="button" aria-label="Add to Wishlist" onclick="Store.toggleWishlist({id: 'na-2', title: 'Clean Code: A Handbook of Agile Software Craftsmanship', author: 'Robert C. Martin', price: 650, mrp: 999, discount: '₹ 349 Off', image: 'https://images.unsplash.com/photo-1532012164546-f432f2e3777f?auto=format&fit=crop&w=400&q=80'})">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                            </button>
-                        </div>
-                        <div class="cw-card-info">
-                            <h3 class="cw-card-title"><a href="book-details.html?demo=clean-code">Clean Code</a></h3>
-                            <p class="cw-card-author">Robert C. Martin</p>
-                            <div class="cw-card-price-row">
-                                <span class="cw-mrp-strike">₹ 999</span>
-                                <span class="cw-deal-price">₹ 650</span>
-                                <span class="cw-discount-pill">₹ 349 Off</span>
-                            </div>
-                            <button class="cw-add-bag-btn" type="button" onclick="Store.addToCart({id: 'na-2', title: 'Clean Code', author: 'Robert C. Martin', price: 650, mrp: 999, discount: '₹ 349 Off', image: 'https://images.unsplash.com/photo-1532012164546-f432f2e3777f?auto=format&fit=crop&w=400&q=80'})">
-                                <span>🛍️</span> Add to Bag
-                            </button>
-                        </div>
+                    <!-- Step 2 -->
+                    <div class="b4u-step-card">
+                        <div class="step-num">2</div>
+                        <h3 class="step-title">List or Discover a Book</h3>
+                        <p class="step-desc">
+                            Post textbooks you've completed or search required semester titles by course code, faculty subject, author, or ISBN.
+                        </p>
                     </div>
 
-                    <!-- New Arrival 3 -->
-                    <div class="book-card-cw">
-                        <div class="cw-card-image-wrap">
-                            <img src="https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&w=400&q=80" alt="Introduction to Algorithms (CLRS)" class="cw-card-img" loading="lazy">
-                            <button class="cw-heart-btn" type="button" aria-label="Add to Wishlist" onclick="Store.toggleWishlist({id: 'na-3', title: 'Introduction to Algorithms (CLRS)', author: 'Cormen, Leiserson, Rivest, Stein', price: 890, mrp: 1499, discount: '₹ 609 Off', image: 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&w=400&q=80'})">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                            </button>
-                        </div>
-                        <div class="cw-card-info">
-                            <h3 class="cw-card-title"><a href="book-details.html?demo=clrs">Introduction to Algorithms</a></h3>
-                            <p class="cw-card-author">T. Cormen, C. Leiserson</p>
-                            <div class="cw-card-price-row">
-                                <span class="cw-mrp-strike">₹ 1,499</span>
-                                <span class="cw-deal-price">₹ 890</span>
-                                <span class="cw-discount-pill">₹ 609 Off</span>
-                            </div>
-                            <button class="cw-add-bag-btn" type="button" onclick="Store.addToCart({id: 'na-3', title: 'Introduction to Algorithms (CLRS)', author: 'Cormen, Leiserson, Rivest, Stein', price: 890, mrp: 1499, discount: '₹ 609 Off', image: 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&w=400&q=80'})">
-                                <span>🛍️</span> Add to Bag
-                            </button>
-                        </div>
+                    <!-- Step 3 -->
+                    <div class="b4u-step-card">
+                        <div class="step-num">3</div>
+                        <h3 class="step-title">Send or Receive a Request</h3>
+                        <p class="step-desc">
+                            Connect directly with the book owner to coordinate swap preferences, free gift pickup, or agreed loan duration.
+                        </p>
                     </div>
 
-                    <!-- New Arrival 4 -->
-                    <div class="book-card-cw">
-                        <div class="cw-card-image-wrap">
-                            <img src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80" alt="Deep Work" class="cw-card-img" loading="lazy">
-                            <button class="cw-heart-btn" type="button" aria-label="Add to Wishlist" onclick="Store.toggleWishlist({id: 'na-4', title: 'Deep Work: Rules for Focused Success', author: 'Cal Newport', price: 399, mrp: 699, discount: '₹ 300 Off', image: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80'})">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                            </button>
-                        </div>
-                        <div class="cw-card-info">
-                            <h3 class="cw-card-title"><a href="book-details.html?demo=deep-work">Deep Work</a></h3>
-                            <p class="cw-card-author">Cal Newport</p>
-                            <div class="cw-card-price-row">
-                                <span class="cw-mrp-strike">₹ 699</span>
-                                <span class="cw-deal-price">₹ 399</span>
-                                <span class="cw-discount-pill">₹ 300 Off</span>
-                            </div>
-                            <button class="cw-add-bag-btn" type="button" onclick="Store.addToCart({id: 'na-4', title: 'Deep Work: Rules for Focused Success', author: 'Cal Newport', price: 399, mrp: 699, discount: '₹ 300 Off', image: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80'})">
-                                <span>🛍️</span> Add to Bag
-                            </button>
-                        </div>
+                    <!-- Step 4 -->
+                    <div class="b4u-step-card">
+                        <div class="step-num">4</div>
+                        <h3 class="step-title">Meet on Campus Handover</h3>
+                        <p class="step-desc">
+                            Meet safely at the campus central library, student union, or department lobby to inspect and complete the handover.
+                        </p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 9. Manga & Graphic Novels Showcase -->
-        <section class="cw-section cw-manga-section" id="manga-section">
-            <div class="cw-container">
-                <div class="cw-manga-banner" style="background: linear-gradient(135deg, #18181B 0%, #27272A 100%); color: #FFFFFF; border-radius: 14px; padding: 2.5rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <div>
-                        <span class="cw-slide-badge" style="background: #E11D48; color: #FFFFFF;">MANGA ZONE</span>
-                        <h2 style="font-family: var(--font-editorial); font-size: 2.2rem; margin: 0.5rem 0;">Immerse Yourself in Japanese Manga</h2>
-                        <p style="color: #A1A1AA; max-width: 500px;">Explore bestselling series like Demon Slayer, Jujutsu Kaisen, Chainsaw Man and One Piece.</p>
-                    </div>
-                    <a href="explore.html?subject=Comics" class="cw-btn cw-btn-primary cw-btn-lg">Explore Manga Corner &rarr;</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- 10. Live Campus Textbooks Catalog (Connected live to Servlets /api/books) -->
-        <section class="cw-section cw-live-catalog-section" id="campus-textbooks">
-            <div class="cw-container">
-                <div class="cw-section-header">
-                    <div>
-                        <span class="cw-section-kicker">CAMPUS COMMUNITY INVENTORY</span>
-                        <h2 class="cw-section-title">Available Campus Textbooks</h2>
-                        <p class="cw-section-subtitle">Loaded live from MySQL database via JDBC and Java Jakarta Servlets</p>
-                    </div>
-
-                    <!-- Live Filter Controls -->
-                    <div class="catalog-filters">
-                        <select id="filter-subject" class="cw-filter-select" aria-label="Filter by Subject">
-                            <option value="">All Subjects</option>
-                            <option value="Java">Java Programming</option>
-                            <option value="DBMS">Database Systems</option>
-                            <option value="DSA">Data Structures & Algorithms</option>
-                            <option value="Networks">Computer Networks</option>
-                            <option value="Operating Systems">Operating Systems</option>
-                        </select>
-
-                        <select id="filter-mode" class="cw-filter-select" aria-label="Filter by Sharing Mode">
-                            <option value="">All Modes</option>
-                            <option value="SWAP">SWAP Only</option>
-                            <option value="GIVEAWAY">GIVEAWAY Only</option>
-                            <option value="LENDING">LENDING Only</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Dynamic Book Cards Grid (rendered dynamically by app.js) -->
-                <div id="book-grid" class="cw-product-grid">
-                    <!-- Populated dynamically via fetch('api/books') in app.js -->
-                </div>
-            </div>
-        </section>
-
-        <!-- 11. Reading Desk / Editorial Magazine Section -->
-        <section class="cw-section cw-reading-desk-section" style="background-color: #FFFFFF; border-top: 1px solid var(--cw-border);">
-            <div class="cw-container">
-                <div class="cw-section-header text-center">
-                    <span class="cw-section-kicker">THE READING DESK</span>
-                    <h2 class="cw-section-title">Articles, Book Guides & Campus Insights</h2>
-                    <p class="cw-section-subtitle">Curated reading advice and study guides written for university students.</p>
-                </div>
-
-                <div class="cw-articles-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
-                    <!-- Article 1 -->
-                    <article class="cw-article-card" style="border: 1px solid var(--cw-border); border-radius: 12px; overflow: hidden; background: #FFF;">
-                        <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=600&q=80" alt="Study Desk" style="width: 100%; height: 200px; object-fit: cover;">
-                        <div style="padding: 1.5rem;">
-                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--cw-burgundy); text-transform: uppercase;">Campus Life</span>
-                            <h3 style="font-family: var(--font-editorial); font-size: 1.3rem; margin: 0.5rem 0;">How Peer Textbook Sharing Saves Students Over $500 Every Semester</h3>
-                            <p style="font-size: 0.9rem; color: #4B5563; line-height: 1.6;">Textbooks are among the highest hidden costs in college. Learn how campus swap programs are revolutionizing academic affordability.</p>
-                            <a href="#" style="display: inline-block; margin-top: 1rem; font-weight: 700; font-size: 0.85rem; color: var(--cw-burgundy);">Read Story &rarr;</a>
+        <!-- E. CAMPUS COMMUNITY SECTION -->
+        <section class="b4u-community-section">
+            <div class="b4u-container">
+                <div class="b4u-community-grid">
+                    <div class="b4u-community-info">
+                        <h2>Built by Students, for Students</h2>
+                        <p>
+                            Textbooks shouldn't gather dust on shelves while fellow classmates struggle to afford required course reading. Book4u keeps academic resources moving across semesters.
+                        </p>
+                        <ul class="b4u-benefit-list">
+                            <li class="b4u-benefit-item">
+                                <span class="icon">✓</span>
+                                <div><strong>Save on Semester Reading:</strong> Access expensive reference manuals and required reading lists without paying commercial bookstore markups.</div>
+                            </li>
+                            <li class="b4u-benefit-item">
+                                <span class="icon">✓</span>
+                                <div><strong>Sustainable Campus Circulation:</strong> Reduce paper waste and prolong textbook lifecycles by passing books down to incoming student cohorts.</div>
+                            </li>
+                            <li class="b4u-benefit-item">
+                                <span class="icon">✓</span>
+                                <div><strong>Direct Peer Collaboration:</strong> Meet classmates in your department, share lecture insights, and strengthen our university academic community.</div>
+                            </li>
+                        </ul>
+                        <div style="display: flex; gap: 1rem;">
+                            <a href="register.html" class="btn btn-primary btn-lg">
+                                Join Your Campus Exchange
+                            </a>
+                            <a href="explore.html" class="btn btn-outline btn-lg">
+                                Browse Books
+                            </a>
                         </div>
-                    </article>
+                    </div>
 
-                    <!-- Article 2 -->
-                    <article class="cw-article-card" style="border: 1px solid var(--cw-border); border-radius: 12px; overflow: hidden; background: #FFF;">
-                        <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0d0?auto=format&fit=crop&w=600&q=80" alt="Classic Books" style="width: 100%; height: 200px; object-fit: cover;">
-                        <div style="padding: 1.5rem;">
-                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--cw-burgundy); text-transform: uppercase;">Curated Reading</span>
-                            <h3 style="font-family: var(--font-editorial); font-size: 1.3rem; margin: 0.5rem 0;">5 Classic Works of Literature Every Engineering Student Must Read</h3>
-                            <p style="font-size: 0.9rem; color: #4B5563; line-height: 1.6;">Broaden your horizons beyond code syntax and formulas with foundational masterpieces on ethics, humanity, and future societies.</p>
-                            <a href="#" style="display: inline-block; margin-top: 1rem; font-weight: 700; font-size: 0.85rem; color: var(--cw-burgundy);">Read Story &rarr;</a>
-                        </div>
-                    </article>
-
-                    <!-- Article 3 -->
-                    <article class="cw-article-card" style="border: 1px solid var(--cw-border); border-radius: 12px; overflow: hidden; background: #FFF;">
-                        <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=600&q=80" alt="Writing" style="width: 100%; height: 200px; object-fit: cover;">
-                        <div style="padding: 1.5rem;">
-                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--cw-burgundy); text-transform: uppercase;">Study Techniques</span>
-                            <h3 style="font-family: var(--font-editorial); font-size: 1.3rem; margin: 0.5rem 0;">The Art of Annotation: Preserving Secondhand Books for Future Readers</h3>
-                            <p style="font-size: 0.9rem; color: #4B5563; line-height: 1.6;">How to use sticky flags, removable highlighters, and smart margin notes without deteriorating book condition grades.</p>
-                            <a href="#" style="display: inline-block; margin-top: 1rem; font-weight: 700; font-size: 0.85rem; color: var(--cw-burgundy);">Read Story &rarr;</a>
-                        </div>
-                    </article>
+                    <div class="b4u-community-visual">
+                        <h3>Campus Handover Guidelines</h3>
+                        <p>
+                            To ensure safe and reliable peer exchanges, always follow our recommended student handover checklist:
+                        </p>
+                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem; font-size: 0.95rem;">
+                            <li style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                                <span>🏛️</span>
+                                <span><strong>Designated Meeting Stations:</strong> Meet in public campus spots such as the Central Library Block B or the Student Center cafeteria.</span>
+                            </li>
+                            <li style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                                <span>🔍</span>
+                                <span><strong>Inspect Book Condition:</strong> Verify edition, page completeness, and notes before finalizing your swap or temporary loan.</span>
+                            </li>
+                            <li style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                                <span>📅</span>
+                                <span><strong>Honor Loan Durations:</strong> Return borrowed textbooks promptly on or before the agreed semester return date.</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- 12. Newsletter Section -->
-        <section class="cw-newsletter-section" style="background-color: var(--cw-cream); border-top: 1px solid var(--cw-border); padding: 4rem 1rem;">
-            <div class="cw-container text-center" style="max-width: 600px; margin: 0 auto;">
-                <span class="cw-section-kicker">STAY CONNECTED</span>
-                <h2 style="font-family: var(--font-editorial); font-size: 2.2rem; margin: 0.5rem 0 1rem 0;">Join the Book4u Readers Circle</h2>
-                <p style="color: #4B5563; font-size: 0.95rem; margin-bottom: 1.5rem;">Receive campus textbook drop notifications, curated bestseller reviews, and semester exchange schedules directly in your inbox.</p>
-                <form class="cw-newsletter-form" onsubmit="event.preventDefault(); Store.showToast('Thank you for subscribing to Book4u Readers Circle!', 'success');" style="display: flex; gap: 0.5rem; max-width: 460px; margin: 0 auto;">
-                    <input type="email" placeholder="Enter your university email address..." required style="flex: 1; padding: 0.8rem 1rem; border: 1px solid var(--cw-border); border-radius: 8px; outline: none; font-size: 0.9rem;">
-                    <button type="submit" class="cw-btn cw-btn-dark" style="padding: 0.8rem 1.5rem;">Subscribe</button>
-                </form>
             </div>
         </section>
 
     </main>
 
-    <!-- 13. Modal Form: List a New Book -->
-    <div id="list-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modal-title" style="font-family: var(--font-editorial); font-size: 1.5rem;">List an Academic Book</h2>
-                <button id="btn-close-modal" class="modal-close" aria-label="Close modal">&times;</button>
-            </div>
-
-            <form id="new-book-form">
-                <div class="form-group">
-                    <label for="book-title-input">Book Title *</label>
-                    <input type="text" id="book-title-input" class="form-control" placeholder="e.g. Operating System Concepts" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="book-author-input">Author(s) *</label>
-                    <input type="text" id="book-author-input" class="form-control" placeholder="e.g. Silberschatz, Galvin" required>
-                </div>
-
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                    <div>
-                        <label for="book-subject-input">Subject *</label>
-                        <select id="book-subject-input" class="form-control" required>
-                            <option value="Java">Java Programming</option>
-                            <option value="DBMS">DBMS</option>
-                            <option value="DSA">DSA</option>
-                            <option value="Networks">Networks</option>
-                            <option value="Operating Systems">Operating Systems</option>
-                            <option value="Fiction">Fiction</option>
-                            <option value="Comics">Comics & Manga</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="book-course-input">Course Code</label>
-                        <input type="text" id="book-course-input" class="form-control" placeholder="e.g. CS301">
-                    </div>
-                </div>
-
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                    <div>
-                        <label for="book-mode-select">Sharing Mode *</label>
-                        <select id="book-mode-select" class="form-control" required>
-                            <option value="SWAP">SWAP (Direct Trade)</option>
-                            <option value="GIVEAWAY">GIVEAWAY (Free Gift)</option>
-                            <option value="LENDING">LENDING (Time-Bound Loan)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="book-condition-select">Condition *</label>
-                        <select id="book-condition-select" class="form-control" required>
-                            <option value="LIKE_NEW">Like New</option>
-                            <option value="VERY_GOOD">Very Good</option>
-                            <option value="GOOD" selected>Good</option>
-                            <option value="ACCEPTABLE">Acceptable</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group" id="lending-duration-group" style="display: none;">
-                    <label for="book-days-input">Max Lending Duration (Days) *</label>
-                    <input type="number" id="book-days-input" class="form-control" min="1" max="180" placeholder="e.g. 14">
-                </div>
-
-                <div class="form-group">
-                    <label for="book-swap-input">Swap Preferences (If SWAP mode)</label>
-                    <input type="text" id="book-swap-input" class="form-control" placeholder="e.g. Looking for Computer Networks 5th Edition">
-                </div>
-
-                <div class="form-group">
-                    <label for="book-desc-input">Description / Notes</label>
-                    <textarea id="book-desc-input" class="form-control" rows="3" placeholder="Condition details, highlight marks, edition notes..."></textarea>
-                </div>
-
-                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
-                    <button type="button" class="cw-btn cw-btn-outline" onclick="document.getElementById('list-modal').classList.remove('active')">Cancel</button>
-                    <button type="submit" class="cw-btn cw-btn-primary">Publish Listing</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 14. Full Crossword-Inspired Bookstore Footer -->
-    <footer class="cw-footer">
-        <div class="cw-footer-container">
-            <div class="cw-footer-grid">
-                <!-- Column 1: Brand & Mission -->
-                <div class="cw-footer-col">
-                    <div class="cw-logo" style="margin-bottom: 1rem;">
-                        <div class="cw-logo-icon"><span>B</span></div>
-                        <div class="cw-logo-text">
-                            <span class="cw-logo-title" style="color: #FFF;">BOOK4U</span>
-                            <span class="cw-logo-sub" style="color: #A1A1AA;">CAMPUS BOOKSTORE</span>
+    <!-- Campus Footer -->
+    <footer class="b4u-footer">
+        <div class="b4u-footer-container">
+            <div class="b4u-footer-grid">
+                <div class="b4u-footer-col">
+                    <div class="b4u-logo" style="margin-bottom: 1rem;">
+                        <div class="b4u-logo-icon">B</div>
+                        <div class="b4u-logo-text">
+                            <span class="b4u-logo-title" style="color: #FFF;">Book4u</span>
+                            <span class="b4u-logo-tagline" style="color: #94A3B8;">Campus Book Exchange</span>
                         </div>
                     </div>
-                    <p class="cw-footer-desc">
-                        Book4u is the university's premier student-driven bookstore and book exchange. Combining the editorial curations of Crossword.in with peer-to-peer textbook swapping, giving, and semester lending.
+                    <p class="b4u-footer-desc">
+                        Your Books. Your Campus. Your Community. Connecting university students for academic book swaps, free giveaways, and temporary semester lending.
                     </p>
-                    <div class="cw-social-links" style="margin-top: 1rem; display: flex; gap: 0.75rem;">
-                        <span style="font-size: 1.2rem; cursor: pointer;">📘</span>
-                        <span style="font-size: 1.2rem; cursor: pointer;">📸</span>
-                        <span style="font-size: 1.2rem; cursor: pointer;">🐦</span>
-                        <span style="font-size: 1.2rem; cursor: pointer;">💬</span>
-                    </div>
                 </div>
-
-                <!-- Column 2: Popular Categories -->
-                <div class="cw-footer-col">
-                    <h4 class="cw-footer-heading">Categories</h4>
-                    <ul class="cw-footer-links">
-                        <li><a href="explore.html?subject=Fiction">Fiction & Literature</a></li>
-                        <li><a href="explore.html?subject=Non-Fiction">Non-Fiction & Biography</a></li>
-                        <li><a href="explore.html?subject=Comics">Comics & Manga</a></li>
-                        <li><a href="explore.html?subject=Java">Computer Science</a></li>
-                        <li><a href="explore.html?subject=DSA">Engineering & Technology</a></li>
-                        <li><a href="explore.html?subject=DBMS">Database Systems</a></li>
-                        <li><a href="#bestsellers">Crossword Bestsellers</a></li>
+                <div class="b4u-footer-col">
+                    <h4 class="b4u-footer-heading">Sharing Modes</h4>
+                    <ul class="b4u-footer-links">
+                        <li><a href="explore.html?mode=SWAP">Peer Book Swap</a></li>
+                        <li><a href="explore.html?mode=GIVEAWAY">Free Student Giveaways</a></li>
+                        <li><a href="explore.html?mode=LENDING">Semester Lending</a></li>
+                        <li><a href="add-book.html">List Your Textbook</a></li>
                     </ul>
                 </div>
-
-                <!-- Column 3: Student Hub -->
-                <div class="cw-footer-col">
-                    <h4 class="cw-footer-heading">Student Hub</h4>
-                    <ul class="cw-footer-links">
-                        <li><a href="explore.html">Browse All Books</a></li>
-                        <li><a href="my-books.html">My Listed Books</a></li>
-                        <li><a href="profile.html">Student Profile & Settings</a></li>
-                        <li><a href="cart.html">Shopping Bag</a></li>
-                        <li><a href="wishlist.html">Saved Wishlist</a></li>
-                        <li><a href="checkout.html">Campus Delivery & Pickup</a></li>
-                        <li><a href="login.html">Sign In / Register</a></li>
-                    </ul>
-                </div>
-
-                <!-- Column 4: Trust & Campus Support -->
-                <div class="cw-footer-col">
-                    <h4 class="cw-footer-heading">Campus Desk & Trust</h4>
-                    <ul class="cw-footer-links">
-                        <li><span>📍 Central Library, Block B Desk</span></li>
-                        <li><span>⏱️ Support: Mon - Sat (9am - 8pm)</span></li>
-                        <li><span>✉️ support@book4u-campus.edu</span></li>
-                        <li><a href="api/health" target="_blank">System Health Diagnostic</a></li>
-                        <li><span style="color: #22C55E;">✔ 100% Student Verified</span></li>
-                        <li><span style="color: #22C55E;">✔ Zero Platform Commission</span></li>
+                <div class="b4u-footer-col">
+                    <h4 class="b4u-footer-heading">Student Account</h4>
+                    <ul class="b4u-footer-links">
+                        <li><a href="my-books.html">My Listings</a></li>
+                        <li><a href="wishlist.html">Saved Books</a></li>
+                        <li><a href="profile.html">Student Profile</a></li>
+                        <li><a href="login.html">Sign In</a></li>
                     </ul>
                 </div>
             </div>
-
-            <!-- Bottom Copyright Bar -->
-            <div class="cw-footer-bottom">
-                <p>&copy; 2026 Book4u Academic Book Exchange. Inspired by Crossword.in. Built with Java 21, Jakarta Servlets 6.0, Tomcat 10.1, JDBC, and MySQL.</p>
-                <div class="cw-footer-legal-links">
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                    <a href="#">Academic Integrity</a>
-                    <a href="#">Safe Campus Handover Guidelines</a>
-                </div>
+            <div class="b4u-footer-bottom">
+                <p>&copy; 2026 Book4u — Student Peer-to-Peer Book Exchange System. Academic Non-Profit Campus Platform.</p>
             </div>
         </div>
     </footer>
 
-    <!-- Client-Side Scripts (Store first, then Auth, then App) -->
+    <!-- Scripts -->
     <script src="js/store.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
-
-    <!-- Carousel & Bestseller Navigation Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Hero Slider Logic
-            const slides = document.querySelectorAll('.cw-slide');
-            const dots = document.querySelectorAll('.cw-dot');
-            const prevBtn = document.getElementById('slider-prev');
-            const nextBtn = document.getElementById('slider-next');
-            let currentSlide = 0;
-            let slideInterval = null;
-
-            function goToSlide(index) {
-                slides[currentSlide].classList.remove('active');
-                dots[currentSlide].classList.remove('active');
-                currentSlide = (index + slides.length) % slides.length;
-                slides[currentSlide].classList.add('active');
-                dots[currentSlide].classList.add('active');
-            }
-
-            if (prevBtn && nextBtn && slides.length > 0) {
-                prevBtn.addEventListener('click', () => {
-                    clearInterval(slideInterval);
-                    goToSlide(currentSlide - 1);
-                    startAutoSlide();
-                });
-                nextBtn.addEventListener('click', () => {
-                    clearInterval(slideInterval);
-                    goToSlide(currentSlide + 1);
-                    startAutoSlide();
-                });
-
-                dots.forEach(dot => {
-                    dot.addEventListener('click', (e) => {
-                        clearInterval(slideInterval);
-                        const idx = parseInt(e.target.getAttribute('data-index'), 10);
-                        goToSlide(idx);
-                        startAutoSlide();
-                    });
-                });
-
-                function startAutoSlide() {
-                    slideInterval = setInterval(() => {
-                        goToSlide(currentSlide + 1);
-                    }, 6500);
-                }
-                startAutoSlide();
-            }
-
-            // Bestseller Row Horizontal Scroll
-            const bsRow = document.getElementById('bestseller-row');
-            const bsPrev = document.getElementById('bestseller-prev');
-            const bsNext = document.getElementById('bestseller-next');
-            if (bsRow && bsPrev && bsNext) {
-                bsPrev.addEventListener('click', () => {
-                    bsRow.scrollBy({ left: -320, behavior: 'smooth' });
-                });
-                bsNext.addEventListener('click', () => {
-                    bsRow.scrollBy({ left: 320, behavior: 'smooth' });
-                });
-            }
-        });
-    </script>
 </body>
 </html>

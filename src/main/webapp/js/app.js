@@ -18,9 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
  * Tests Tomcat container status and live MySQL JDBC connectivity.
  */
 async function checkSystemHealth() {
-    const healthPill = document.getElementById('system-health-pill');
-    const healthText = document.getElementById('health-text');
     const healthDot = document.getElementById('health-dot');
+    const healthText = document.getElementById('health-text');
+    if (!healthDot || !healthText) return;
 
     try {
         const response = await fetch('api/health');
@@ -28,7 +28,7 @@ async function checkSystemHealth() {
             const data = await response.json();
             if (data.databaseStatus === 'CONNECTED') {
                 healthDot.className = 'health-dot dot-green';
-                healthText.textContent = 'Tomcat & MySQL: Online';
+                healthText.textContent = 'Tomcat & MySQL: Connected';
             } else {
                 healthDot.className = 'health-dot dot-amber';
                 healthText.textContent = 'Server: Up | DB: Awaiting Connection';
@@ -47,13 +47,15 @@ async function checkSystemHealth() {
  * Fetches available books from GET /api/books and renders them on the page.
  */
 async function loadAvailableBooks(subject = '', mode = '') {
-    const grid = document.getElementById('book-grid');
-    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">Loading campus books...</p>';
+    const grid = document.getElementById('book-grid') || document.getElementById('recent-book-grid');
+    if (!grid) return;
+
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--color-muted); padding: 2rem;">Loading campus textbooks...</p>';
 
     let url = 'api/books';
     const params = new URLSearchParams();
-    if (subject) params.append('subject', subject);
-    if (mode) params.append('mode', mode);
+    if (subject && subject !== 'ALL') params.append('subject', subject);
+    if (mode && mode !== 'ALL') params.append('mode', mode);
     if (params.toString()) url += '?' + params.toString();
 
     try {
@@ -67,78 +69,147 @@ async function loadAvailableBooks(subject = '', mode = '') {
         renderBookCards(books);
 
     } catch (err) {
-        grid.innerHTML = `
-            <div style="grid-column: 1/-1; background-color: #fffbeb; border: 1px solid #fde68a; padding: 1.5rem; border-radius: 12px; text-align: center;">
-                <p style="color: #92400e; font-weight: 600; margin-bottom: 0.5rem;">Preview Mode (API endpoint unreachable)</p>
-                <p style="color: #78350f; font-size: 0.9rem;">To connect live to Servlets and MySQL, package the project with <code>mvn package</code> and deploy <code>target/Book4u.war</code> into Tomcat's <code>webapps/</code> folder.</p>
-            </div>
-        `;
+        console.warn('API unreachable, displaying campus catalog preview:', err);
+        // Fallback sample academic listings for clean preview if API is not deployed locally
+        const sampleBooks = [
+            {
+                id: 1,
+                title: "Core Java: Fundamentals, Volume 1 (12th Edition)",
+                author: "Cay S. Horstmann",
+                subject: "Computer Science",
+                courseCode: "CS201",
+                sharingMode: "SWAP",
+                conditionGrade: "LIKE_NEW",
+                swapPreferences: "Looking for DBMS Korth or OS Silberschatz",
+                ownerName: "Aarav Sharma",
+                imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&q=80"
+            },
+            {
+                id: 2,
+                title: "Database System Concepts (7th Edition)",
+                author: "Silberschatz, Korth, Sudarshan",
+                subject: "Database Systems",
+                courseCode: "CS304",
+                sharingMode: "LENDING",
+                lendingMaxDurationDays: 30,
+                conditionGrade: "VERY_GOOD",
+                ownerName: "Priya Patel",
+                imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80"
+            },
+            {
+                id: 3,
+                title: "Introduction to Algorithms (CLRS 4th Edition)",
+                author: "Cormen, Leiserson, Rivest, Stein",
+                subject: "Algorithms",
+                courseCode: "CS210",
+                sharingMode: "SWAP",
+                conditionGrade: "GOOD",
+                swapPreferences: "Open to Machine Learning or Networks",
+                ownerName: "Rohan Verma",
+                imageUrl: "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=500&q=80"
+            },
+            {
+                id: 4,
+                title: "Computer Networks: A Systems Approach",
+                author: "Larry L. Peterson, Bruce S. Davie",
+                subject: "Networking",
+                courseCode: "CS350",
+                sharingMode: "GIVEAWAY",
+                conditionGrade: "GOOD",
+                ownerName: "Ananya Iyer",
+                imageUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=500&q=80"
+            }
+        ];
+        renderBookCards(sampleBooks);
     }
 }
 
 /**
- * Generates DOM cards for books in Crossword Bookstore style.
+ * Generates DOM cards for books in modern academic peer-exchange style.
  */
 function renderBookCards(books) {
-    const grid = document.getElementById('book-grid');
+    const grid = document.getElementById('book-grid') || document.getElementById('recent-book-grid');
+    if (!grid) return;
+
     if (!books || books.length === 0) {
-        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--cw-muted); padding: 3rem; font-size: 1.05rem;">No academic textbooks currently match this filter. Try selecting "All Subjects" or "All Modes".</p>';
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--color-muted); padding: 3rem; font-size: 1rem;">No academic textbooks currently match this filter. Try selecting "All Subjects" or "All Modes".</p>';
         return;
     }
 
     grid.innerHTML = '';
     books.forEach(book => {
         const card = document.createElement('div');
-        card.className = 'book-card-cw';
+        card.className = 'b4u-book-card';
 
         const coverSrc = book.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80';
         
-        let modePrice = 'Free Swap';
-        let discountPill = '100% Free';
+        let modeLabel = 'SWAP';
+        let modeClass = 'mode-swap';
+        let modeActionText = 'Request Swap';
+        let modeDetail = book.swapPreferences ? `Wants: ${escapeHtml(book.swapPreferences)}` : 'Peer Exchange';
+
         if (book.sharingMode === 'GIVEAWAY') {
-            modePrice = 'Free Gift';
-            discountPill = 'Giveaway';
+            modeLabel = 'GIVEAWAY';
+            modeClass = 'mode-giveaway';
+            modeActionText = 'Claim Free';
+            modeDetail = 'Free Student Gift';
         } else if (book.sharingMode === 'LENDING') {
-            modePrice = 'Semester Loan';
-            discountPill = `${book.lendingMaxDurationDays || 14}d Loan`;
+            modeLabel = 'LENDING';
+            modeClass = 'mode-lending';
+            const days = book.lendingMaxDurationDays || 14;
+            modeActionText = `Borrow (${days}d)`;
+            modeDetail = `Loan period: ${days} days`;
         }
+
+        const isSaved = typeof Store !== 'undefined' && Store.isSaved(book.id);
 
         const bookPayload = JSON.stringify({
             id: book.id,
             title: book.title,
             author: book.author,
-            price: 0,
-            mrp: 699,
-            discount: discountPill,
-            image: coverSrc,
-            mode: book.sharingMode
+            coverImage: coverSrc,
+            sharingMode: book.sharingMode,
+            subject: book.subject || 'Academic',
+            conditionGrade: book.conditionGrade || 'Good',
+            courseCode: book.courseCode || ''
         }).replace(/"/g, '&quot;');
 
+        const conditionLabel = (book.conditionGrade || 'GOOD').replace('_', ' ');
+
         card.innerHTML = `
-            <div class="cw-card-image-wrap">
-                <img src="${escapeHtml(coverSrc)}" alt="${escapeHtml(book.title)}" class="cw-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80';">
-                <button class="cw-heart-btn" type="button" aria-label="Add to Wishlist" onclick='Store.toggleWishlist(${bookPayload})'>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            <div class="b4u-card-media">
+                <a href="book-details.html?id=${book.id}">
+                    <img src="${escapeHtml(coverSrc)}" alt="${escapeHtml(book.title)}" class="b4u-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80';">
+                </a>
+                <span class="b4u-mode-badge ${modeClass}">${modeLabel}</span>
+                <button class="b4u-save-btn ${isSaved ? 'active' : ''}" type="button" aria-label="Save Book" onclick='Store.toggleSave(${bookPayload}, this)' title="Save to Reading List">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="${isSaved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                     </svg>
                 </button>
             </div>
-            <div class="cw-card-info">
-                <h3 class="cw-card-title"><a href="book-details.html?id=${book.id}" title="${escapeHtml(book.title)}">${escapeHtml(book.title)}</a></h3>
-                <p class="cw-card-author">By ${escapeHtml(book.author)} • <span style="color: var(--cw-burgundy); font-weight: 600;">${escapeHtml(book.subject || 'Academic')}</span></p>
-                <div class="cw-card-price-row">
-                    <span class="cw-mrp-strike">₹ 699</span>
-                    <span class="cw-deal-price">${modePrice}</span>
-                    <span class="cw-discount-pill">${discountPill}</span>
+            <div class="b4u-card-body">
+                <div class="b4u-card-meta">
+                    <span class="b4u-subject-tag">${escapeHtml(book.subject || 'Academic')}</span>
+                    ${book.courseCode ? `<span class="b4u-course-tag">${escapeHtml(book.courseCode)}</span>` : ''}
+                    <span class="b4u-condition-tag">${escapeHtml(conditionLabel)}</span>
                 </div>
-                <div style="font-size: 0.78rem; color: #64748B; margin-bottom: 0.75rem;">
-                    Course: <strong>${escapeHtml(book.courseCode || 'General')}</strong> • Owner: <strong>${escapeHtml(book.ownerName || 'Campus Student')}</strong>
+                <h3 class="b4u-card-title">
+                    <a href="book-details.html?id=${book.id}" title="${escapeHtml(book.title)}">${escapeHtml(book.title)}</a>
+                </h3>
+                <p class="b4u-card-author">By ${escapeHtml(book.author || 'Author')}</p>
+                <div class="b4u-card-owner">
+                    <span class="owner-icon">👤</span>
+                    <span>${escapeHtml(book.ownerName || 'Verified Student')}</span>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button class="cw-add-bag-btn" type="button" style="flex: 1;" onclick='Store.addToCart(${bookPayload})'>
-                        <span>🛍️</span> Add to Bag
-                    </button>
-                    <a href="book-details.html?id=${book.id}" class="cw-btn cw-btn-outline" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;" title="View Details">
+                <div class="b4u-card-mode-detail">
+                    <span>${modeDetail}</span>
+                </div>
+                <div class="b4u-card-actions">
+                    <a href="book-details.html?id=${book.id}" class="btn btn-primary btn-sm" style="flex: 1; text-align: center;">
+                        ${modeActionText}
+                    </a>
+                    <a href="book-details.html?id=${book.id}" class="btn btn-outline btn-sm" title="View Specifications">
                         Details
                     </a>
                 </div>
@@ -148,37 +219,33 @@ function renderBookCards(books) {
     });
 }
 
-function handleRequest(bookId, mode) {
-    alert(`Requesting book #${bookId} in ${mode} mode.\nThis triggers exchange negotiation between students on campus.`);
-}
-
 function setupEventListeners() {
-    // Filter by subject
+    // Filter by subject & mode
     const subjectFilter = document.getElementById('filter-subject');
     const modeFilter = document.getElementById('filter-mode');
 
     const applyFilters = () => {
-        const subject = subjectFilter.value;
-        const mode = modeFilter.value;
+        const subject = subjectFilter ? subjectFilter.value : '';
+        const mode = modeFilter ? modeFilter.value : '';
         loadAvailableBooks(subject, mode);
     };
 
     if (subjectFilter) subjectFilter.addEventListener('change', applyFilters);
     if (modeFilter) modeFilter.addEventListener('change', applyFilters);
 
-    // Modal controls
+    // Modal controls for listing a book
     const listModal = document.getElementById('list-modal');
     const openModalBtn = document.getElementById('btn-open-list-modal');
     const closeModalBtn = document.getElementById('btn-close-modal');
     const newBookForm = document.getElementById('new-book-form');
 
-    if (openModalBtn) {
+    if (openModalBtn && listModal) {
         openModalBtn.addEventListener('click', () => {
             listModal.classList.add('active');
         });
     }
 
-    if (closeModalBtn) {
+    if (closeModalBtn && listModal) {
         closeModalBtn.addEventListener('click', () => {
             listModal.classList.remove('active');
         });
@@ -230,7 +297,7 @@ function setupEventListeners() {
                 if (response.ok) {
                     alert('Success! Your book listing has been added to the campus catalog.');
                     newBookForm.reset();
-                    listModal.classList.remove('active');
+                    if (listModal) listModal.classList.remove('active');
                     loadAvailableBooks();
                 } else {
                     alert('Error: ' + (result.error || 'Failed to list book'));
@@ -240,11 +307,4 @@ function setupEventListeners() {
             }
         });
     }
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }

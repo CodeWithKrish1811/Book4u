@@ -465,8 +465,8 @@ async function updateNavbarAuth() {
                 <button type="button" class="btn btn-outline btn-sm" onclick="logoutStudent()">Sign Out</button>
             `;
 
-            // Insert before modal or at end
-            const listBtn = document.getElementById('btn-open-list-modal');
+            // Insert before List a Book button or at end
+            const listBtn = navActions.querySelector('.btn-list-book, .btn-navy, #btn-open-list-modal');
             if (listBtn) {
                 navActions.insertBefore(authGroup, listBtn);
             } else {

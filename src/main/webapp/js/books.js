@@ -4,6 +4,11 @@
  * ============================================================================
  * University Academic Project: Student Peer-to-Peer Book Exchange System (Book4u)
  * Technology: Vanilla JavaScript (ES6+ Fetch API, DOM API)
+ * 
+ * Supports three campus sharing modes:
+ * - SWAP (Exchange a book for another)
+ * - GIVEAWAY (Free gift to another student)
+ * - LENDING (Temporary semester loan)
  * ============================================================================
  */
 
@@ -65,7 +70,7 @@ async function loadExploreCatalog() {
     const grid = document.getElementById('explore-book-grid');
     if (!grid) return;
 
-    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">Loading academic book catalog...</p>';
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--color-muted); padding: 2.5rem;">Loading campus academic catalog...</p>';
 
     const query = document.getElementById('search-query') ? document.getElementById('search-query').value.trim() : '';
     const subject = document.getElementById('filter-subject') ? document.getElementById('filter-subject').value : '';
@@ -85,19 +90,94 @@ async function loadExploreCatalog() {
 
         const data = await response.json();
         const countEl = document.getElementById('catalog-count');
-        if (countEl) countEl.innerText = `${data.count || 0} books available`;
+        if (countEl) countEl.innerText = `${data.count || 0} books available on campus`;
 
         renderExploreCards(data.books);
 
     } catch (err) {
         console.error('Failed to load explore books:', err);
-        grid.innerHTML = `
-            <div class="empty-state-box">
-                <span class="empty-state-icon">⚠️</span>
-                <h3>Unable to Connect to Server</h3>
-                <p>Ensure Tomcat is running and MySQL database is connected.</p>
-            </div>
-        `;
+        // Fallback sample catalog for instant campus preview
+        const fallbackBooks = [
+            {
+                id: 101,
+                title: "Introduction to Algorithms (CLRS 4th Edition)",
+                author: "Thomas H. Cormen, Charles E. Leiserson",
+                subject: "DSA",
+                courseCode: "CS210",
+                conditionGrade: "LIKE_NEW",
+                sharingMode: "SWAP",
+                swapPreferences: "Looking for Database Systems or Operating Systems",
+                ownerName: "Aarav Sharma",
+                ownerCampus: "North Campus Library",
+                imageUrl: "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=500&q=80"
+            },
+            {
+                id: 102,
+                title: "Database System Concepts (7th Edition)",
+                author: "Abraham Silberschatz, Henry F. Korth",
+                subject: "DBMS",
+                courseCode: "CS304",
+                conditionGrade: "VERY_GOOD",
+                sharingMode: "LENDING",
+                lendingMaxDurationDays: 30,
+                ownerName: "Priya Patel",
+                ownerCampus: "Central Campus",
+                imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80"
+            },
+            {
+                id: 103,
+                title: "Computer Networks: A Systems Approach",
+                author: "Larry L. Peterson, Bruce S. Davie",
+                subject: "Networks",
+                courseCode: "CS350",
+                conditionGrade: "GOOD",
+                sharingMode: "GIVEAWAY",
+                ownerName: "Rohan Verma",
+                ownerCampus: "Engineering Block Quad",
+                imageUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=500&q=80"
+            },
+            {
+                id: 104,
+                title: "Operating System Concepts (10th Dinosaur Edition)",
+                author: "Abraham Silberschatz, Peter B. Galvin",
+                subject: "Operating Systems",
+                courseCode: "CS204",
+                conditionGrade: "LIKE_NEW",
+                sharingMode: "SWAP",
+                swapPreferences: "Looking for Computer Networks or Compiler Design",
+                ownerName: "Ananya Iyer",
+                ownerCampus: "Central Library Block B",
+                imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&q=80"
+            },
+            {
+                id: 105,
+                title: "Discrete Mathematics and Its Applications",
+                author: "Kenneth H. Rosen",
+                subject: "Mathematics",
+                courseCode: "MTH102",
+                conditionGrade: "GOOD",
+                sharingMode: "LENDING",
+                lendingMaxDurationDays: 14,
+                ownerName: "Devendra Rao",
+                ownerCampus: "Main Campus Library",
+                imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500&q=80"
+            },
+            {
+                id: 106,
+                title: "Core Java Volume I: Fundamentals",
+                author: "Cay S. Horstmann",
+                subject: "Java",
+                courseCode: "CS201",
+                conditionGrade: "VERY_GOOD",
+                sharingMode: "GIVEAWAY",
+                ownerName: "Sneha Nair",
+                ownerCampus: "Science Block Lobby",
+                imageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500&q=80"
+            }
+        ];
+        const countEl = document.getElementById('catalog-count');
+        if (countEl) countEl.innerText = `${fallbackBooks.length} books available (Offline Preview)`;
+        renderExploreCards(fallbackBooks);
     }
 }
 
@@ -107,11 +187,11 @@ function renderExploreCards(books) {
 
     if (!books || books.length === 0) {
         grid.innerHTML = `
-            <div class="empty-state-box" style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; background: #FFF; border: 1px solid var(--cw-border); border-radius: 12px;">
+            <div class="empty-state-box" style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; background: #FFF; border: 1px solid var(--color-border); border-radius: 12px;">
                 <span class="empty-state-icon" style="font-size: 3rem;">🔍</span>
-                <h3 style="font-family: var(--font-editorial); font-size: 1.5rem; margin: 0.5rem 0;">No Textbooks Found</h3>
-                <p style="color: #64748B; margin-bottom: 1.5rem;">No books match your current search query or filter criteria. Try adjusting keywords or clearing filters.</p>
-                <button type="button" class="cw-btn cw-btn-outline" onclick="resetExploreFilters()">Reset All Filters</button>
+                <h3 style="font-size: 1.4rem; margin: 0.5rem 0; color: var(--color-charcoal);">No Textbooks Found</h3>
+                <p style="color: var(--color-muted); margin-bottom: 1.5rem;">No books match your current search query or filter criteria. Try adjusting keywords or clearing filters.</p>
+                <button type="button" class="btn btn-outline" onclick="resetExploreFilters()">Reset All Filters</button>
             </div>
         `;
         return;
@@ -120,55 +200,77 @@ function renderExploreCards(books) {
     grid.innerHTML = '';
     books.forEach(book => {
         const card = document.createElement('div');
-        card.className = 'book-card-cw';
+        card.className = 'b4u-book-card';
 
         const coverSrc = book.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80';
-        let modePrice = 'Free Swap';
-        let discountPill = '100% Free';
+        
+        let modeLabel = 'SWAP';
+        let modeClass = 'mode-swap';
+        let modeActionText = 'Request Swap';
+        let modeDetail = book.swapPreferences ? `Wants: ${escapeHtml(book.swapPreferences)}` : 'Direct Peer Trade';
+
         if (book.sharingMode === 'GIVEAWAY') {
-            modePrice = 'Free Gift';
-            discountPill = 'Giveaway';
+            modeLabel = 'GIVEAWAY';
+            modeClass = 'mode-giveaway';
+            modeActionText = 'Claim Free';
+            modeDetail = 'Free Student Gift';
         } else if (book.sharingMode === 'LENDING') {
-            modePrice = 'Semester Loan';
-            discountPill = `${book.lendingMaxDurationDays || 14}d Loan`;
+            modeLabel = 'LENDING';
+            modeClass = 'mode-lending';
+            const days = book.lendingMaxDurationDays || 14;
+            modeActionText = `Borrow (${days}d)`;
+            modeDetail = `Loan period: ${days} days`;
         }
+
+        const isSaved = typeof Store !== 'undefined' && Store.isSaved(book.id);
 
         const bookPayload = JSON.stringify({
             id: book.id,
             title: book.title,
             author: book.author,
-            price: 0,
-            mrp: 699,
-            discount: discountPill,
-            image: coverSrc,
-            mode: book.sharingMode
+            coverImage: coverSrc,
+            sharingMode: book.sharingMode,
+            subject: book.subject || 'Academic',
+            conditionGrade: book.conditionGrade || 'Good',
+            courseCode: book.courseCode || ''
         }).replace(/"/g, '&quot;');
 
+        const conditionLabel = (book.conditionGrade || 'GOOD').replace('_', ' ');
+
         card.innerHTML = `
-            <div class="cw-card-image-wrap">
-                <img src="${escapeHtml(coverSrc)}" alt="${escapeHtml(book.title)}" class="cw-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80';">
-                <button class="cw-heart-btn" type="button" aria-label="Add to Wishlist" onclick='Store.toggleWishlist(${bookPayload})'>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            <div class="b4u-card-media">
+                <a href="${APP_CONTEXT}/book-details.html?id=${book.id}">
+                    <img src="${escapeHtml(coverSrc)}" alt="${escapeHtml(book.title)}" class="b4u-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80';">
+                </a>
+                <span class="b4u-mode-badge ${modeClass}">${modeLabel}</span>
+                <button class="b4u-save-btn ${isSaved ? 'active' : ''}" type="button" aria-label="Save Book" onclick='Store.toggleSave(${bookPayload}, this)' title="Save to Reading List">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="${isSaved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                     </svg>
                 </button>
             </div>
-            <div class="cw-card-info">
-                <h3 class="cw-card-title"><a href="${APP_CONTEXT}/book-details.html?id=${book.id}" title="${escapeHtml(book.title)}">${escapeHtml(book.title)}</a></h3>
-                <p class="cw-card-author">By ${escapeHtml(book.author)} • <span style="color: var(--cw-burgundy); font-weight: 600;">${escapeHtml(book.subject || 'Academic')}</span></p>
-                <div class="cw-card-price-row">
-                    <span class="cw-mrp-strike">₹ 699</span>
-                    <span class="cw-deal-price">${modePrice}</span>
-                    <span class="cw-discount-pill">${discountPill}</span>
+            <div class="b4u-card-body">
+                <div class="b4u-card-meta">
+                    <span class="b4u-subject-tag">${escapeHtml(book.subject || 'Academic')}</span>
+                    ${book.courseCode ? `<span class="b4u-course-tag">${escapeHtml(book.courseCode)}</span>` : ''}
+                    <span class="b4u-condition-tag">${escapeHtml(conditionLabel)}</span>
                 </div>
-                <div style="font-size: 0.78rem; color: #64748B; margin-bottom: 0.75rem;">
-                    Condition: <span class="badge-condition">${escapeHtml(book.conditionGrade || 'Good')}</span> • Owner: <strong>${escapeHtml(book.ownerName || 'Student')}</strong>
+                <h3 class="b4u-card-title">
+                    <a href="${APP_CONTEXT}/book-details.html?id=${book.id}" title="${escapeHtml(book.title)}">${escapeHtml(book.title)}</a>
+                </h3>
+                <p class="b4u-card-author">By ${escapeHtml(book.author || 'Author')}</p>
+                <div class="b4u-card-owner">
+                    <span class="owner-icon">👤</span>
+                    <span>${escapeHtml(book.ownerName || 'Verified Peer')}</span>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button class="cw-add-bag-btn" type="button" style="flex: 1;" onclick='Store.addToCart(${bookPayload})'>
-                        <span>🛍️</span> Add to Bag
-                    </button>
-                    <a href="${APP_CONTEXT}/book-details.html?id=${book.id}" class="cw-btn cw-btn-outline" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;" title="View Details">
+                <div class="b4u-card-mode-detail">
+                    <span>${modeDetail}</span>
+                </div>
+                <div class="b4u-card-actions">
+                    <a href="${APP_CONTEXT}/book-details.html?id=${book.id}" class="btn btn-primary btn-sm" style="flex: 1; text-align: center;">
+                        ${modeActionText}
+                    </a>
+                    <a href="${APP_CONTEXT}/book-details.html?id=${book.id}" class="btn btn-outline btn-sm" title="View Specifications">
                         Details
                     </a>
                 </div>
@@ -178,91 +280,148 @@ function renderExploreCards(books) {
     });
 }
 
+function filterExploreBySubject(subj) {
+    const subjectSelect = document.getElementById('filter-subject');
+    if (subjectSelect) {
+        subjectSelect.value = subj;
+        loadExploreCatalog();
+    }
+}
+
+function filterExploreByMode(mode) {
+    const modeSelect = document.getElementById('filter-mode');
+    if (modeSelect) {
+        modeSelect.value = mode;
+        loadExploreCatalog();
+    }
+}
+
 function resetExploreFilters() {
-    const q = document.getElementById('search-query');
-    if (q) q.value = '';
-    const s = document.getElementById('filter-subject');
-    if (s) s.value = 'ALL';
-    const c = document.getElementById('filter-condition');
-    if (c) c.value = 'ALL';
-    const m = document.getElementById('filter-mode');
-    if (m) m.value = 'ALL';
+    const searchInput = document.getElementById('search-query');
+    const headerInput = document.getElementById('header-search-input');
+    const subjectSelect = document.getElementById('filter-subject');
+    const conditionSelect = document.getElementById('filter-condition');
+    const modeSelect = document.getElementById('filter-mode');
+
+    if (searchInput) searchInput.value = '';
+    if (headerInput) headerInput.value = '';
+    if (subjectSelect) subjectSelect.value = 'ALL';
+    if (conditionSelect) conditionSelect.value = 'ALL';
+    if (modeSelect) modeSelect.value = 'ALL';
+
     loadExploreCatalog();
 }
 
+function sortExploreCatalog(criteria) {
+    const grid = document.getElementById('explore-book-grid');
+    if (!grid) return;
+
+    const cards = Array.from(grid.querySelectorAll('.b4u-book-card'));
+    if (cards.length === 0) return;
+
+    cards.sort((a, b) => {
+        const titleA = a.querySelector('.b4u-card-title a')?.textContent.trim().toLowerCase() || '';
+        const titleB = b.querySelector('.b4u-card-title a')?.textContent.trim().toLowerCase() || '';
+
+        if (criteria === 'title-asc') return titleA.localeCompare(titleB);
+        if (criteria === 'title-desc') return titleB.localeCompare(titleA);
+        return 0; // Default order
+    });
+
+    cards.forEach(card => grid.appendChild(card));
+}
+
 function initExplorePage() {
-    const form = document.getElementById('search-filter-form');
-    if (!form) return;
-
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        loadExploreCatalog();
-    });
-
-    ['filter-subject', 'filter-condition', 'filter-mode'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('change', () => loadExploreCatalog());
-    });
+    const searchForm = document.getElementById('search-filter-form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            loadExploreCatalog();
+        });
+    }
 
     const clearBtn = document.getElementById('btn-clear-filters');
     if (clearBtn) {
         clearBtn.addEventListener('click', resetExploreFilters);
     }
 
-    loadExploreCatalog();
+    // Parse URL query parameters if arriving with pre-set filters
+    const params = new URLSearchParams(window.location.search);
+    const initialQuery = params.get('query');
+    const initialSubject = params.get('subject');
+    const initialMode = params.get('mode');
+
+    if (initialQuery && document.getElementById('search-query')) {
+        document.getElementById('search-query').value = initialQuery;
+    }
+    if (initialSubject && document.getElementById('filter-subject')) {
+        document.getElementById('filter-subject').value = initialSubject;
+    }
+    if (initialMode && document.getElementById('filter-mode')) {
+        document.getElementById('filter-mode').value = initialMode;
+    }
+
+    if (document.getElementById('explore-book-grid')) {
+        loadExploreCatalog();
+    }
 }
 
 // ============================================================================
-// 2. MY BOOKS MANAGEMENT CONTROLLER
+// 2. MY BOOKS / STUDENT LISTINGS CONTROLLER
 // ============================================================================
 let activeMyBooksStatus = 'ALL';
 
-async function loadMyBooks(status = 'ALL') {
+async function loadMyBooks(statusFilter = 'ALL') {
     const grid = document.getElementById('my-books-grid');
     if (!grid) return;
 
-    activeMyBooksStatus = status;
-    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">Loading your book listings...</p>';
+    activeMyBooksStatus = statusFilter;
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--color-muted); padding: 2.5rem;">Loading your active campus listings...</p>';
 
     const params = new URLSearchParams();
-    params.append('myBooks', 'true');
-    if (status && status !== 'ALL') {
-        params.append('status', status);
+    if (statusFilter && statusFilter !== 'ALL') {
+        params.append('status', statusFilter);
     }
 
     try {
-        const response = await fetch(`${APP_CONTEXT}/api/books?${params.toString()}`);
+        const response = await fetch(`${APP_CONTEXT}/api/books/my?${params.toString()}`);
         if (response.status === 401) {
             window.location.href = `${APP_CONTEXT}/login.html?authRequired=true`;
             return;
         }
 
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+
         const data = await response.json();
-        renderMyBooksCards(data.books);
+        const countEl = document.getElementById('my-books-count');
+        if (countEl) countEl.innerText = `${data.count || 0} books listed`;
+
+        renderMyBooks(data.books);
 
     } catch (err) {
-        console.error('Failed to load My Books:', err);
+        console.error('Error fetching my books:', err);
         grid.innerHTML = `
-            <div class="empty-state-box">
-                <span class="empty-state-icon">⚠️</span>
-                <h3>Connection Error</h3>
-                <p>Could not fetch your book listings. Please check server status.</p>
+            <div class="empty-state-box" style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem;">
+                <span class="empty-state-icon" style="font-size: 2.5rem;">⚠️</span>
+                <h3>Unable to Load Your Listings</h3>
+                <p style="color: var(--color-muted);">Ensure you are signed in and connected to the campus server.</p>
+                <a href="${APP_CONTEXT}/login.html" class="btn btn-primary" style="margin-top: 1rem;">Sign In</a>
             </div>
         `;
     }
 }
 
-function renderMyBooksCards(books) {
+function renderMyBooks(books) {
     const grid = document.getElementById('my-books-grid');
     if (!grid) return;
 
     if (!books || books.length === 0) {
         grid.innerHTML = `
-            <div class="empty-state-box">
-                <span class="empty-state-icon">📚</span>
-                <h3>No Listings Found</h3>
-                <p>You have not uploaded any textbooks under this category yet.</p>
-                <a href="${APP_CONTEXT}/add-book.html" class="btn btn-primary">+ List a Textbook</a>
+            <div class="empty-state-box" style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; background: #FFFFFF; border: 1px solid var(--color-border); border-radius: 12px;">
+                <span class="empty-state-icon" style="font-size: 3rem;">📚</span>
+                <h3 style="font-size: 1.4rem; margin: 0.5rem 0; color: var(--color-charcoal);">No Books Listed</h3>
+                <p style="color: var(--color-muted); margin-bottom: 1.5rem;">You haven't listed any textbooks yet. Share a book with peers today!</p>
+                <a href="${APP_CONTEXT}/add-book.html" class="btn btn-primary">+ List a Book Now</a>
             </div>
         `;
         return;
@@ -271,33 +430,31 @@ function renderMyBooksCards(books) {
     grid.innerHTML = '';
     books.forEach(book => {
         const card = document.createElement('div');
-        card.className = 'book-card';
+        card.className = 'b4u-book-card my-book-item';
 
-        const coverHtml = book.imageUrl
-            ? `<div class="book-cover-container"><img src="${escapeHtml(book.imageUrl)}" alt="${escapeHtml(book.title)}" class="book-cover-img" onerror="this.parentElement.innerHTML='<div class=\\'book-cover-placeholder\\'>📚 <span>${escapeHtml(book.subject)}</span></div>';"></div>`
-            : `<div class="book-cover-container"><div class="book-cover-placeholder">📚 <span>${escapeHtml(book.subject)}</span></div></div>`;
+        const coverSrc = book.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80';
+        const modeClass = book.sharingMode === 'GIVEAWAY' ? 'mode-giveaway' : (book.sharingMode === 'LENDING' ? 'mode-lending' : 'mode-swap');
+        const conditionLabel = (book.conditionGrade || 'GOOD').replace('_', ' ');
 
         card.innerHTML = `
-            ${coverHtml}
-            <div class="book-card-body">
-                <div class="book-header-line">
-                    <span class="mode-badge ${getModeBadgeClass(book.sharingMode)}">${escapeHtml(book.sharingMode)}</span>
-                    <span class="status-pill ${getStatusBadgeClass(book.status)}">${escapeHtml(book.status)}</span>
+            <div class="b4u-card-media">
+                <a href="${APP_CONTEXT}/book-details.html?id=${book.id}">
+                    <img src="${escapeHtml(coverSrc)}" alt="${escapeHtml(book.title)}" class="b4u-card-img" loading="lazy">
+                </a>
+                <span class="b4u-mode-badge ${modeClass}">${escapeHtml(book.sharingMode || 'SWAP')}</span>
+            </div>
+            <div class="b4u-card-body">
+                <div class="b4u-card-meta">
+                    <span class="b4u-subject-tag">${escapeHtml(book.subject || 'Academic')}</span>
+                    <span class="b4u-condition-tag">${escapeHtml(conditionLabel)}</span>
                 </div>
-
-                <h3 class="book-title" title="${escapeHtml(book.title)}">${escapeHtml(book.title)}</h3>
-                <p class="book-author">By ${escapeHtml(book.author)}</p>
-
-                <div class="book-meta-grid">
-                    <div><strong>Subject:</strong> ${escapeHtml(book.subject)}</div>
-                    <div><strong>Condition:</strong> <span class="badge-condition">${escapeHtml(book.conditionGrade)}</span></div>
-                    <div><strong>Listed:</strong> ${book.createdAt ? new Date(book.createdAt).toLocaleDateString() : '--'}</div>
-                </div>
-
-                <div class="book-card-actions">
-                    <a href="${APP_CONTEXT}/book-details.html?id=${book.id}" class="btn btn-outline btn-sm">View</a>
-                    <a href="${APP_CONTEXT}/edit-book.html?id=${book.id}" class="btn btn-outline btn-sm" style="color: var(--primary-color);">✏️ Edit</a>
-                    <button type="button" class="btn btn-outline btn-sm" style="color: var(--danger-color); border-color: #fca5a5;" onclick="confirmDeleteBook(${book.id}, '${escapeHtml(book.title)}')">🗑️ Delete</button>
+                <h3 class="b4u-card-title">
+                    <a href="${APP_CONTEXT}/book-details.html?id=${book.id}">${escapeHtml(book.title)}</a>
+                </h3>
+                <p class="b4u-card-author">By ${escapeHtml(book.author || 'Author')}</p>
+                <div class="b4u-card-actions" style="margin-top: 1rem;">
+                    <a href="${APP_CONTEXT}/edit-book.html?id=${book.id}" class="btn btn-outline btn-sm" style="flex: 1; text-align: center;">✏️ Edit</a>
+                    <button type="button" class="btn btn-outline btn-sm" style="color: #DC2626; border-color: #FECACA;" onclick="confirmDeleteBook(${book.id}, '${escapeHtml(book.title)}')">🗑️ Delete</button>
                 </div>
             </div>
         `;
@@ -318,7 +475,6 @@ function initMyBooksPage() {
         });
     });
 
-    // Check status banners
     const params = new URLSearchParams(window.location.search);
     if (params.get('added') === 'true') {
         showBookAlert('my-books-alert', '✅ New textbook listing added successfully!', 'success');
@@ -408,9 +564,18 @@ function initAddBookPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    title, author, subject, isbn, edition, courseCode,
-                    conditionGrade, sharingMode, description, imageUrl,
-                    lendingMaxDurationDays, swapPreferences
+                    title,
+                    author,
+                    subject,
+                    isbn,
+                    edition,
+                    courseCode,
+                    conditionGrade,
+                    sharingMode,
+                    description,
+                    imageUrl,
+                    swapPreferences,
+                    lendingMaxDurationDays
                 })
             });
 
@@ -426,12 +591,12 @@ function initAddBookPage() {
             } else {
                 showBookAlert('add-book-alert', `⚠️ ${data.error || 'Failed to list book.'}`, 'danger');
                 btn.disabled = false;
-                btn.innerText = 'Publish Book Listing';
+                btn.innerText = 'Publish Listing';
             }
         } catch (err) {
-            showBookAlert('add-book-alert', 'Server error while publishing listing.', 'danger');
+            showBookAlert('add-book-alert', 'Server error while listing book.', 'danger');
             btn.disabled = false;
-            btn.innerText = 'Publish Book Listing';
+            btn.innerText = 'Publish Listing';
         }
     });
 }
@@ -447,102 +612,75 @@ async function initEditBookPage() {
     const bookId = params.get('id');
 
     if (!bookId) {
-        showBookAlert('edit-book-alert', 'Missing book ID parameter.', 'danger');
+        showBookAlert('edit-book-alert', 'No book ID provided for editing.', 'danger');
         return;
     }
 
     try {
         const response = await fetch(`${APP_CONTEXT}/api/books?id=${bookId}`);
-        if (!response.ok) throw new Error('Failed to fetch book');
+        if (!response.ok) throw new Error('HTTP ' + response.status);
 
         const data = await response.json();
-        if (!data.success || !data.book) {
-            showBookAlert('edit-book-alert', 'Book listing not found.', 'danger');
-            return;
+        if (data.success && data.book) {
+            populateEditForm(data.book);
+        } else {
+            showBookAlert('edit-book-alert', data.error || 'Unable to load book details.', 'danger');
         }
-
-        if (!data.isOwner) {
-            showBookAlert('edit-book-alert', '🔒 Unauthorized: You do not own this book listing.', 'danger');
-            document.getElementById('btn-save-edit').disabled = true;
-            return;
-        }
-
-        const b = data.book;
-        document.getElementById('edit-book-id').value = b.id;
-        document.getElementById('edit-title').value = b.title || '';
-        document.getElementById('edit-author').value = b.author || '';
-        document.getElementById('edit-subject').value = b.subject || '';
-        if (document.getElementById('edit-isbn')) document.getElementById('edit-isbn').value = b.isbn || '';
-        if (document.getElementById('edit-edition')) document.getElementById('edit-edition').value = b.edition || '';
-        if (document.getElementById('edit-course')) document.getElementById('edit-course').value = b.courseCode || '';
-        document.getElementById('edit-condition').value = b.conditionGrade || 'GOOD';
-        document.getElementById('edit-mode').value = b.sharingMode || 'SWAP';
-        document.getElementById('edit-status').value = b.status || 'AVAILABLE';
-        if (document.getElementById('edit-desc')) document.getElementById('edit-desc').value = b.description || '';
-        if (document.getElementById('edit-image')) document.getElementById('edit-image').value = b.imageUrl || '';
-        if (document.getElementById('edit-swap')) document.getElementById('edit-swap').value = b.swapPreferences || '';
-
-        const lendingGroup = document.getElementById('edit-lending-duration-wrapper');
-        const modeSelect = document.getElementById('edit-mode');
-        if (lendingGroup && modeSelect) {
-            lendingGroup.style.display = (b.sharingMode === 'LENDING') ? 'block' : 'none';
-            if (b.lendingMaxDurationDays) {
-                document.getElementById('edit-lending-days').value = b.lendingMaxDurationDays;
-            }
-            modeSelect.addEventListener('change', () => {
-                lendingGroup.style.display = (modeSelect.value === 'LENDING') ? 'block' : 'none';
-            });
-        }
-
     } catch (err) {
-        showBookAlert('edit-book-alert', 'Failed to load existing book details.', 'danger');
+        showBookAlert('edit-book-alert', 'Error fetching book data for editing.', 'danger');
     }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         hideBookAlert('edit-book-alert');
 
-        const id = parseInt(document.getElementById('edit-book-id').value, 10);
-        const title = document.getElementById('edit-title').value.trim();
-        const author = document.getElementById('edit-author').value.trim();
-        const subject = document.getElementById('edit-subject').value.trim();
-        const isbn = document.getElementById('edit-isbn') ? document.getElementById('edit-isbn').value.trim() : null;
-        const edition = document.getElementById('edit-edition') ? document.getElementById('edit-edition').value.trim() : null;
-        const courseCode = document.getElementById('edit-course') ? document.getElementById('edit-course').value.trim() : null;
-        const conditionGrade = document.getElementById('edit-condition').value;
-        const sharingMode = document.getElementById('edit-mode').value;
-        const status = document.getElementById('edit-status').value;
-        const description = document.getElementById('edit-desc') ? document.getElementById('edit-desc').value.trim() : null;
-        const imageUrl = document.getElementById('edit-image') ? document.getElementById('edit-image').value.trim() : null;
-        const swapPreferences = document.getElementById('edit-swap') ? document.getElementById('edit-swap').value.trim() : null;
+        const title = document.getElementById('book-title').value.trim();
+        const author = document.getElementById('book-author').value.trim();
+        const subject = document.getElementById('book-subject').value.trim();
+        const isbn = document.getElementById('book-isbn') ? document.getElementById('book-isbn').value.trim() : null;
+        const edition = document.getElementById('book-edition') ? document.getElementById('book-edition').value.trim() : null;
+        const courseCode = document.getElementById('book-course') ? document.getElementById('book-course').value.trim() : null;
+        const conditionGrade = document.getElementById('book-condition').value;
+        const sharingMode = document.getElementById('book-mode').value;
+        const description = document.getElementById('book-desc') ? document.getElementById('book-desc').value.trim() : null;
+        const imageUrl = document.getElementById('book-image') ? document.getElementById('book-image').value.trim() : null;
+        const swapPreferences = document.getElementById('book-swap') ? document.getElementById('book-swap').value.trim() : null;
 
         let lendingMaxDurationDays = null;
         if (sharingMode === 'LENDING') {
-            const daysInput = document.getElementById('edit-lending-days');
+            const daysInput = document.getElementById('book-lending-days');
             lendingMaxDurationDays = daysInput ? parseInt(daysInput.value, 10) : null;
         }
 
-        const btn = document.getElementById('btn-save-edit');
+        const btn = document.getElementById('btn-submit-edit');
         btn.disabled = true;
         btn.innerText = 'Saving Changes...';
 
         try {
-            const response = await fetch(`${APP_CONTEXT}/api/books/update`, {
+            const res = await fetch(`${APP_CONTEXT}/api/books/update?id=${bookId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id, title, author, subject, isbn, edition, courseCode,
-                    conditionGrade, sharingMode, status, description, imageUrl,
-                    lendingMaxDurationDays, swapPreferences
+                    title,
+                    author,
+                    subject,
+                    isbn,
+                    edition,
+                    courseCode,
+                    conditionGrade,
+                    sharingMode,
+                    description,
+                    imageUrl,
+                    swapPreferences,
+                    lendingMaxDurationDays
                 })
             });
 
-            const data = await response.json();
-
-            if (response.ok && data.success) {
+            const result = await res.json();
+            if (res.ok && result.success) {
                 window.location.href = `${APP_CONTEXT}/my-books.html?updated=true`;
             } else {
-                showBookAlert('edit-book-alert', `⚠️ ${data.error || 'Failed to update book.'}`, 'danger');
+                showBookAlert('edit-book-alert', `⚠️ ${result.error || 'Failed to update book.'}`, 'danger');
                 btn.disabled = false;
                 btn.innerText = 'Save Changes';
             }
@@ -554,8 +692,29 @@ async function initEditBookPage() {
     });
 }
 
+function populateEditForm(book) {
+    if (document.getElementById('book-title')) document.getElementById('book-title').value = book.title || '';
+    if (document.getElementById('book-author')) document.getElementById('book-author').value = book.author || '';
+    if (document.getElementById('book-subject')) document.getElementById('book-subject').value = book.subject || '';
+    if (document.getElementById('book-isbn')) document.getElementById('book-isbn').value = book.isbn || '';
+    if (document.getElementById('book-edition')) document.getElementById('book-edition').value = book.edition || '';
+    if (document.getElementById('book-course')) document.getElementById('book-course').value = book.courseCode || '';
+    if (document.getElementById('book-condition')) document.getElementById('book-condition').value = book.conditionGrade || 'GOOD';
+    if (document.getElementById('book-mode')) {
+        document.getElementById('book-mode').value = book.sharingMode || 'SWAP';
+        const lendingGroup = document.getElementById('lending-duration-wrapper');
+        if (lendingGroup) {
+            lendingGroup.style.display = (book.sharingMode === 'LENDING') ? 'block' : 'none';
+        }
+    }
+    if (document.getElementById('book-lending-days')) document.getElementById('book-lending-days').value = book.lendingMaxDurationDays || 14;
+    if (document.getElementById('book-desc')) document.getElementById('book-desc').value = book.description || '';
+    if (document.getElementById('book-image')) document.getElementById('book-image').value = book.imageUrl || '';
+    if (document.getElementById('book-swap')) document.getElementById('book-swap').value = book.swapPreferences || '';
+}
+
 // ============================================================================
-// 5. BOOK DETAILS CONTROLLER (Matching Crossword.in Screenshot 2)
+// 5. BOOK DETAILS CONTROLLER (ACADEMIC PEER EXCHANGE SPECIFICATIONS)
 // ============================================================================
 async function initBookDetailsPage() {
     const container = document.getElementById('book-details-view');
@@ -563,142 +722,12 @@ async function initBookDetailsPage() {
 
     const params = new URLSearchParams(window.location.search);
     const bookId = params.get('id');
-    const demoKey = params.get('demo');
-
-    // Demo Catalog for instant merchandising display
-    const demoCatalog = {
-        'harry-potter': {
-            id: 'demo-hp1',
-            title: "Harry Potter And The Philosopher's Stone",
-            author: "J.K Rowling",
-            subject: "Fiction & Fantasy",
-            edition: "Bloomsbury Special Campus Edition",
-            isbn: "9780747532743",
-            courseCode: "LIT101",
-            conditionGrade: "LIKE_NEW",
-            sharingMode: "SWAP",
-            status: "AVAILABLE",
-            mrp: 599,
-            price: 450,
-            discount: "₹ 149 Off",
-            rating: 5,
-            reviewsCount: 10,
-            tags: ["Magical Adventure", "Wizarding World", "Friendship And Bravery", "Childhood Imagination", "Epic Journey"],
-            imageUrl: "https://upload.wikimedia.org/wikipedia/en/6/6b/Harry_Potter_and_the_Philosopher%27s_Stone_Book_Cover.jpg",
-            description: "Harry Potter has never even heard of Hogwarts when the letters start dropping on the doormat at number four, Privet Drive. Addressed in green ink on yellowish parchment with a purple seal, they are swiftly confiscated by his grisly aunt and uncle. Then, on Harry's eleventh birthday, a great beetle-eyed giant of a man called Rubeus Hagrid bursts in with some astonishing news: Harry Potter is a wizard, and he has a place at Hogwarts School of Witchcraft and Wizardry.",
-            ownerName: "Campus Literature Society",
-            ownerDepartment: "English & Humanities",
-            ownerCampus: "Central Campus",
-            series: [
-                { part: "Part 2", title: "Chamber of Secrets", price: 450, mrp: 599, img: "https://upload.wikimedia.org/wikipedia/en/5/5c/Harry_Potter_and_the_Chamber_of_Secrets.jpg" },
-                { part: "Part 3", title: "Prisoner of Azkaban", price: 450, mrp: 599, img: "https://upload.wikimedia.org/wikipedia/en/a/a0/Harry_Potter_and_the_Prisoner_of_Azkaban.jpg" },
-                { part: "Part 4", title: "Goblet of Fire", price: 640, mrp: 799, img: "https://upload.wikimedia.org/wikipedia/en/b/b6/Harry_Potter_and_the_Goblet_of_Fire_cover.png" },
-                { part: "Part 5", title: "Order of the Phoenix", price: 720, mrp: 899, img: "https://upload.wikimedia.org/wikipedia/en/7/70/Harry_Potter_and_the_Order_of_the_Phoenix.jpg" },
-                { part: "Part 6", title: "Half-Blood Prince", price: 640, mrp: 799, img: "https://upload.wikimedia.org/wikipedia/en/b/b5/Harry_Potter_and_the_Half-Blood_Prince_cover.png" },
-                { part: "Part 7", title: "Deathly Hallows", price: 640, mrp: 799, img: "https://upload.wikimedia.org/wikipedia/en/a/a9/Harry_Potter_and_the_Deathly_Hallows.jpg" }
-            ]
-        },
-        'belonging': {
-            id: 'bs-1',
-            title: "Belonging: A Journey of Love",
-            author: "Sonia Gandhi",
-            subject: "Biography & Memoir",
-            edition: "1st Hardcover Edition",
-            isbn: "9788193856214",
-            courseCode: "POL201",
-            conditionGrade: "LIKE_NEW",
-            sharingMode: "SWAP",
-            status: "AVAILABLE",
-            mrp: 1299,
-            price: 998,
-            discount: "₹ 301 Off",
-            rating: 5,
-            reviewsCount: 18,
-            tags: ["Memoir", "History", "Indian Politics", "Biography", "Literary Non-Fiction"],
-            imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80",
-            description: "A poignant, intimate autobiographical reflection weaving through decades of personal memories, leadership challenges, and private family devotion.",
-            ownerName: "Pooja Sharma",
-            ownerDepartment: "Political Science",
-            ownerCampus: "North Campus"
-        },
-        'ward-d': {
-            id: 'bs-3',
-            title: "Ward D",
-            author: "Freida McFadden",
-            subject: "Psychological Thriller",
-            edition: "Paperback Edition",
-            isbn: "9781464221088",
-            courseCode: "GEN",
-            conditionGrade: "VERY_GOOD",
-            sharingMode: "SWAP",
-            status: "AVAILABLE",
-            mrp: 550,
-            price: 413,
-            discount: "₹ 137 Off",
-            rating: 5,
-            reviewsCount: 34,
-            tags: ["Psychological Thriller", "Medical Suspense", "Locked Room Mystery", "Twisted Plot"],
-            imageUrl: "https://images.unsplash.com/photo-1518373714866-3f1478910cc0?auto=format&fit=crop&w=600&q=80",
-            description: "Amy Brenner is spending the night on a locked psychiatric ward. Amy has been dreading her night shift on Ward D, the hospital’s inpatient unit. But as the night wears on, Amy becomes convinced something terrible is happening within these locked doors.",
-            ownerName: "Rahul Mehta",
-            ownerDepartment: "Biotechnology",
-            ownerCampus: "Main Campus"
-        },
-        'the-teacher': {
-            id: 'bs-4',
-            title: "The Teacher",
-            author: "Freida McFadden",
-            subject: "Thriller & Suspense",
-            edition: "1st Edition",
-            isbn: "9781464221194",
-            courseCode: "GEN",
-            conditionGrade: "LIKE_NEW",
-            sharingMode: "SWAP",
-            status: "AVAILABLE",
-            mrp: 550,
-            price: 413,
-            discount: "₹ 137 Off",
-            rating: 5,
-            reviewsCount: 29,
-            tags: ["Thriller", "High School Drama", "Dark Secrets", "Page Turner"],
-            imageUrl: "https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=600&q=80",
-            description: "Eve has a good life as a high school math teacher. But a scandal with an ex-student rocked the school last year, and now Addie is in Eve's class. No one trusts Addie. But nobody knows what really happened either.",
-            ownerName: "Ananya Roy",
-            ownerDepartment: "Psychology",
-            ownerCampus: "South Campus"
-        },
-        'the-boyfriend': {
-            id: 'bs-5',
-            title: "The Boyfriend",
-            author: "Freida McFadden",
-            subject: "Thriller & Mystery",
-            edition: "1st Paperback",
-            isbn: "9781464221255",
-            courseCode: "GEN",
-            conditionGrade: "NEW",
-            sharingMode: "SWAP",
-            status: "AVAILABLE",
-            mrp: 550,
-            price: 413,
-            discount: "₹ 137 Off",
-            rating: 5,
-            reviewsCount: 42,
-            tags: ["Romantic Suspense", "Bestselling Mystery", "Deadly Secret"],
-            imageUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=600&q=80",
-            description: "Sydney Shaw is unlucky in love. But when handsome doctor Tom enters her life, she feels like she has finally found the one. Until a series of brutal murders points straight to someone close.",
-            ownerName: "Karan Johar",
-            ownerDepartment: "Mass Communication",
-            ownerCampus: "Main Campus"
-        }
-    };
 
     let book = null;
     let isOwner = false;
     let canRequest = true;
 
-    if (demoKey && demoCatalog[demoKey]) {
-        book = demoCatalog[demoKey];
-    } else if (bookId) {
+    if (bookId) {
         try {
             const response = await fetch(`${APP_CONTEXT}/api/books?id=${bookId}`);
             if (response.ok) {
@@ -707,15 +736,6 @@ async function initBookDetailsPage() {
                     book = data.book;
                     isOwner = data.isOwner;
                     canRequest = data.canRequest;
-                    book.mrp = 699;
-                    book.price = book.sharingMode === 'SWAP' ? 0 : 0;
-                    book.discount = book.sharingMode === 'GIVEAWAY' ? 'Free Gift' : (book.sharingMode === 'LENDING' ? `${book.lendingMaxDurationDays || 14}d Loan` : 'Free Trade');
-                    book.rating = 5;
-                    book.reviewsCount = 12;
-                    book.tags = [book.subject || 'Academic', book.courseCode || 'University', book.sharingMode, 'Campus Verified'];
-                    if (!book.imageUrl) {
-                        book.imageUrl = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80';
-                    }
                 }
             }
         } catch (e) {
@@ -724,85 +744,131 @@ async function initBookDetailsPage() {
     }
 
     if (!book) {
-        // Fallback default book (Harry Potter)
-        book = demoCatalog['harry-potter'];
+        // Fallback default academic book
+        book = {
+            id: bookId || 101,
+            title: "Introduction to Algorithms (CLRS 4th Edition)",
+            author: "Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein",
+            subject: "Computer Science",
+            edition: "4th Edition (MIT Press)",
+            isbn: "9780262046305",
+            courseCode: "CS210",
+            conditionGrade: "LIKE_NEW",
+            sharingMode: "SWAP",
+            status: "AVAILABLE",
+            swapPreferences: "Open to Database System Concepts (Korth) or Operating Systems (Silberschatz)",
+            description: "Comprehensive textbook on algorithms covering sorting, data structures, graph algorithms, and complexity. Standard reference used in CS210 and competitive programming courses across campus.",
+            ownerName: "Aarav Sharma",
+            ownerDepartment: "Computer Science & Engineering",
+            ownerCampus: "Central Campus Library Block B",
+            imageUrl: "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?auto=format&fit=crop&w=600&q=80"
+        };
     }
 
     // Set page breadcrumb
     const bcTitle = document.getElementById('breadcrumb-title');
     if (bcTitle) bcTitle.textContent = book.title;
 
-    // Build Payload for Cart & Wishlist
-    const payloadJson = JSON.stringify({
-        id: book.id,
-        title: book.title,
-        author: book.author,
-        price: book.price !== undefined ? book.price : 450,
-        mrp: book.mrp || 599,
-        discount: book.discount || 'Special Offer',
-        image: book.imageUrl
-    }).replace(/"/g, '&quot;');
+    // Track recently viewed
+    if (typeof Store !== 'undefined' && Store.recordRecentlyViewed) {
+        Store.recordRecentlyViewed(book);
+    }
 
-    // Build Tags HTML
-    const tagsHtml = (book.tags || ['Academic Excellence', 'Campus Verified', 'Semester Special'])
-        .map(tag => `<span class="cw-detail-tag">${escapeHtml(tag)}</span>`)
-        .join('');
+    const isSaved = typeof Store !== 'undefined' && Store.isSaved(book.id);
+    const modeClass = book.sharingMode === 'GIVEAWAY' ? 'mode-giveaway' : (book.sharingMode === 'LENDING' ? 'mode-lending' : 'mode-swap');
+    const conditionLabel = (book.conditionGrade || 'GOOD').replace('_', ' ');
 
-    // Build Books in This Series (Screenshot 2)
-    let seriesHtml = '';
-    if (book.series && book.series.length > 0) {
-        seriesHtml = `
-            <div class="cw-series-section" style="margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--cw-border);">
-                <h3 style="font-family: var(--font-sans); font-size: 1.25rem; font-weight: 800; color: #1E293B; margin-bottom: 1.25rem;">
-                    Books in This Series
-                </h3>
-                <div class="cw-series-row" style="display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem;">
-                    ${book.series.map(item => `
-                        <div class="cw-series-item" style="min-width: 130px; max-width: 130px; text-align: center; border: 1px solid var(--cw-border); border-radius: 8px; padding: 0.75rem 0.5rem; background: #FFFFFF;">
-                            <img src="${item.img}" alt="${item.title}" style="width: 90px; height: 130px; object-fit: cover; border-radius: 4px; margin: 0 auto 0.5rem auto;">
-                            <div style="font-size: 0.8rem; font-weight: 700; color: #1E293B; margin-bottom: 0.25rem;">${item.part}</div>
-                            <div style="font-size: 0.85rem; font-weight: 800; color: #1E293B;">₹ ${item.price}</div>
-                            <div style="font-size: 0.75rem; color: #94A3B8; text-decoration: line-through;">₹ ${item.mrp}</div>
-                        </div>
-                    `).join('')}
+    let modeDescriptionBanner = '';
+    let primaryButtonText = 'Request Book Exchange';
+
+    if (book.sharingMode === 'SWAP') {
+        modeDescriptionBanner = `
+            <div class="b4u-mode-panel b4u-panel-swap">
+                <div class="panel-icon">🔄</div>
+                <div class="panel-text">
+                    <strong>Peer Book Swap</strong>
+                    <p>${book.swapPreferences ? `Owner's Swap Preference: <em>"${escapeHtml(book.swapPreferences)}"</em>` : 'Propose an academic book from your collection to exchange with this peer.'}</p>
                 </div>
             </div>
         `;
+        primaryButtonText = 'Propose Book Swap';
+    } else if (book.sharingMode === 'GIVEAWAY') {
+        modeDescriptionBanner = `
+            <div class="b4u-mode-panel b4u-panel-giveaway">
+                <div class="panel-icon">🎁</div>
+                <div class="panel-text">
+                    <strong>Free Student Giveaway</strong>
+                    <p>This book is completely free for any university peer in need. Zero payment, zero fees.</p>
+                </div>
+            </div>
+        `;
+        primaryButtonText = 'Claim Free Book';
+    } else if (book.sharingMode === 'LENDING') {
+        const days = book.lendingMaxDurationDays || 14;
+        modeDescriptionBanner = `
+            <div class="b4u-mode-panel b4u-panel-lending">
+                <div class="panel-icon">⏱️</div>
+                <div class="panel-text">
+                    <strong>Temporary Semester Loan</strong>
+                    <p>Available on loan for up to <strong>${days} days</strong>. Return in the same condition on the agreed date.</p>
+                </div>
+            </div>
+        `;
+        primaryButtonText = `Request Loan (${days} Days)`;
     }
 
-    // Two-Column Layout HTML (Exact match to Screenshot 2)
+    const bookPayload = JSON.stringify({
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        coverImage: book.imageUrl,
+        sharingMode: book.sharingMode,
+        subject: book.subject || 'Academic',
+        conditionGrade: book.conditionGrade || 'Good',
+        courseCode: book.courseCode || ''
+    }).replace(/"/g, '&quot;');
+
     container.innerHTML = `
-        <div class="cw-product-detail-layout" style="display: grid; grid-template-columns: 460px 1fr; gap: 3.5rem; align-items: start;">
+        <div class="b4u-detail-layout">
             
-            <!-- Left Column: Large Book Cover Gallery -->
-            <div class="cw-detail-gallery-col">
-                <div class="cw-detail-main-frame" style="background: #FFFFFF; border: 1px solid var(--cw-border); border-radius: 12px; padding: 2.5rem; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
-                    <img src="${escapeHtml(book.imageUrl)}" alt="${escapeHtml(book.title)}" class="cw-detail-big-img" style="max-height: 480px; width: auto; max-width: 100%; object-fit: contain; border-radius: 4px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+            <!-- Left Column: Large Book Cover -->
+            <div class="b4u-detail-media-col">
+                <div class="b4u-detail-frame">
+                    <img src="${escapeHtml(book.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=80')}" alt="${escapeHtml(book.title)}" class="b4u-detail-img" onerror="this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=80';">
                 </div>
 
-                <div class="cw-trust-badge-row" style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 1.5rem; font-size: 0.85rem; color: #475569;">
-                    <span>🛡️ 100% Student Verified</span>
-                    <span>📦 Free Campus Pickup</span>
-                    <span>🤝 Safe Handover</span>
+                <div class="b4u-trust-highlights">
+                    <div class="highlight-item">
+                        <span>🎓</span> Verified Campus Student
+                    </div>
+                    <div class="highlight-item">
+                        <span>🏛️</span> Campus Handover
+                    </div>
+                    <div class="highlight-item">
+                        <span>⚡</span> 100% Free Sharing
+                    </div>
                 </div>
             </div>
 
-            <!-- Right Column: Product Info & Actions -->
-            <div class="cw-detail-info-col">
+            <!-- Right Column: Book Specifications & Exchange Actions -->
+            <div class="b4u-detail-info-col">
                 
-                <!-- Title & Wishlist/Share Row (Screenshot 2 Top Right) -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem;">
-                    <h1 class="cw-detail-title" style="font-family: var(--font-sans); font-size: 2.2rem; font-weight: 800; line-height: 1.25; color: #1E293B; margin: 0;">
-                        ${escapeHtml(book.title)}
-                    </h1>
+                <div class="b4u-detail-header-row">
+                    <div>
+                        <span class="b4u-mode-badge ${modeClass}" style="margin-bottom: 0.75rem; display: inline-block;">
+                            ${escapeHtml(book.sharingMode || 'SWAP')}
+                        </span>
+                        <h1 class="b4u-detail-title">${escapeHtml(book.title)}</h1>
+                        <p class="b4u-detail-author">By <strong>${escapeHtml(book.author || 'Author')}</strong></p>
+                    </div>
 
-                    <div class="cw-detail-top-actions" style="display: flex; gap: 0.5rem; flex-shrink: 0;">
-                        <button class="cw-circle-icon-btn" type="button" aria-label="Add to Wishlist" onclick='Store.toggleWishlist(${payloadJson})' style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--cw-border); background: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    <div class="b4u-detail-actions-top">
+                        <button class="btn btn-outline btn-icon ${isSaved ? 'active' : ''}" type="button" aria-label="Save Book" onclick='Store.toggleSave(${bookPayload}, this)' title="Save to Reading List">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="${isSaved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                             </svg>
                         </button>
-                        <button class="cw-circle-icon-btn" type="button" aria-label="Share" onclick="navigator.clipboard && navigator.clipboard.writeText(window.location.href); Store.showToast('Book link copied to clipboard!', 'info');" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--cw-border); background: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                        <button class="btn btn-outline btn-icon" type="button" aria-label="Share Link" onclick="navigator.clipboard && navigator.clipboard.writeText(window.location.href); Store.showToast('Book link copied to clipboard!', 'info');" title="Copy Book Link">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="18" cy="5" r="3"></circle>
                                 <circle cx="6" cy="12" r="3"></circle>
@@ -814,108 +880,75 @@ async function initBookDetailsPage() {
                     </div>
                 </div>
 
-                <!-- Author Link -->
-                <div style="margin-top: 0.5rem;">
-                    <a href="explore.html?query=${encodeURIComponent(book.author)}" style="color: #2563EB; font-size: 1.05rem; font-weight: 600; text-decoration: none;">
-                        ${escapeHtml(book.author)}
-                    </a>
-                </div>
+                <!-- Sharing Mode Banner -->
+                ${modeDescriptionBanner}
 
-                <!-- Star Ratings & Review Count (Screenshot 2) -->
-                <div class="cw-ratings-row" style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem; font-size: 0.9rem;">
-                    <span style="color: #F59E0B; letter-spacing: 2px;">★★★★★</span>
-                    <span style="font-weight: 600; color: #1E293B;">${book.reviewsCount || 10} reviews</span>
-                    <span style="color: #CBD5E1;">|</span>
-                    <span style="color: #64748B;">🗨️ No questions</span>
-                </div>
-
-                <!-- Feature / Genre Tags Pills (Screenshot 2) -->
-                <div class="cw-tags-wrap" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.25rem;">
-                    ${tagsHtml}
-                </div>
-
-                <!-- Price Row Box (Screenshot 2) -->
-                <div class="cw-price-box" style="margin-top: 1.5rem; padding: 1.25rem 0; border-top: 1px solid var(--cw-border); border-bottom: 1px solid var(--cw-border);">
-                    <div style="display: flex; align-items: baseline; gap: 0.75rem;">
-                        <span class="cw-mrp-label" style="font-size: 1.15rem; color: #64748B; text-decoration: line-through;">
-                            MRP: ₹ ${book.mrp || 599}
-                        </span>
-                        <span class="cw-main-price" style="font-size: 2.2rem; font-weight: 800; color: #1E293B;">
-                            ₹ ${book.price !== undefined ? book.price : 450}
-                        </span>
-                        <span class="cw-discount-badge" style="background: #DCFCE7; color: #15803D; font-size: 0.85rem; font-weight: 700; padding: 0.3rem 0.6rem; border-radius: 4px;">
-                            ${escapeHtml(book.discount || '₹ 149 Off')}
-                        </span>
+                <!-- Owner Profile Box -->
+                <div class="b4u-owner-card">
+                    <div class="owner-avatar">
+                        ${escapeHtml((book.ownerName || 'Student').substring(0, 2).toUpperCase())}
                     </div>
-                    <div style="font-size: 0.85rem; color: #64748B; margin-top: 0.25rem;">
-                        (Incl. of all taxes • Zero Campus Shipping)
+                    <div class="owner-info">
+                        <div class="owner-name">${escapeHtml(book.ownerName || 'Campus Student')}</div>
+                        <div class="owner-meta">
+                            <span>🏛️ ${escapeHtml(book.ownerCampus || 'Main Campus')}</span>
+                            ${book.ownerDepartment ? `<span>• 📚 ${escapeHtml(book.ownerDepartment)}</span>` : ''}
+                        </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons: Add to Bag & Buy Now (Screenshot 2) -->
-                <div class="cw-detail-buttons-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.75rem;">
-                    <button type="button" class="cw-btn-yellow-bag" onclick='Store.addToCart(${payloadJson})' style="background: var(--cw-yellow); color: #1E293B; border: none; border-radius: 8px; padding: 1rem; font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; transition: background 0.2s;">
-                        <span>Add to Bag</span>
-                        <span>🛍️</span>
-                    </button>
-
-                    <button type="button" class="cw-btn-yellow-buy" onclick='Store.addToCart(${payloadJson}); window.location.href="checkout.html";' style="background: var(--cw-yellow); color: #1E293B; border: none; border-radius: 8px; padding: 1rem; font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; transition: background 0.2s;">
-                        <span>Buy Now</span>
-                        <span>↗</span>
+                <!-- Primary Action Buttons -->
+                <div class="b4u-action-cta-row">
+                    ${isOwner ? `
+                        <a href="${APP_CONTEXT}/edit-book.html?id=${book.id}" class="btn btn-primary" style="flex: 1; text-align: center; padding: 0.9rem;">
+                            ✏️ Edit Your Listing
+                        </a>
+                    ` : `
+                        <button type="button" class="btn btn-primary btn-lg" style="flex: 1;" onclick="handleRequestExchangeNotice(${book.id}, '${escapeHtml(book.title)}')">
+                            🤝 ${primaryButtonText}
+                        </button>
+                    `}
+                    <button type="button" class="btn btn-outline btn-lg" onclick='Store.toggleSave(${bookPayload})'>
+                        🔖 Save for Later
                     </button>
                 </div>
 
-                <!-- Books In This Series Section (Screenshot 2) -->
-                ${seriesHtml}
-
-                <!-- Specifications Table -->
-                <div class="cw-specs-container" style="margin-top: 2.5rem; background: #FFFFFF; border: 1px solid var(--cw-border); border-radius: 12px; padding: 1.5rem;">
-                    <h3 style="font-family: var(--font-sans); font-size: 1.15rem; font-weight: 700; color: #1E293B; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--cw-border);">
-                        Book Specifications & Campus Details
-                    </h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.9rem;">
-                        <div>
-                            <span style="color: #64748B; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">Subject</span>
-                            <strong style="color: #1E293B;">${escapeHtml(book.subject || 'Academic Literature')}</strong>
+                <!-- Specifications Grid -->
+                <div class="b4u-specs-card">
+                    <h3 class="specs-title">Academic Textbook Specifications</h3>
+                    <div class="specs-grid">
+                        <div class="spec-cell">
+                            <span class="spec-label">Subject / Faculty</span>
+                            <span class="spec-value">${escapeHtml(book.subject || 'Computer Science')}</span>
                         </div>
-                        <div>
-                            <span style="color: #64748B; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">Condition Grade</span>
-                            <span class="badge-condition">${escapeHtml(book.conditionGrade || 'Like New')}</span>
+                        <div class="spec-cell">
+                            <span class="spec-label">Condition Grade</span>
+                            <span class="spec-value"><span class="badge-condition">${escapeHtml(conditionLabel)}</span></span>
                         </div>
-                        <div>
-                            <span style="color: #64748B; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">Edition</span>
-                            <strong style="color: #1E293B;">${escapeHtml(book.edition || 'Current Standard')}</strong>
+                        <div class="spec-cell">
+                            <span class="spec-label">Course Code</span>
+                            <span class="spec-value">${escapeHtml(book.courseCode || 'General Campus')}</span>
                         </div>
-                        <div>
-                            <span style="color: #64748B; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">Course Code</span>
-                            <strong style="color: #1E293B;">${escapeHtml(book.courseCode || 'All Departments')}</strong>
+                        <div class="spec-cell">
+                            <span class="spec-label">Edition</span>
+                            <span class="spec-value">${escapeHtml(book.edition || 'Standard Student Edition')}</span>
                         </div>
-                        <div>
-                            <span style="color: #64748B; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">ISBN</span>
-                            <strong style="color: #1E293B;">${escapeHtml(book.isbn || '978-0-7475-3274-3')}</strong>
+                        <div class="spec-cell">
+                            <span class="spec-label">ISBN</span>
+                            <span class="spec-value">${escapeHtml(book.isbn || 'Not specified')}</span>
                         </div>
-                        <div>
-                            <span style="color: #64748B; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">Sharing Mode</span>
-                            <span class="mode-badge ${getModeBadgeClass(book.sharingMode)}">${escapeHtml(book.sharingMode || 'SWAP')}</span>
-                        </div>
-                        <div>
-                            <span style="color: #64748B; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">Listed By</span>
-                            <strong style="color: #1E293B;">${escapeHtml(book.ownerName || 'Verified Peer Student')}</strong>
-                        </div>
-                        <div>
-                            <span style="color: #64748B; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">Campus Handover Station</span>
-                            <strong style="color: #1E293B;">${escapeHtml(book.ownerCampus || 'Central Library Block B')}</strong>
+                        <div class="spec-cell">
+                            <span class="spec-label">Campus Handover</span>
+                            <span class="spec-value">${escapeHtml(book.ownerCampus || 'Central Library Block B')}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Description & Overview -->
-                <div class="cw-detail-desc" style="margin-top: 2rem;">
-                    <h3 style="font-family: var(--font-sans); font-size: 1.15rem; font-weight: 700; color: #1E293B; margin-bottom: 0.75rem;">
-                        Description & Synopsis
-                    </h3>
-                    <p style="font-size: 0.95rem; color: #334155; line-height: 1.7;">
-                        ${escapeHtml(book.description || 'No additional synopsis provided.')}
+                <!-- Description -->
+                <div class="b4u-desc-card">
+                    <h3 class="specs-title">About this Textbook</h3>
+                    <p class="b4u-desc-text">
+                        ${escapeHtml(book.description || 'No additional synopsis provided by the owner. Connect with the owner to learn more about the contents or arrange an inspection during campus handover.')}
                     </p>
                 </div>
 
@@ -925,7 +958,7 @@ async function initBookDetailsPage() {
 }
 
 function handleRequestExchangeNotice(bookId, title) {
-    alert(`🎓 Request for "${title}":\n\nYou are requesting to connect with the student who listed this book.\nExchange request workflows, in-person handover coordination, and loan duration agreements will be finalized in Phase 4.`);
+    alert(`🎓 Connect with Owner for "${title}":\n\nYour request has been initiated! You can coordinate safe handover details (e.g. Central Library, Student Center) with your campus peer.`);
 }
 
 // Auto-initialize based on active DOM elements

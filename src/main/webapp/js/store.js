@@ -1,22 +1,30 @@
 /**
  * ============================================================================
- * store.js - Client-Side Bookstore Commerce & Wishlist Manager
+ * store.js - Client-Side Saved Books & Reading List Manager
  * ============================================================================
- * Inspired by Crossword.in: Manages Cart (Shopping Bag), Wishlist, Recently Viewed,
- * and Header Badge Synchronization with local persistence (localStorage).
+ * University Academic Project: Student Peer-to-Peer Book Exchange System (Book4u)
+ * Technology: Vanilla JavaScript (ES6+), localStorage persistence
+ * 
+ * Manages Saved Books (reading wishlist), Recently Viewed books, and badge
+ * synchronization across campus navigation without any commercial e-commerce logic.
  * ============================================================================
  */
 
 const Store = (function () {
-    const CART_KEY = 'book4u_cart';
-    const WISHLIST_KEY = 'book4u_wishlist';
+    const SAVED_KEY = 'book4u_saved_books';
+    const LEGACY_WISHLIST_KEY = 'book4u_wishlist';
     const RECENT_KEY = 'book4u_recently_viewed';
 
-    // Retrieve parsed array from localStorage
+    // Retrieve parsed array from localStorage (with backwards compatibility)
     function getItem(key) {
         try {
             const data = localStorage.getItem(key);
-            return data ? JSON.parse(data) : [];
+            if (data) return JSON.parse(data);
+            if (key === SAVED_KEY) {
+                const legacy = localStorage.getItem(LEGACY_WISHLIST_KEY);
+                return legacy ? JSON.parse(legacy) : [];
+            }
+            return [];
         } catch (e) {
             console.error('Error reading localStorage key: ' + key, e);
             return [];
@@ -27,168 +35,129 @@ const Store = (function () {
     function setItem(key, val) {
         try {
             localStorage.setItem(key, JSON.stringify(val));
+            if (key === SAVED_KEY) {
+                localStorage.setItem(LEGACY_WISHLIST_KEY, JSON.stringify(val));
+            }
         } catch (e) {
             console.error('Error saving to localStorage key: ' + key, e);
         }
     }
 
-    // Update badge counters across the page
+    // Update badge counters across the page (Saved Books badge only)
     function updateBadges() {
-        const cartItems = getItem(CART_KEY);
-        const totalCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
-        const wishlistItems = getItem(WISHLIST_KEY);
+        const savedItems = getItem(SAVED_KEY);
+        const count = savedItems.length;
 
-        const cartBadges = document.querySelectorAll('.cart-count-badge');
-        cartBadges.forEach(badge => {
-            badge.textContent = totalCount;
-            badge.style.display = totalCount > 0 ? 'inline-flex' : 'none';
-        });
-
-        const wishlistBadges = document.querySelectorAll('.wishlist-count-badge');
-        wishlistBadges.forEach(badge => {
-            badge.textContent = wishlistItems.length;
-            badge.style.display = wishlistItems.length > 0 ? 'inline-flex' : 'none';
+        const badges = document.querySelectorAll('.saved-count-badge, .wishlist-count-badge');
+        badges.forEach(badge => {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'inline-flex' : 'none';
         });
     }
 
-    // Floating Toast Notification (Crossword Bookstore Style)
-    function showToast(message, type = 'success') {
-        let toastContainer = document.getElementById('cw-toast-container');
+    // Campus Toast Notification
+    function showToast(message, type = 'info') {
+        let toastContainer = document.getElementById('b4u-toast-container');
         if (!toastContainer) {
             toastContainer = document.createElement('div');
-            toastContainer.id = 'cw-toast-container';
-            toastContainer.className = 'cw-toast-container';
+            toastContainer.id = 'b4u-toast-container';
+            toastContainer.className = 'b4u-toast-container';
             document.body.appendChild(toastContainer);
         }
 
         const toast = document.createElement('div');
-        toast.className = `cw-toast cw-toast-${type}`;
-        const icon = type === 'success' ? '🛍️' : (type === 'wishlist' ? '❤️' : 'ℹ️');
+        toast.className = `b4u-toast b4u-toast-${type}`;
+        const icon = type === 'saved' || type === 'wishlist' ? '🔖' : (type === 'success' ? '✅' : 'ℹ️');
         toast.innerHTML = `
-            <span class="cw-toast-icon">${icon}</span>
-            <div class="cw-toast-content">${message}</div>
-            <button class="cw-toast-close" aria-label="Close">&times;</button>
+            <span class="b4u-toast-icon">${icon}</span>
+            <div class="b4u-toast-content">${message}</div>
+            <button class="b4u-toast-close" aria-label="Close">&times;</button>
         `;
 
-        toast.querySelector('.cw-toast-close').addEventListener('click', () => {
+        toast.querySelector('.b4u-toast-close').addEventListener('click', () => {
             toast.remove();
         });
 
         toastContainer.appendChild(toast);
 
         setTimeout(() => {
-            toast.classList.add('cw-toast-show');
+            toast.classList.add('b4u-toast-show');
         }, 10);
 
         setTimeout(() => {
-            toast.classList.remove('cw-toast-show');
+            toast.classList.remove('b4u-toast-show');
             setTimeout(() => toast.remove(), 300);
-        }, 3500);
+        }, 3200);
     }
 
     return {
-        // --- CART / BAG METHODS ---
-        getCart() {
-            return getItem(CART_KEY);
+        // --- SAVED BOOKS (READING WISHLIST) METHODS ---
+        getSavedBooks() {
+            return getItem(SAVED_KEY);
         },
-        addToCart(book) {
-            if (!book || !book.id) return;
-            const items = getItem(CART_KEY);
-            const existing = items.find(item => String(item.id) === String(book.id));
-            if (existing) {
-                existing.quantity = (existing.quantity || 1) + 1;
-            } else {
-                items.push({
-                    id: book.id,
-                    title: book.title || 'Academic Book',
-                    author: book.author || 'Author',
-                    coverImage: book.coverImage || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80',
-                    price: book.price !== undefined ? book.price : 450,
-                    originalPrice: book.originalPrice || 599,
-                    sharingMode: book.sharingMode || 'SWAP',
-                    subject: book.subject || 'General',
-                    quantity: 1
-                });
-            }
-            setItem(CART_KEY, items);
-            updateBadges();
-            showToast(`<strong>${escapeHtml(book.title)}</strong> added to your shopping bag!`, 'success');
-        },
-        updateQuantity(bookId, delta) {
-            let items = getItem(CART_KEY);
-            const item = items.find(i => String(i.id) === String(bookId));
-            if (item) {
-                item.quantity = (item.quantity || 1) + delta;
-                if (item.quantity <= 0) {
-                    items = items.filter(i => String(i.id) !== String(bookId));
-                }
-                setItem(CART_KEY, items);
-                updateBadges();
-            }
-            return items;
-        },
-        removeFromCart(bookId) {
-            let items = getItem(CART_KEY);
-            items = items.filter(i => String(i.id) !== String(bookId));
-            setItem(CART_KEY, items);
-            updateBadges();
-            return items;
-        },
-        clearCart() {
-            setItem(CART_KEY, []);
-            updateBadges();
-        },
-        getCartTotal() {
-            const items = getItem(CART_KEY);
-            return items.reduce((total, item) => total + ((item.price || 0) * (item.quantity || 1)), 0);
-        },
-
-        // --- WISHLIST METHODS ---
         getWishlist() {
-            return getItem(WISHLIST_KEY);
+            return getItem(SAVED_KEY);
         },
-        isInWishlist(bookId) {
-            const items = getItem(WISHLIST_KEY);
+        isSaved(bookId) {
+            const items = getItem(SAVED_KEY);
             return items.some(item => String(item.id) === String(bookId));
         },
-        toggleWishlist(book, buttonElement) {
+        isInWishlist(bookId) {
+            return this.isSaved(bookId);
+        },
+        toggleSave(book, buttonElement) {
             if (!book || !book.id) return false;
-            let items = getItem(WISHLIST_KEY);
+            let items = getItem(SAVED_KEY);
             const exists = items.some(item => String(item.id) === String(book.id));
+
             if (exists) {
                 items = items.filter(item => String(item.id) !== String(book.id));
-                setItem(WISHLIST_KEY, items);
+                setItem(SAVED_KEY, items);
                 updateBadges();
-                if (buttonElement) buttonElement.classList.remove('active');
-                showToast(`Removed <strong>${escapeHtml(book.title)}</strong> from your wishlist.`, 'info');
+                if (buttonElement) {
+                    buttonElement.classList.remove('active');
+                    const svg = buttonElement.querySelector('svg');
+                    if (svg) svg.setAttribute('fill', 'none');
+                }
+                showToast(`Removed <strong>${escapeHtml(book.title)}</strong> from your Saved Books.`, 'info');
                 return false;
             } else {
                 items.push({
                     id: book.id,
                     title: book.title || 'Academic Book',
                     author: book.author || 'Author',
-                    coverImage: book.coverImage || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80',
-                    price: book.price !== undefined ? book.price : 450,
-                    originalPrice: book.originalPrice || 599,
-                    sharingMode: book.sharingMode || 'SWAP',
-                    subject: book.subject || 'General'
+                    coverImage: book.coverImage || book.image || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80',
+                    sharingMode: book.sharingMode || book.mode || 'SWAP',
+                    subject: book.subject || 'Academic',
+                    conditionGrade: book.conditionGrade || 'Good',
+                    courseCode: book.courseCode || ''
                 });
-                setItem(WISHLIST_KEY, items);
+                setItem(SAVED_KEY, items);
                 updateBadges();
-                if (buttonElement) buttonElement.classList.add('active');
-                showToast(`Added <strong>${escapeHtml(book.title)}</strong> to your wishlist!`, 'wishlist');
+                if (buttonElement) {
+                    buttonElement.classList.add('active');
+                    const svg = buttonElement.querySelector('svg');
+                    if (svg) svg.setAttribute('fill', 'currentColor');
+                }
+                showToast(`Saved <strong>${escapeHtml(book.title)}</strong> to your Saved Books!`, 'saved');
                 return true;
             }
         },
-        removeFromWishlist(bookId) {
-            let items = getItem(WISHLIST_KEY);
+        toggleWishlist(book, buttonElement) {
+            return this.toggleSave(book, buttonElement);
+        },
+        removeSaved(bookId) {
+            let items = getItem(SAVED_KEY);
             items = items.filter(item => String(item.id) !== String(bookId));
-            setItem(WISHLIST_KEY, items);
+            setItem(SAVED_KEY, items);
             updateBadges();
             return items;
         },
+        removeFromWishlist(bookId) {
+            return this.removeSaved(bookId);
+        },
 
-        // --- RECENTLY VIEWED ---
+        // --- RECENTLY VIEWED (CAMPUS DISCOVERY HISTORY) ---
         recordRecentlyViewed(book) {
             if (!book || !book.id) return;
             let items = getItem(RECENT_KEY);
@@ -197,11 +166,11 @@ const Store = (function () {
                 id: book.id,
                 title: book.title,
                 author: book.author,
-                coverImage: book.coverImage || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80',
-                price: book.price || 450,
-                originalPrice: book.originalPrice || 599,
-                sharingMode: book.sharingMode || 'SWAP',
-                subject: book.subject || 'General'
+                coverImage: book.coverImage || book.image || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80',
+                sharingMode: book.sharingMode || book.mode || 'SWAP',
+                subject: book.subject || 'Academic',
+                conditionGrade: book.conditionGrade || 'Good',
+                courseCode: book.courseCode || ''
             });
             if (items.length > 8) items.pop();
             setItem(RECENT_KEY, items);

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Details — Book4u</title>
-    <meta name="description" content="View textbook specifications, peer owner info, and campus exchange details on Book4u. Inspired by Crossword.in.">
+    <meta name="description" content="View textbook specifications, peer owner info, and campus exchange details on Book4u.">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Design System Stylesheet -->
     <link rel="stylesheet" href="css/style.css?v=3.0">
@@ -19,35 +19,36 @@
     <!-- Top Announcement Bar -->
     <div class="announcement-bar">
         <div class="announcement-content">
-            <span class="announcement-pill">CAMPUS SPECIAL</span>
-            <span>✨ Free in-person student pickup at Central Library Block B • Zero platform fees!</span>
-            <a href="explore.html" class="announcement-link">Explore More &rarr;</a>
+            <span class="announcement-pill">CAMPUS EXCHANGE</span>
+            <span>📍 Free in-person student pickup at Central Library Block B • Zero platform fees!</span>
+            <a href="explore.html" style="color: #93C5FD; font-size: 0.8rem; font-weight: 700;">Explore Catalog &rarr;</a>
         </div>
     </div>
 
-    <!-- Signature Crossword Yellow Header (Matching Screenshot 2) -->
-    <header class="cw-header">
-        <div class="cw-header-container">
-            <a href="index.html" class="cw-logo">
-                <div class="cw-logo-icon"><span>B</span></div>
-                <div class="cw-logo-text">
-                    <span class="cw-logo-title">BOOK4U</span>
-                    <span class="cw-logo-sub">STUDENT BOOKSTORE</span>
+    <!-- Main Navigation Header -->
+    <header class="b4u-header">
+        <div class="b4u-header-container">
+            <!-- Brand Logo -->
+            <a href="index.html" class="b4u-logo">
+                <div class="b4u-logo-icon">B</div>
+                <div class="b4u-logo-text">
+                    <span class="b4u-logo-title">Book4u</span>
+                    <span class="b4u-logo-tagline">Campus Book Exchange</span>
                 </div>
             </a>
 
             <!-- Search Bar -->
-            <div class="cw-search-wrapper">
-                <form action="explore.html" method="GET" class="cw-search-form">
+            <div class="b4u-search-wrapper">
+                <form action="explore.html" method="GET" class="b4u-search-form">
                     <input 
                         type="text" 
                         name="query" 
-                        class="cw-search-input" 
-                        placeholder="Search For ISBN, Book..."
-                        aria-label="Search bookstore"
+                        class="b4u-search-input" 
+                        placeholder="Search For ISBN, Title, Author..."
+                        aria-label="Search campus books"
                     >
-                    <button type="submit" class="cw-search-btn" aria-label="Submit search">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <button type="submit" class="b4u-search-btn" aria-label="Submit search">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
@@ -56,49 +57,34 @@
             </div>
 
             <!-- Header Actions -->
-            <div class="cw-header-actions nav-actions">
-                <a href="wishlist.html" class="cw-action-item" title="Wishlist">
-                    <div class="cw-icon-badge-wrap">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                        </svg>
-                        <span class="cw-badge wishlist-count-badge" style="display: none;">0</span>
-                    </div>
-                </a>
-
-                <a href="profile.html" class="cw-action-item" title="Account">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
+            <div class="b4u-header-actions nav-actions">
+                <a href="wishlist.html" class="b4u-action-btn" title="Saved Books">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                     </svg>
+                    <span class="b4u-action-label">Saved</span>
+                    <span class="b4u-badge saved-count-badge" style="display: none;">0</span>
                 </a>
 
-                <a href="cart.html" class="cw-action-item" title="Shopping Bag">
-                    <div class="cw-icon-badge-wrap">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <path d="M16 10a4 4 0 0 1-8 0"></path>
-                        </svg>
-                        <span class="cw-badge cart-count-badge" style="display: none;">0</span>
-                    </div>
-                </a>
+                <a href="login.html" class="btn btn-outline guest-auth-btn">Sign In</a>
+                <a href="register.html" class="btn btn-primary guest-auth-btn">Register</a>
 
-                <a href="login.html" class="cw-btn cw-btn-outline guest-auth-btn">Sign In</a>
-                <a href="register.html" class="cw-btn cw-btn-dark guest-auth-btn">Register</a>
+                <a href="add-book.html" class="btn btn-navy">+ List a Book</a>
             </div>
         </div>
 
-        <!-- Navigation Sub-bar -->
-        <nav class="cw-nav-bar">
-            <div class="cw-nav-container">
-                <ul class="cw-nav-list">
-                    <li class="cw-nav-item"><a href="explore.html" class="cw-nav-link">Books</a></li>
-                    <li class="cw-nav-item"><a href="explore.html?subject=Fiction" class="cw-nav-link">Fiction</a></li>
-                    <li class="cw-nav-item"><a href="explore.html?subject=Comics" class="cw-nav-link">Comics & Manga</a></li>
-                    <li class="cw-nav-item"><a href="explore.html?subject=Academic" class="cw-nav-link">Academic Textbooks</a></li>
-                    <li class="cw-nav-item"><a href="index.html#bestsellers" class="cw-nav-link">Bestsellers</a></li>
-                    <li class="cw-nav-item"><a href="add-book.html" class="cw-nav-link" style="color: var(--cw-burgundy); font-weight: 700;">+ List Book</a></li>
+        <!-- Navigation Bar -->
+        <nav class="b4u-nav-bar">
+            <div class="b4u-nav-container">
+                <ul class="b4u-nav-list">
+                    <li class="b4u-nav-item"><a href="index.html" class="b4u-nav-link">Home</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html" class="b4u-nav-link">Explore Books</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html?mode=SWAP" class="b4u-nav-link">Swap</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html?mode=GIVEAWAY" class="b4u-nav-link">Giveaways</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html?mode=LENDING" class="b4u-nav-link">Lending</a></li>
+                    <li class="b4u-nav-item"><a href="my-books.html" class="b4u-nav-link">My Listings</a></li>
+                    <li class="b4u-nav-item"><a href="profile.html#requests" class="b4u-nav-link">My Requests</a></li>
+                    <li class="b4u-nav-item"><a href="profile.html" class="b4u-nav-link">Profile</a></li>
                 </ul>
             </div>
         </nav>
@@ -106,63 +92,60 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <div class="cw-container" style="padding-top: 1.5rem; padding-bottom: 4rem;">
-            
+        <div class="b4u-container" style="padding-top: 1.5rem; padding-bottom: 5rem;">
+
             <!-- Breadcrumbs -->
-            <nav class="cw-breadcrumbs" style="margin-bottom: 1.5rem; font-size: 0.85rem; color: #64748B;">
-                <a href="index.html" style="color: var(--cw-burgundy);">Home</a> &gt; 
-                <a href="explore.html" style="color: var(--cw-burgundy);">Books</a> &gt; 
-                <span id="breadcrumb-title" style="color: #1E293B; font-weight: 600;">Book Details</span>
+            <nav class="b4u-breadcrumbs">
+                <a href="index.html">Home</a> &gt; 
+                <a href="explore.html">Explore Books</a> &gt; 
+                <span class="breadcrumb-current" id="breadcrumb-title">Book Specifications</span>
             </nav>
 
-            <!-- Dynamic Product View (Rendered by books.js matching Screenshot 2) -->
+            <!-- Dynamic Book Details View -->
             <div id="book-details-view">
-                <p style="text-align: center; color: var(--cw-muted); padding: 4rem;">Loading book details...</p>
+                <div style="text-align: center; padding: 4rem 1rem; color: var(--color-slate-light);">
+                    <p>Loading textbook details...</p>
+                </div>
             </div>
 
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="cw-footer">
-        <div class="cw-footer-container">
-            <div class="cw-footer-grid">
-                <div class="cw-footer-col">
-                    <div class="cw-logo" style="margin-bottom: 1rem;">
-                        <div class="cw-logo-icon"><span>B</span></div>
-                        <div class="cw-logo-text">
-                            <span class="cw-logo-title" style="color: #FFF;">BOOK4U</span>
-                            <span class="cw-logo-sub" style="color: #A1A1AA;">CAMPUS BOOKSTORE</span>
+    <!-- Campus Footer -->
+    <footer class="b4u-footer">
+        <div class="b4u-footer-container">
+            <div class="b4u-footer-grid">
+                <div class="b4u-footer-col">
+                    <div class="b4u-logo" style="margin-bottom: 1rem;">
+                        <div class="b4u-logo-icon">B</div>
+                        <div class="b4u-logo-text">
+                            <span class="b4u-logo-title" style="color: #FFF;">Book4u</span>
+                            <span class="b4u-logo-tagline" style="color: #94A3B8;">Campus Book Exchange</span>
                         </div>
                     </div>
-                    <p class="cw-footer-desc">Peer-to-peer textbook exchange and student bookstore inspired by Crossword.in.</p>
+                    <p class="b4u-footer-desc">Your Books. Your Campus. Your Community. Connecting university students for academic book swaps, free giveaways, and temporary semester lending.</p>
                 </div>
-                <div class="cw-footer-col">
-                    <h4 class="cw-footer-heading">Categories</h4>
-                    <ul class="cw-footer-links">
-                        <li><a href="explore.html?subject=Fiction">Fiction</a></li>
-                        <li><a href="explore.html?subject=Non-Fiction">Non-Fiction</a></li>
-                        <li><a href="explore.html?subject=Comics">Comics & Manga</a></li>
+                <div class="b4u-footer-col">
+                    <h4 class="b4u-footer-heading">Sharing Modes</h4>
+                    <ul class="b4u-footer-links">
+                        <li><a href="explore.html?mode=SWAP">Peer Book Swap</a></li>
+                        <li><a href="explore.html?mode=GIVEAWAY">Free Student Giveaways</a></li>
+                        <li><a href="explore.html?mode=LENDING">Semester Lending</a></li>
+                        <li><a href="add-book.html">List Your Textbook</a></li>
                     </ul>
                 </div>
-                <div class="cw-footer-col">
-                    <h4 class="cw-footer-heading">Student Hub</h4>
-                    <ul class="cw-footer-links">
-                        <li><a href="explore.html">Browse Catalog</a></li>
+                <div class="b4u-footer-col">
+                    <h4 class="b4u-footer-heading">Student Account</h4>
+                    <ul class="b4u-footer-links">
                         <li><a href="my-books.html">My Listings</a></li>
-                        <li><a href="cart.html">Shopping Bag</a></li>
-                    </ul>
-                </div>
-                <div class="cw-footer-col">
-                    <h4 class="cw-footer-heading">Desk</h4>
-                    <ul class="cw-footer-links">
-                        <li><span>Central Library Block B</span></li>
-                        <li><span>support@book4u-campus.edu</span></li>
+                        <li><a href="wishlist.html">Saved Books</a></li>
+                        <li><a href="profile.html">Student Profile</a></li>
+                        <li><a href="login.html">Sign In</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="cw-footer-bottom">
-                <p>&copy; 2026 Book4u. Inspired by Crossword.in.</p>
+            <div class="b4u-footer-bottom">
+                <p>&copy; 2026 Book4u — Student Peer-to-Peer Book Exchange System. Academic Non-Profit Campus Platform.</p>
             </div>
         </div>
     </footer>
