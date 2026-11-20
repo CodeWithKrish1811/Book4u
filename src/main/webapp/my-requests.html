@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Exchange Requests — Book4u</title>
+    <meta name="description" content="Manage peer book exchange requests, received requests, and active campus handovers on Book4u.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Design System Stylesheet -->
+    <link rel="stylesheet" href="css/style.css?v=3.0">
+</head>
+<body>
+
+    <!-- Top Announcement Bar -->
+    <div class="announcement-bar">
+        <div class="announcement-content">
+            <span class="announcement-pill">PEER EXCHANGE</span>
+            <span>📍 Coordinate safe campus textbook handovers at the Central Library or Student Center • Zero fees!</span>
+            <a href="explore.html" style="color: #93C5FD; font-size: 0.8rem; font-weight: 700;">Explore Catalog &rarr;</a>
+        </div>
+    </div>
+
+    <!-- Main Navigation Header -->
+    <header class="b4u-header">
+        <div class="b4u-header-container">
+            <!-- Brand Logo -->
+            <a href="index.html" class="b4u-logo">
+                <div class="b4u-logo-icon">B</div>
+                <div class="b4u-logo-text">
+                    <span class="b4u-logo-title">Book4u</span>
+                    <span class="b4u-logo-tagline">Campus Book Exchange</span>
+                </div>
+            </a>
+
+            <!-- Search Bar -->
+            <div class="b4u-search-wrapper">
+                <form action="explore.html" method="GET" class="b4u-search-form">
+                    <input 
+                        type="text" 
+                        name="query" 
+                        class="b4u-search-input" 
+                        placeholder="Search For ISBN, Title, Author..."
+                        aria-label="Search campus books"
+                    >
+                    <button type="submit" class="b4u-search-btn" aria-label="Submit search">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="b4u-header-actions nav-actions">
+                <a href="wishlist.html" class="b4u-action-btn" title="Saved Books">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span class="b4u-action-label">Saved</span>
+                    <span class="b4u-badge saved-count-badge" style="display: none;">0</span>
+                </a>
+
+                <a href="login.html" class="btn btn-outline guest-auth-btn">Sign In</a>
+                <a href="register.html" class="btn btn-primary guest-auth-btn">Register</a>
+
+                <a href="add-book.html" class="btn btn-navy">+ List a Book</a>
+            </div>
+        </div>
+
+        <!-- Navigation Bar -->
+        <nav class="b4u-nav-bar">
+            <div class="b4u-nav-container">
+                <ul class="b4u-nav-list">
+                    <li class="b4u-nav-item"><a href="index.html" class="b4u-nav-link">Home</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html" class="b4u-nav-link">Explore Books</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html?mode=SWAP" class="b4u-nav-link">Swap</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html?mode=GIVEAWAY" class="b4u-nav-link">Giveaways</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html?mode=LENDING" class="b4u-nav-link">Lending</a></li>
+                    <li class="b4u-nav-item"><a href="my-books.html" class="b4u-nav-link">My Listings</a></li>
+                    <li class="b4u-nav-item"><a href="my-requests.html" class="b4u-nav-link active">My Requests</a></li>
+                    <li class="b4u-nav-item"><a href="profile.html" class="b4u-nav-link">Profile</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="b4u-container" style="padding-top: 2rem; padding-bottom: 5rem;">
+
+            <!-- Header & Summary -->
+            <div class="requests-dashboard-header">
+                <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--color-navy); margin-bottom: 0.5rem;">
+                    Student Exchange Requests
+                </h1>
+                <p style="color: var(--color-slate); font-size: 0.95rem;">
+                    Manage requests you have sent to peers, review incoming requests for your textbooks, and track campus handovers.
+                </p>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="requests-stats-bar">
+                <div class="request-stat-card">
+                    <div class="request-stat-icon">📤</div>
+                    <div>
+                        <div class="request-stat-val" id="stat-sent-count">0</div>
+                        <div class="request-stat-lbl">Sent Requests</div>
+                    </div>
+                </div>
+                <div class="request-stat-card">
+                    <div class="request-stat-icon">📥</div>
+                    <div>
+                        <div class="request-stat-val" id="stat-received-count">0</div>
+                        <div class="request-stat-lbl">Received Requests</div>
+                    </div>
+                </div>
+                <div class="request-stat-card">
+                    <div class="request-stat-icon">⏳</div>
+                    <div>
+                        <div class="request-stat-val" id="stat-pending-count">0</div>
+                        <div class="request-stat-lbl">Pending Review</div>
+                    </div>
+                </div>
+                <div class="request-stat-card">
+                    <div class="request-stat-icon">🤝</div>
+                    <div>
+                        <div class="request-stat-val" id="stat-exchanges-count">0</div>
+                        <div class="request-stat-lbl">Active Handovers</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="requests-tabs" role="tablist">
+                <button class="requests-tab-btn active" onclick="switchRequestTab('received')" id="tab-btn-received">
+                    📥 Received Requests <span class="tab-badge" id="badge-received-count">0</span>
+                </button>
+                <button class="requests-tab-btn" onclick="switchRequestTab('sent')" id="tab-btn-sent">
+                    📤 Sent Requests <span class="tab-badge" id="badge-sent-count">0</span>
+                </button>
+                <button class="requests-tab-btn" onclick="switchRequestTab('exchanges')" id="tab-btn-exchanges">
+                    🤝 Active & Completed Handovers <span class="tab-badge" id="badge-exchanges-count">0</span>
+                </button>
+            </div>
+
+            <!-- Alerts Box -->
+            <div id="requests-alert" style="display: none; margin-bottom: 1.5rem;" class="alert alert-info"></div>
+
+            <!-- Tab Content: Received Requests -->
+            <section id="tab-pane-received" class="requests-list">
+                <div style="text-align: center; padding: 3rem; color: var(--color-slate);">
+                    Loading incoming exchange requests...
+                </div>
+            </section>
+
+            <!-- Tab Content: Sent Requests -->
+            <section id="tab-pane-sent" class="requests-list" style="display: none;">
+                <div style="text-align: center; padding: 3rem; color: var(--color-slate);">
+                    Loading sent exchange requests...
+                </div>
+            </section>
+
+            <!-- Tab Content: Active Exchanges -->
+            <section id="tab-pane-exchanges" class="requests-list" style="display: none;">
+                <div style="text-align: center; padding: 3rem; color: var(--color-slate);">
+                    Loading active handovers...
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Accept Request Modal -->
+    <div class="modal-overlay" id="accept-modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--color-navy); margin: 0;">Accept Exchange Request</h3>
+                <button type="button" onclick="closeAcceptModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-slate);">&times;</button>
+            </div>
+            <p style="font-size: 0.9rem; color: var(--color-slate); margin-bottom: 1.25rem;">
+                Coordinate where and how you will meet your campus peer for the physical book handover.
+            </p>
+            <form id="accept-request-form" onsubmit="submitAcceptRequest(event)">
+                <input type="hidden" id="accept-request-id" value="">
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Campus Handover Spot</label>
+                    <input type="text" id="accept-location" class="form-control" placeholder="e.g. Central Library Block B, 2nd Floor" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Handover Instructions or Note (Optional)</label>
+                    <textarea id="accept-notes" class="form-control" rows="3" placeholder="e.g. I can meet on Thursday at 2:00 PM near the circulation desk."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeAcceptModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-accept">Confirm & Accept</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Campus Footer -->
+    <footer class="b4u-footer">
+        <div class="b4u-footer-container">
+            <div class="b4u-footer-grid">
+                <div class="b4u-footer-col">
+                    <div class="b4u-logo" style="margin-bottom: 1rem;">
+                        <div class="b4u-logo-icon">B</div>
+                        <div class="b4u-logo-text">
+                            <span class="b4u-logo-title" style="color: #FFF;">Book4u</span>
+                            <span class="b4u-logo-tagline" style="color: #94A3B8;">Campus Book Exchange</span>
+                        </div>
+                    </div>
+                    <p class="b4u-footer-desc">Your Books. Your Campus. Your Community. Connecting university students for academic book swaps, free giveaways, and temporary semester lending.</p>
+                </div>
+                <div class="b4u-footer-col">
+                    <h4 class="b4u-footer-heading">Sharing Modes</h4>
+                    <ul class="b4u-footer-links">
+                        <li><a href="explore.html?mode=SWAP">Peer Book Swap</a></li>
+                        <li><a href="explore.html?mode=GIVEAWAY">Free Student Giveaways</a></li>
+                        <li><a href="explore.html?mode=LENDING">Semester Lending</a></li>
+                        <li><a href="add-book.html">List Your Textbook</a></li>
+                    </ul>
+                </div>
+                <div class="b4u-footer-col">
+                    <h4 class="b4u-footer-heading">Student Account</h4>
+                    <ul class="b4u-footer-links">
+                        <li><a href="my-books.html">My Listings</a></li>
+                        <li><a href="my-requests.html">My Requests</a></li>
+                        <li><a href="wishlist.html">Saved Books</a></li>
+                        <li><a href="profile.html">Student Profile</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="b4u-footer-bottom">
+                <p>&copy; 2026 Book4u — Student Peer-to-Peer Book Exchange System. Academic Non-Profit Campus Platform.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/store.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/requests.js"></script>
+</body>
+</html>

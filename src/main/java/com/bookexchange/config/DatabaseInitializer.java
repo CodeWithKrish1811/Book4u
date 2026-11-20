@@ -36,7 +36,9 @@ public class DatabaseInitializer implements ServletContextListener {
             }
 
             if (tablesExist) {
-                System.out.println("[DatabaseInitializer] Database tables already present. Ready for requests.");
+                System.out.println("[DatabaseInitializer] Database tables already present. Checking for schema upgrades...");
+                ensureSchemaUpgrades(conn);
+                System.out.println("[DatabaseInitializer] Schema upgrade check complete. Ready for requests.");
                 return;
             }
 
@@ -81,6 +83,67 @@ public class DatabaseInitializer implements ServletContextListener {
 
         } catch (Exception e) {
             System.err.println("[DatabaseInitializer] Database auto-initialization note: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Non-destructive schema migration for existing databases to support
+     * complete physical handover and lending return workflows.
+     */
+    private void ensureSchemaUpgrades(Connection conn) {
+        try (Statement stmt = conn.createStatement()) {
+            // 1. Upgrade exchange_requests status column to include EXPIRED
+            try {
+                stmt.execute("ALTER TABLE exchange_requests MODIFY COLUMN status " +
+                             "ENUM('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED', 'EXPIRED') NOT NULL DEFAULT 'PENDING'");
+            } catch (Exception e) {
+                System.out.println("[DatabaseInitializer] Migration note (exchange_requests status): " + e.getMessage());
+            }
+
+            // 2. Add dual-confirmation and tracking columns to exchanges table if missing
+            String[][] exchangeColumns = {
+                {"offered_book_id", "BIGINT NULL"},
+                {"owner_handover_confirmed", "BOOLEAN NOT NULL DEFAULT FALSE"},
+                {"requester_handover_confirmed", "BOOLEAN NOT NULL DEFAULT FALSE"},
+                {"owner_return_confirmed", "BOOLEAN NOT NULL DEFAULT FALSE"},
+                {"requester_return_confirmed", "BOOLEAN NOT NULL DEFAULT FALSE"},
+                {"handover_location", "VARCHAR(255) NULL"},
+                {"handover_notes", "TEXT NULL"}
+            };
+
+            for (String[] col : exchangeColumns) {
+                String colName = col[0];
+                String colDef = col[1];
+                try (ResultSet rs = stmt.executeQuery(
+                        "SELECT COUNT(*) FROM information_schema.columns " +
+                        "WHERE table_schema = DATABASE() AND table_name = 'exchanges' AND column_name = '" + colName + "'")) {
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        try (Statement alterStmt = conn.createStatement()) {
+                            alterStmt.execute("ALTER TABLE exchanges ADD COLUMN " + colName + " " + colDef);
+                            System.out.println("[DatabaseInitializer] Added column 'exchanges." + colName + "' successfully.");
+                        }
+                    }
+                } catch (Exception ex) {
+                    System.out.println("[DatabaseInitializer] Migration check note for 'exchanges." + colName + "': " + ex.getMessage());
+                }
+            }
+
+            // 3. Relax start_date to allow NULL initially (until physical handover occurs)
+            try {
+                stmt.execute("ALTER TABLE exchanges MODIFY COLUMN start_date DATE NULL");
+            } catch (Exception e) {
+                System.out.println("[DatabaseInitializer] Migration note (exchanges.start_date): " + e.getMessage());
+            }
+
+            // 4. Update exchanges status column to VARCHAR(32) to support all physical lifecycle states
+            try {
+                stmt.execute("ALTER TABLE exchanges MODIFY COLUMN status VARCHAR(32) NOT NULL DEFAULT 'AWAITING_HANDOVER'");
+            } catch (Exception e) {
+                System.out.println("[DatabaseInitializer] Migration note (exchanges.status): " + e.getMessage());
+            }
+
+        } catch (Exception e) {
+            System.err.println("[DatabaseInitializer] Non-destructive migration exception: " + e.getMessage());
         }
     }
 

@@ -55,6 +55,27 @@
         <tracking-mode>COOKIE</tracking-mode>
     </session-config>
 
+    <!-- Explicit Servlet Mappings for Exchange Request Management -->
+    <servlet>
+        <servlet-name>ExchangeRequestServlet</servlet-name>
+        <servlet-class>com.bookexchange.servlet.ExchangeRequestServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ExchangeRequestServlet</servlet-name>
+        <url-pattern>/api/exchange-requests</url-pattern>
+        <url-pattern>/api/exchange-requests/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ExchangeServlet</servlet-name>
+        <servlet-class>com.bookexchange.servlet.ExchangeServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ExchangeServlet</servlet-name>
+        <url-pattern>/api/exchanges</url-pattern>
+        <url-pattern>/api/exchanges/*</url-pattern>
+    </servlet-mapping>
+
     <!-- Explicit MIME Type Mappings -->
     <mime-mapping>
         <extension>css</extension>

@@ -904,7 +904,7 @@ async function initBookDetailsPage() {
                             ✏️ Edit Your Listing
                         </a>
                     ` : `
-                        <button type="button" class="btn btn-primary btn-lg" style="flex: 1;" onclick="handleRequestExchangeNotice(${book.id}, '${escapeHtml(book.title)}')">
+                        <button type="button" class="btn btn-primary btn-lg" style="flex: 1;" onclick="openRequestBookModal(${book.id}, '${escapeHtml(book.title).replace(/'/g, "\\'")}', '${book.sharingMode || 'SWAP'}', ${book.lendingMaxDurationDays || 14}, '${escapeHtml(book.ownerCampus || '').replace(/'/g, "\\'")}')">
                             🤝 ${primaryButtonText}
                         </button>
                     `}
@@ -957,8 +957,203 @@ async function initBookDetailsPage() {
     `;
 }
 
-function handleRequestExchangeNotice(bookId, title) {
-    alert(`🎓 Connect with Owner for "${title}":\n\nYour request has been initiated! You can coordinate safe handover details (e.g. Central Library, Student Center) with your campus peer.`);
+// ============================================================================
+// 6. REQUEST BOOK INTERACTIVE MODAL CONTROLLER
+// ============================================================================
+async function openRequestBookModal(bookId, title, sharingMode, maxDurationDays, ownerCampus) {
+    const modal = document.getElementById('request-book-modal');
+    if (!modal) {
+        // Fallback alert if on an un-updated page
+        alert(`🎓 Connect with Owner for "${title}":\nPlease visit the listing page to submit a verified exchange request.`);
+        return;
+    }
+
+    const alertBox = document.getElementById('modal-alert-box');
+    if (alertBox) alertBox.style.display = 'none';
+
+    document.getElementById('req-book-id').value = bookId;
+    document.getElementById('req-exchange-mode').value = sharingMode;
+    document.getElementById('request-modal-title').textContent = `Request: ${title}`;
+    document.getElementById('req-handover-location').value = ownerCampus || 'Central Library Block B, 1st Floor';
+    document.getElementById('req-message').value = '';
+
+    const swapGroup = document.getElementById('swap-offered-group');
+    const lendingGroup = document.getElementById('lending-duration-group');
+    const banner = document.getElementById('request-modal-mode-banner');
+
+    if (sharingMode === 'SWAP') {
+        if (swapGroup) swapGroup.style.display = 'block';
+        if (lendingGroup) lendingGroup.style.display = 'none';
+        if (banner) {
+            banner.innerHTML = `
+                <div class="b4u-mode-panel b4u-panel-swap" style="margin: 0;">
+                    <div class="panel-icon">🔄</div>
+                    <div class="panel-text">
+                        <strong>Peer Book Swap</strong>
+                        <p style="margin: 0;">Select one of your listed books to trade in exchange for this textbook.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fetch authenticated user's available books
+        const select = document.getElementById('req-offered-book-id');
+        if (select) {
+            select.innerHTML = '<option value="">Loading your available listings...</option>';
+            try {
+                const res = await fetch(`${APP_CONTEXT}/api/books?myBooks=true&status=AVAILABLE`);
+                if (res.status === 401) {
+                    window.location.href = `${APP_CONTEXT}/login.html?authRequired=true`;
+                    return;
+                }
+                const data = await res.json();
+                if (data.books && data.books.length > 0) {
+                    select.innerHTML = '<option value="">-- Choose one of your books to offer --</option>' +
+                        data.books.map(b => `<option value="${b.id}">${escapeHtml(b.title)} (${escapeHtml(b.subject)})</option>`).join('');
+                } else {
+                    select.innerHTML = '<option value="">⚠️ You have no available books to offer</option>';
+                }
+            } catch (e) {
+                select.innerHTML = '<option value="">Error loading your listings</option>';
+            }
+        }
+
+    } else if (sharingMode === 'LENDING') {
+        if (swapGroup) swapGroup.style.display = 'none';
+        if (lendingGroup) lendingGroup.style.display = 'block';
+        const days = maxDurationDays || 14;
+        const durInput = document.getElementById('req-duration-days');
+        if (durInput) {
+            durInput.max = days;
+            durInput.value = Math.min(14, days);
+        }
+        const durHelp = document.getElementById('lending-duration-help');
+        if (durHelp) durHelp.textContent = `Maximum duration permitted by owner: ${days} days`;
+
+        if (banner) {
+            banner.innerHTML = `
+                <div class="b4u-mode-panel b4u-panel-lending" style="margin: 0;">
+                    <div class="panel-icon">⏱️</div>
+                    <div class="panel-text">
+                        <strong>Temporary Semester Loan</strong>
+                        <p style="margin: 0;">Borrow this textbook for your coursework and return on the agreed date.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+    } else { // GIVEAWAY
+        if (swapGroup) swapGroup.style.display = 'none';
+        if (lendingGroup) lendingGroup.style.display = 'none';
+        if (banner) {
+            banner.innerHTML = `
+                <div class="b4u-mode-panel b4u-panel-giveaway" style="margin: 0;">
+                    <div class="panel-icon">🎁</div>
+                    <div class="panel-text">
+                        <strong>Free Student Giveaway</strong>
+                        <p style="margin: 0;">This book is offered completely free of charge to any student in need.</p>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    modal.classList.add('active');
+}
+
+function closeRequestBookModal() {
+    const modal = document.getElementById('request-book-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+async function submitBookRequest(event) {
+    event.preventDefault();
+
+    const bookId = document.getElementById('req-book-id').value;
+    const mode = document.getElementById('req-exchange-mode').value;
+    const location = document.getElementById('req-handover-location').value.trim();
+    const message = document.getElementById('req-message').value.trim();
+    const btn = document.getElementById('btn-submit-book-req');
+    const alertBox = document.getElementById('modal-alert-box');
+
+    let offeredBookId = null;
+    let proposedDays = null;
+
+    if (mode === 'SWAP') {
+        const sel = document.getElementById('req-offered-book-id');
+        offeredBookId = sel ? sel.value : null;
+        if (!offeredBookId) {
+            if (alertBox) {
+                alertBox.textContent = 'Please select a book to offer in return for a SWAP exchange.';
+                alertBox.style.display = 'block';
+            }
+            return;
+        }
+    } else if (mode === 'LENDING') {
+        const inp = document.getElementById('req-duration-days');
+        proposedDays = inp ? parseInt(inp.value, 10) : 14;
+        if (!proposedDays || proposedDays <= 0) {
+            if (alertBox) {
+                alertBox.textContent = 'Please enter a valid positive duration in days.';
+                alertBox.style.display = 'block';
+            }
+            return;
+        }
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending Request...';
+    if (alertBox) alertBox.style.display = 'none';
+
+    try {
+        const payload = {
+            bookId: parseInt(bookId, 10),
+            exchangeMode: mode,
+            offeredBookId: offeredBookId ? parseInt(offeredBookId, 10) : null,
+            proposedDurationDays: proposedDays,
+            requestMessage: message,
+            handoverLocation: location
+        };
+
+        const response = await fetch(`${APP_CONTEXT}/api/exchange-requests`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.status === 401) {
+            window.location.href = `${APP_CONTEXT}/login.html?authRequired=true`;
+            return;
+        }
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+            closeRequestBookModal();
+            if (typeof Store !== 'undefined' && Store.showToast) {
+                Store.showToast(data.message || 'Exchange request submitted successfully!', 'success');
+            } else {
+                alert(data.message || 'Exchange request submitted successfully!');
+            }
+            setTimeout(() => {
+                window.location.href = `${APP_CONTEXT}/my-requests.html`;
+            }, 1000);
+        } else {
+            if (alertBox) {
+                alertBox.textContent = data.error || 'Failed to submit exchange request.';
+                alertBox.style.display = 'block';
+            }
+            btn.disabled = false;
+            btn.textContent = 'Send Request';
+        }
+
+    } catch (err) {
+        if (alertBox) {
+            alertBox.textContent = 'Network error: ' + err.message;
+            alertBox.style.display = 'block';
+        }
+        btn.disabled = false;
+        btn.textContent = 'Send Request';
+    }
 }
 
 // Auto-initialize based on active DOM elements

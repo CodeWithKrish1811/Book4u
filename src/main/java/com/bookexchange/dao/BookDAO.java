@@ -373,19 +373,83 @@ public class BookDAO {
     }
 
     /**
+     * Updates availability status with external connection (for transactions).
+     */
+    public boolean updateStatus(Connection conn, Long id, String status) throws SQLException {
+        String sql = "UPDATE books SET status = ? WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, status);
+            stmt.setLong(2, id);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    /**
      * Updates availability status.
      */
     public boolean updateStatus(Long id, String status) throws SQLException {
-        String sql = "UPDATE books SET status = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection()) {
+            return updateStatus(conn, id, status);
+        }
+    }
+
+    /**
+     * Atomically transfers ownership of a book to a new student and sets status to AVAILABLE.
+     */
+    public boolean transferOwnership(Connection conn, Long bookId, Long newOwnerId) throws SQLException {
+        String sql = "UPDATE books SET owner_id = ?, status = 'AVAILABLE' WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, newOwnerId);
+            stmt.setLong(2, bookId);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Finds a book by primary key and acquires an exclusive row-level lock (FOR UPDATE)
+     * within an active transaction.
+     */
+    public Book findByIdForUpdate(Connection conn, Long id) throws SQLException {
+        String sql = "SELECT b.id, b.owner_id, s.full_name AS owner_name, s.department AS owner_department, s.campus_name AS owner_campus, " +
+                     "b.title, b.author, b.isbn, b.edition, b.course_code, b.subject, b.condition_grade, b.sharing_mode, b.status, " +
+                     "b.description, b.image_url, b.lending_max_duration_days, b.swap_preferences, b.created_at, b.updated_at " +
+                     "FROM books b " +
+                     "JOIN students s ON b.owner_id = s.id " +
+                     "WHERE b.id = ? FOR UPDATE";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToBook(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Finds all available books owned by a student (useful for populating SWAP offerings).
+     */
+    public List<Book> findAvailableByOwner(Long ownerId) throws SQLException {
+        List<Book> list = new ArrayList<>();
+        String sql = "SELECT b.id, b.owner_id, s.full_name AS owner_name, s.department AS owner_department, s.campus_name AS owner_campus, " +
+                     "b.title, b.author, b.isbn, b.edition, b.course_code, b.subject, b.condition_grade, b.sharing_mode, b.status, " +
+                     "b.description, b.image_url, b.lending_max_duration_days, b.swap_preferences, b.created_at, b.updated_at " +
+                     "FROM books b " +
+                     "JOIN students s ON b.owner_id = s.id " +
+                     "WHERE b.owner_id = ? AND b.status = 'AVAILABLE' ORDER BY b.title ASC";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, status);
-            stmt.setLong(2, id);
-
-            return stmt.executeUpdate() > 0;
+            stmt.setLong(1, ownerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRowToBook(rs));
+                }
+            }
         }
+        return list;
     }
 
     /**

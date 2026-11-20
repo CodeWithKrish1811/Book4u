@@ -83,7 +83,7 @@ CREATE TABLE exchange_requests (
     offered_book_id BIGINT NULL COMMENT 'Reciprocal book offered in return (for SWAP mode)',
     proposed_duration_days INT UNSIGNED NULL COMMENT 'Requested loan duration in days (for LENDING mode)',
     request_message TEXT NULL COMMENT 'Introductory message explaining course need',
-    status ENUM('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED') NOT NULL DEFAULT 'PENDING' COMMENT 'Request status',
+    status ENUM('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED', 'EXPIRED') NOT NULL DEFAULT 'PENDING' COMMENT 'Request status',
     handover_location VARCHAR(255) NULL COMMENT 'Proposed campus handover spot (e.g. Central Library)',
     handover_time DATETIME NULL COMMENT 'Proposed meeting date and time',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -101,25 +101,36 @@ CREATE TABLE exchange_requests (
 -- =====================================================================
 -- TABLE: exchanges
 -- Description: Accepted exchange agreements and active loan tracking
+-- Supports dual physical handover confirmation and dual return confirmation
 -- =====================================================================
 CREATE TABLE exchanges (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     request_id BIGINT NOT NULL UNIQUE COMMENT '1:1 link to accepted exchange request',
     book_id BIGINT NOT NULL COMMENT 'Textbook being shared',
+    offered_book_id BIGINT NULL COMMENT 'Reciprocal book offered in return (for SWAP mode)',
     owner_id BIGINT NOT NULL COMMENT 'Original book owner / lender',
     requester_id BIGINT NOT NULL COMMENT 'Book requester / borrower',
     exchange_mode ENUM('SWAP', 'GIVEAWAY', 'LENDING') NOT NULL COMMENT 'Sharing mode',
-    status ENUM('ACTIVE', 'COMPLETED', 'RETURNED', 'DISPUTED') NOT NULL DEFAULT 'ACTIVE' COMMENT 'Lifecycle status',
-    start_date DATE NOT NULL COMMENT 'Loan or exchange start date',
+    status VARCHAR(32) NOT NULL DEFAULT 'AWAITING_HANDOVER' COMMENT 'Lifecycle: AWAITING_HANDOVER, ACTIVE, COMPLETED, RETURNED, OVERDUE, CANCELLED, DISPUTED',
+    owner_handover_confirmed BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Owner confirmed physical handover',
+    requester_handover_confirmed BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Requester confirmed physical handover',
+    owner_return_confirmed BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Owner confirmed book returned (lending)',
+    requester_return_confirmed BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Requester confirmed book returned (lending)',
+    handover_location VARCHAR(255) NULL COMMENT 'Agreed campus meeting location',
+    handover_notes TEXT NULL COMMENT 'Coordination notes or instructions',
+    start_date DATE NULL COMMENT 'Handover completion date / loan start date',
     due_date DATE NULL COMMENT 'Agreed return deadline (for LENDING mode)',
     return_date DATE NULL COMMENT 'Actual return date (for LENDING mode)',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_exchanges_request FOREIGN KEY (request_id) REFERENCES exchange_requests(id) ON DELETE RESTRICT,
     CONSTRAINT fk_exchanges_book FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_exchanges_offered_book FOREIGN KEY (offered_book_id) REFERENCES books(id) ON DELETE SET NULL,
     CONSTRAINT fk_exchanges_owner FOREIGN KEY (owner_id) REFERENCES students(id) ON DELETE RESTRICT,
     CONSTRAINT fk_exchanges_requester FOREIGN KEY (requester_id) REFERENCES students(id) ON DELETE RESTRICT,
-    INDEX idx_exchanges_status (status)
+    INDEX idx_exchanges_status (status),
+    INDEX idx_exchanges_owner (owner_id),
+    INDEX idx_exchanges_requester (requester_id)
 ) ENGINE=InnoDB COMMENT='Active and completed exchanges';
 
 -- =====================================================================
