@@ -28,6 +28,16 @@ public class CharacterEncodingFilter implements Filter {
             throws IOException, ServletException {
         request.setCharacterEncoding(ENCODING);
         response.setCharacterEncoding(ENCODING);
+
+        if (response instanceof jakarta.servlet.http.HttpServletResponse httpResp && request instanceof jakarta.servlet.http.HttpServletRequest httpReq) {
+            String path = httpReq.getRequestURI();
+            if (path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js") || path.endsWith("/")) {
+                httpResp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+                httpResp.setHeader("Pragma", "no-cache");
+                httpResp.setHeader("Expires", "0");
+            }
+        }
+
         chain.doFilter(request, response);
     }
 
