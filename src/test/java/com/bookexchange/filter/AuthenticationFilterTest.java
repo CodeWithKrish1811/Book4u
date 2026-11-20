@@ -76,9 +76,7 @@ public class AuthenticationFilterTest {
         assertTrue((Boolean) isPublicMethod.invoke(filter, "/", "GET"));
         assertTrue((Boolean) isPublicMethod.invoke(filter, "/explore.html", "GET"));
         assertTrue((Boolean) isPublicMethod.invoke(filter, "/book-details.html", "GET"));
-        assertTrue((Boolean) isPublicMethod.invoke(filter, "/cart.html", "GET"));
         assertTrue((Boolean) isPublicMethod.invoke(filter, "/wishlist.html", "GET"));
-        assertTrue((Boolean) isPublicMethod.invoke(filter, "/checkout.html", "GET"));
         assertTrue((Boolean) isPublicMethod.invoke(filter, "/login.html", "GET"));
         assertTrue((Boolean) isPublicMethod.invoke(filter, "/register.html", "GET"));
 
@@ -94,12 +92,18 @@ public class AuthenticationFilterTest {
         // Protected resources: Must return false
         assertFalse((Boolean) isPublicMethod.invoke(filter, "/profile.html", "GET"));
         assertFalse((Boolean) isPublicMethod.invoke(filter, "/my-books.html", "GET"));
+        assertFalse((Boolean) isPublicMethod.invoke(filter, "/my-requests.html", "GET"));
+        assertFalse((Boolean) isPublicMethod.invoke(filter, "/exchange-details.html", "GET"));
         assertFalse((Boolean) isPublicMethod.invoke(filter, "/add-book.html", "GET"));
         assertFalse((Boolean) isPublicMethod.invoke(filter, "/edit-book.html", "GET"));
         assertFalse((Boolean) isPublicMethod.invoke(filter, "/api/profile", "GET"));
         assertFalse((Boolean) isPublicMethod.invoke(filter, "/api/profile/update", "POST"));
         assertFalse((Boolean) isPublicMethod.invoke(filter, "/api/profile/password", "POST"));
-        assertFalse((Boolean) isPublicMethod.invoke(filter, "/api/books", "POST")); // Creating a book listing requires authentication!
+        assertFalse((Boolean) isPublicMethod.invoke(filter, "/api/books", "POST"));
+        assertFalse((Boolean) isPublicMethod.invoke(filter, "/api/exchange-requests", "GET"));
+        assertFalse((Boolean) isPublicMethod.invoke(filter, "/api/exchange-requests", "POST"));
+        assertFalse((Boolean) isPublicMethod.invoke(filter, "/api/exchanges", "GET"));
+        assertFalse((Boolean) isPublicMethod.invoke(filter, "/api/exchanges", "POST"));
     }
 
     @Test

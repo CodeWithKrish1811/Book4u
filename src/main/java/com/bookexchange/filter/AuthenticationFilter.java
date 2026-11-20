@@ -173,7 +173,7 @@ public class AuthenticationFilter implements Filter {
         // Welcome and public exploration catalog pages
         if (path.equals("") || path.equals("/") || path.equals("/index.html") ||
             path.equals("/explore.html") || path.equals("/book-details.html") ||
-            path.equals("/cart.html") || path.equals("/wishlist.html") || path.equals("/checkout.html") ||
+            path.equals("/wishlist.html") ||
             path.equals("/login.html") || path.equals("/register.html")) {
             return true;
         }
