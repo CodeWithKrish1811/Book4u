@@ -12,12 +12,11 @@ CREATE DATABASE IF NOT EXISTS book_exchange_db
 
 USE book_exchange_db;
 
--- 2. Drop existing tables in reverse order of foreign key dependencies
-DROP TABLE IF EXISTS reviews;
-DROP TABLE IF EXISTS exchanges;
-DROP TABLE IF EXISTS exchange_requests;
-DROP TABLE IF EXISTS books;
-DROP TABLE IF EXISTS students;
+-- ---------------------------------------------------------------------
+-- PRODUCTION SAFETY GOVERNANCE:
+-- Destructive DROP TABLE / TRUNCATE statements are strictly prohibited
+-- to guarantee zero data loss during application restarts or redeployments.
+-- ---------------------------------------------------------------------
 
 -- =====================================================================
 -- TABLE: students

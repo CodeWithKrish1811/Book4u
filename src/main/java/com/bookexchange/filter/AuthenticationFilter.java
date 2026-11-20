@@ -49,6 +49,21 @@ public class AuthenticationFilter implements Filter {
         String path = uri.substring(contextPath.length());
         String method = req.getMethod();
 
+        // Check if database schema is degraded/blocked (except health checks)
+        if (path.startsWith("/api/") && !path.startsWith("/api/health") && com.bookexchange.config.DatabaseInitializer.isSchemaBlocked()) {
+            resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            resp.setContentType("application/json");
+            resp.setCharacterEncoding("UTF-8");
+            JsonObject err = new JsonObject();
+            err.addProperty("success", false);
+            err.addProperty("error", "Service unavailable: Database schema requires administrator maintenance.");
+            err.addProperty("schemaStatus", com.bookexchange.config.DatabaseInitializer.getSchemaState().name());
+            try (PrintWriter out = resp.getWriter()) {
+                out.print(gson.toJson(err));
+            }
+            return;
+        }
+
         // 1. CSRF defense on state-changing requests (POST, PUT, DELETE)
         if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method)) {
             if (!isAllowedOrigin(req)) {
