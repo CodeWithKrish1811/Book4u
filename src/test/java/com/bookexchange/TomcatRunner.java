@@ -27,6 +27,13 @@ public class TomcatRunner {
                 port = Integer.parseInt(portEnv.trim());
             } catch (NumberFormatException ignored) {
             }
+        } else {
+            // Check if port 8080 is accessible on Windows, otherwise seamlessly fallback to 8081
+            try (java.net.ServerSocket testSocket = new java.net.ServerSocket(8080)) {
+                port = 8080;
+            } catch (Exception e) {
+                port = 8081;
+            }
         }
 
         File tempDir = new File("target/tomcat-temp");

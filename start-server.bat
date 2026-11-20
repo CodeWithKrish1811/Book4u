@@ -2,7 +2,7 @@
 title Book4u - Local Development Server (Apache Tomcat 10.1)
 echo ==================================================================
 echo   Student Peer-to-Peer Book Exchange System (Book4u)
-echo   Starting local server using Apache Tomcat 10.1 on port 8080...
+echo   Starting local server using Apache Tomcat 10.1...
 echo ==================================================================
 echo.
 if "%JAVA_HOME%"=="" (

@@ -584,18 +584,18 @@ async function initBookDetailsPage() {
             rating: 5,
             reviewsCount: 10,
             tags: ["Magical Adventure", "Wizarding World", "Friendship And Bravery", "Childhood Imagination", "Epic Journey"],
-            imageUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80",
+            imageUrl: "https://upload.wikimedia.org/wikipedia/en/6/6b/Harry_Potter_and_the_Philosopher%27s_Stone_Book_Cover.jpg",
             description: "Harry Potter has never even heard of Hogwarts when the letters start dropping on the doormat at number four, Privet Drive. Addressed in green ink on yellowish parchment with a purple seal, they are swiftly confiscated by his grisly aunt and uncle. Then, on Harry's eleventh birthday, a great beetle-eyed giant of a man called Rubeus Hagrid bursts in with some astonishing news: Harry Potter is a wizard, and he has a place at Hogwarts School of Witchcraft and Wizardry.",
             ownerName: "Campus Literature Society",
             ownerDepartment: "English & Humanities",
             ownerCampus: "Central Campus",
             series: [
-                { part: "Part 2", title: "Chamber of Secrets", price: 450, mrp: 599, img: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=200&q=80" },
-                { part: "Part 3", title: "Prisoner of Azkaban", price: 450, mrp: 599, img: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=200&q=80" },
-                { part: "Part 4", title: "Goblet of Fire", price: 640, mrp: 799, img: "https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=200&q=80" },
-                { part: "Part 5", title: "Order of the Phoenix", price: 720, mrp: 899, img: "https://images.unsplash.com/photo-1518373714866-3f1478910cc0?auto=format&fit=crop&w=200&q=80" },
-                { part: "Part 6", title: "Half-Blood Prince", price: 640, mrp: 799, img: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=200&q=80" },
-                { part: "Part 7", title: "Deathly Hallows", price: 640, mrp: 799, img: "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?auto=format&fit=crop&w=200&q=80" }
+                { part: "Part 2", title: "Chamber of Secrets", price: 450, mrp: 599, img: "https://upload.wikimedia.org/wikipedia/en/5/5c/Harry_Potter_and_the_Chamber_of_Secrets.jpg" },
+                { part: "Part 3", title: "Prisoner of Azkaban", price: 450, mrp: 599, img: "https://upload.wikimedia.org/wikipedia/en/a/a0/Harry_Potter_and_the_Prisoner_of_Azkaban.jpg" },
+                { part: "Part 4", title: "Goblet of Fire", price: 640, mrp: 799, img: "https://upload.wikimedia.org/wikipedia/en/b/b6/Harry_Potter_and_the_Goblet_of_Fire_cover.png" },
+                { part: "Part 5", title: "Order of the Phoenix", price: 720, mrp: 899, img: "https://upload.wikimedia.org/wikipedia/en/7/70/Harry_Potter_and_the_Order_of_the_Phoenix.jpg" },
+                { part: "Part 6", title: "Half-Blood Prince", price: 640, mrp: 799, img: "https://upload.wikimedia.org/wikipedia/en/b/b5/Harry_Potter_and_the_Half-Blood_Prince_cover.png" },
+                { part: "Part 7", title: "Deathly Hallows", price: 640, mrp: 799, img: "https://upload.wikimedia.org/wikipedia/en/a/a9/Harry_Potter_and_the_Deathly_Hallows.jpg" }
             ]
         },
         'belonging': {
