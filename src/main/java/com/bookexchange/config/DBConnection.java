@@ -582,6 +582,29 @@ public class DBConnection {
     }
 
     /**
+     * Configures a custom database URL and driver for automated integration testing
+     * (e.g. an isolated in-memory MySQL-compatible database).
+     */
+    public static synchronized void setTestConfig(String testUrl, String testUser, String testPass, String testDriver) {
+        url = testUrl;
+        username = testUser != null ? testUser : "";
+        password = testPass != null ? testPass : "";
+        if (testDriver != null && !testDriver.isBlank()) {
+            driver = testDriver;
+            loadDriver();
+        }
+        configured = true;
+        configurationError = null;
+    }
+
+    /**
+     * Resets database configuration back to standard environment / properties values.
+     */
+    public static synchronized void resetConfig() {
+        loadProperties();
+    }
+
+    /**
      * Safely closes a database connection if open.
      *
      * @param conn The connection to close

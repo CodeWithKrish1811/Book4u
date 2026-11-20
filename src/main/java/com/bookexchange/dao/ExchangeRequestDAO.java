@@ -183,12 +183,11 @@ public class ExchangeRequestDAO {
     }
 
     /**
-     * Checks if a requester already has a PENDING request for a given book.
+     * Checks if a requester already has a PENDING request for a given book within a transaction.
      */
-    public int countPendingRequests(Long bookId, Long requesterId) throws SQLException {
+    public int countPendingRequests(Connection conn, Long bookId, Long requesterId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM exchange_requests WHERE book_id = ? AND requester_id = ? AND status = 'PENDING'";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, bookId);
             stmt.setLong(2, requesterId);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -198,6 +197,15 @@ public class ExchangeRequestDAO {
             }
         }
         return 0;
+    }
+
+    /**
+     * Checks if a requester already has a PENDING request for a given book (standalone connection).
+     */
+    public int countPendingRequests(Long bookId, Long requesterId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return countPendingRequests(conn, bookId, requesterId);
+        }
     }
 
     /**

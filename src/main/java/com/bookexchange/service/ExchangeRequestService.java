@@ -63,87 +63,102 @@ public class ExchangeRequestService {
             throw new IllegalArgumentException("Target book ID is required.");
         }
 
-        Book book = bookDAO.findById(bookId);
-        if (book == null) {
-            throw new IllegalArgumentException("Requested textbook listing not found.");
-        }
+        try (Connection conn = DBConnection.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
 
-        // Rule 1: A student cannot request their own book
-        if (studentId.equals(book.getOwnerId())) {
-            throw new IllegalArgumentException("You cannot request your own textbook listing.");
-        }
+            try {
+                // Lock book listing to prevent concurrent duplicate race conditions
+                Book book = bookDAO.findByIdForUpdate(conn, bookId);
+                if (book == null) {
+                    throw new IllegalArgumentException("Requested textbook listing not found.");
+                }
 
-        // Rule 2: Only AVAILABLE listings can receive requests
-        if (!"AVAILABLE".equalsIgnoreCase(book.getStatus())) {
-            throw new IllegalStateException("This book listing is currently " + book.getStatus() + " and not accepting requests.");
-        }
+                // Rule 1: A student cannot request their own book
+                if (studentId.equals(book.getOwnerId())) {
+                    throw new IllegalArgumentException("You cannot request your own textbook listing.");
+                }
 
-        // Resolve sharing mode
-        String mode = (exchangeMode != null && !exchangeMode.isBlank()) ? exchangeMode.toUpperCase().trim() : book.getSharingMode();
-        if (!"SWAP".equals(mode) && !"GIVEAWAY".equals(mode) && !"LENDING".equals(mode)) {
-            throw new IllegalArgumentException("Invalid sharing mode: " + mode);
-        }
+                // Rule 2: Only AVAILABLE listings can receive requests
+                if (!"AVAILABLE".equalsIgnoreCase(book.getStatus())) {
+                    throw new IllegalStateException("This book listing is currently " + book.getStatus() + " and not accepting requests.");
+                }
 
-        // Rule 3: Check duplicate pending requests
-        int existingCount = exchangeRequestDAO.countPendingRequests(bookId, studentId);
-        if (existingCount > 0) {
-            throw new IllegalStateException("You already have an active pending request for this book. Please await owner review.");
-        }
+                // Resolve sharing mode
+                String mode = (exchangeMode != null && !exchangeMode.isBlank()) ? exchangeMode.toUpperCase().trim() : book.getSharingMode();
+                if (!"SWAP".equals(mode) && !"GIVEAWAY".equals(mode) && !"LENDING".equals(mode)) {
+                    throw new IllegalArgumentException("Invalid sharing mode: " + mode);
+                }
 
-        // Rule 4: SWAP mode validations
-        if ("SWAP".equals(mode)) {
-            if (offeredBookId == null || offeredBookId <= 0) {
-                throw new IllegalArgumentException("You must select one of your own available textbooks to offer in a SWAP exchange.");
+                // Rule 3: Check duplicate pending requests under row-lock protection
+                int existingCount = exchangeRequestDAO.countPendingRequests(conn, bookId, studentId);
+                if (existingCount > 0) {
+                    throw new IllegalStateException("You already have an active pending request for this book. Please await owner review.");
+                }
+
+                // Rule 4: SWAP mode validations
+                if ("SWAP".equals(mode)) {
+                    if (offeredBookId == null || offeredBookId <= 0) {
+                        throw new IllegalArgumentException("You must select one of your own available textbooks to offer in a SWAP exchange.");
+                    }
+                    if (offeredBookId.equals(bookId)) {
+                        throw new IllegalArgumentException("The offered book cannot be the same as the requested book.");
+                    }
+
+                    Book offeredBook = bookDAO.findByIdForUpdate(conn, offeredBookId);
+                    if (offeredBook == null) {
+                        throw new IllegalArgumentException("The offered textbook listing was not found.");
+                    }
+                    if (!studentId.equals(offeredBook.getOwnerId())) {
+                        throw new IllegalArgumentException("The offered book does not belong to you.");
+                    }
+                    if (!"AVAILABLE".equalsIgnoreCase(offeredBook.getStatus())) {
+                        throw new IllegalStateException("Your offered book is currently " + offeredBook.getStatus() + " and cannot be offered.");
+                    }
+                } else {
+                    offeredBookId = null; // No offered book for GIVEAWAY or LENDING
+                }
+
+                // Rule 5: LENDING mode validations
+                if ("LENDING".equals(mode)) {
+                    if (proposedDurationDays == null || proposedDurationDays <= 0) {
+                        throw new IllegalArgumentException("A valid positive loan duration (in days) must be specified for LENDING.");
+                    }
+                    if (book.getLendingMaxDurationDays() != null && proposedDurationDays > book.getLendingMaxDurationDays()) {
+                        throw new IllegalArgumentException("Proposed loan duration (" + proposedDurationDays + " days) exceeds the owner's limit of " +
+                                book.getLendingMaxDurationDays() + " days.");
+                    }
+                } else {
+                    proposedDurationDays = null;
+                }
+
+                String location = (handoverLocation != null && !handoverLocation.isBlank())
+                        ? handoverLocation.trim()
+                        : book.getOwnerCampus();
+
+                ExchangeRequest req = new ExchangeRequest(
+                        bookId,
+                        studentId,
+                        book.getOwnerId(),
+                        mode,
+                        offeredBookId,
+                        proposedDurationDays,
+                        requestMessage != null ? requestMessage.trim() : null,
+                        location
+                );
+
+                Long requestId = exchangeRequestDAO.createRequest(conn, req);
+                req.setId(requestId);
+                conn.commit();
+                return exchangeRequestDAO.findById(requestId);
+
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(originalAutoCommit);
             }
-            if (offeredBookId.equals(bookId)) {
-                throw new IllegalArgumentException("The offered book cannot be the same as the requested book.");
-            }
-
-            Book offeredBook = bookDAO.findById(offeredBookId);
-            if (offeredBook == null) {
-                throw new IllegalArgumentException("The offered textbook listing was not found.");
-            }
-            if (!studentId.equals(offeredBook.getOwnerId())) {
-                throw new IllegalArgumentException("The offered book does not belong to you.");
-            }
-            if (!"AVAILABLE".equalsIgnoreCase(offeredBook.getStatus())) {
-                throw new IllegalStateException("Your offered book is currently " + offeredBook.getStatus() + " and cannot be offered.");
-            }
-        } else {
-            offeredBookId = null; // No offered book for GIVEAWAY or LENDING
         }
-
-        // Rule 5: LENDING mode validations
-        if ("LENDING".equals(mode)) {
-            if (proposedDurationDays == null || proposedDurationDays <= 0) {
-                throw new IllegalArgumentException("A valid positive loan duration (in days) must be specified for LENDING.");
-            }
-            if (book.getLendingMaxDurationDays() != null && proposedDurationDays > book.getLendingMaxDurationDays()) {
-                throw new IllegalArgumentException("Proposed loan duration (" + proposedDurationDays + " days) exceeds the owner's limit of " +
-                        book.getLendingMaxDurationDays() + " days.");
-            }
-        } else {
-            proposedDurationDays = null;
-        }
-
-        String location = (handoverLocation != null && !handoverLocation.isBlank())
-                ? handoverLocation.trim()
-                : book.getOwnerCampus();
-
-        ExchangeRequest req = new ExchangeRequest(
-                bookId,
-                studentId,
-                book.getOwnerId(),
-                mode,
-                offeredBookId,
-                proposedDurationDays,
-                requestMessage != null ? requestMessage.trim() : null,
-                location
-        );
-
-        Long requestId = exchangeRequestDAO.createRequest(req);
-        req.setId(requestId);
-        return exchangeRequestDAO.findById(requestId);
     }
 
     /**

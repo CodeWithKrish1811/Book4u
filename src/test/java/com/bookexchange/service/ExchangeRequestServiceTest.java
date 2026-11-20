@@ -3,9 +3,13 @@ package com.bookexchange.service;
 import com.bookexchange.dao.BookDAO;
 import com.bookexchange.dao.ExchangeDAO;
 import com.bookexchange.dao.ExchangeRequestDAO;
+import com.bookexchange.config.DBConnection;
 import com.bookexchange.model.Book;
 import com.bookexchange.model.Exchange;
 import com.bookexchange.model.ExchangeRequest;
+import com.bookexchange.test.TestDatabaseHelper;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,6 +53,16 @@ public class ExchangeRequestServiceTest {
     private static final Long BOOK_GIVEAWAY_ID = 102L;
     private static final Long BOOK_LENDING_ID = 103L;
     private static final Long OFFERED_BOOK_ID = 201L;
+
+    @BeforeAll
+    static void initSuite() {
+        TestDatabaseHelper.initDatabase();
+    }
+
+    @AfterAll
+    static void tearDownSuite() {
+        DBConnection.resetConfig();
+    }
 
     @BeforeEach
     void setUp() {
@@ -379,6 +393,11 @@ public class ExchangeRequestServiceTest {
         }
 
         @Override
+        public Book findByIdForUpdate(Connection conn, Long id) {
+            return findById(id);
+        }
+
+        @Override
         public boolean save(Book b) {
             books.put(b.getId(), b);
             return true;
@@ -419,6 +438,11 @@ public class ExchangeRequestServiceTest {
         }
 
         @Override
+        public Long createRequest(Connection conn, ExchangeRequest req) {
+            return createRequest(req);
+        }
+
+        @Override
         public ExchangeRequest findById(Long id) {
             return requests.get(id);
         }
@@ -428,6 +452,11 @@ public class ExchangeRequestServiceTest {
             return (int) requests.values().stream()
                     .filter(r -> r.getBookId().equals(bookId) && r.getRequesterId().equals(requesterId) && "PENDING".equalsIgnoreCase(r.getStatus()))
                     .count();
+        }
+
+        @Override
+        public int countPendingRequests(Connection conn, Long bookId, Long requesterId) {
+            return countPendingRequests(bookId, requesterId);
         }
 
         @Override

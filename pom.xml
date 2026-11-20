@@ -71,6 +71,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- In-Memory MySQL-Compatible Database for Real JDBC Transaction & Concurrency Integration Tests -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Embedded Apache Tomcat 10.1 for Instant Local Server Execution -->
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
