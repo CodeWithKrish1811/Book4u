@@ -147,7 +147,7 @@ function renderReceivedRequests() {
     container.innerHTML = receivedRequestsCache.map(req => {
         const isPending = req.status === 'PENDING';
         const isAccepted = req.status === 'ACCEPTED';
-        const coverImg = req.bookImageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&q=80';
+        const coverImg = (typeof CoverResolver !== 'undefined') ? CoverResolver.resolve({ title: req.bookTitle, author: req.bookAuthor, imageUrl: req.bookImageUrl, subject: req.bookSubject }) : (req.bookImageUrl || '');
 
         let swapHtml = '';
         if (req.exchangeMode === 'SWAP' && req.offeredBookTitle) {
@@ -165,7 +165,7 @@ function renderReceivedRequests() {
 
         return `
             <div class="request-card">
-                <img src="${escapeHtml(coverImg)}" alt="${escapeHtml(req.bookTitle)}" class="request-card-thumb" onerror="this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&q=80';">
+                <img src="${escapeHtml(coverImg)}" alt="${escapeHtml(req.bookTitle)}" class="request-card-thumb" onerror="if (typeof CoverResolver !== 'undefined') { CoverResolver.handleImageError(this, '${escapeHtml(req.bookTitle)}', '${escapeHtml(req.bookAuthor || '')}', '${escapeHtml(req.bookSubject || '')}'); }">
                 
                 <div class="request-card-body">
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
@@ -232,7 +232,7 @@ function renderSentRequests() {
     container.innerHTML = sentRequestsCache.map(req => {
         const isPending = req.status === 'PENDING';
         const isAccepted = req.status === 'ACCEPTED';
-        const coverImg = req.bookImageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&q=80';
+        const coverImg = (typeof CoverResolver !== 'undefined') ? CoverResolver.resolve({ title: req.bookTitle, author: req.bookAuthor, imageUrl: req.bookImageUrl, subject: req.bookSubject }) : (req.bookImageUrl || '');
 
         let swapHtml = '';
         if (req.exchangeMode === 'SWAP' && req.offeredBookTitle) {
@@ -250,7 +250,7 @@ function renderSentRequests() {
 
         return `
             <div class="request-card">
-                <img src="${escapeHtml(coverImg)}" alt="${escapeHtml(req.bookTitle)}" class="request-card-thumb" onerror="this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&q=80';">
+                <img src="${escapeHtml(coverImg)}" alt="${escapeHtml(req.bookTitle)}" class="request-card-thumb" onerror="if (typeof CoverResolver !== 'undefined') { CoverResolver.handleImageError(this, '${escapeHtml(req.bookTitle)}', '${escapeHtml(req.bookAuthor || '')}', '${escapeHtml(req.bookSubject || '')}'); }">
                 
                 <div class="request-card-body">
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
@@ -312,7 +312,7 @@ function renderExchangesList() {
     }
 
     container.innerHTML = exchangesCache.map(ex => {
-        const coverImg = ex.bookImageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&q=80';
+        const coverImg = (typeof CoverResolver !== 'undefined') ? CoverResolver.resolve({ title: ex.bookTitle, author: ex.bookAuthor, imageUrl: ex.bookImageUrl, subject: ex.bookSubject }) : (ex.bookImageUrl || '');
 
         let loanDates = '';
         if (ex.exchangeMode === 'LENDING' && ex.dueDate) {
@@ -321,7 +321,7 @@ function renderExchangesList() {
 
         return `
             <div class="request-card">
-                <img src="${escapeHtml(coverImg)}" alt="${escapeHtml(ex.bookTitle)}" class="request-card-thumb" onerror="this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&q=80';">
+                <img src="${escapeHtml(coverImg)}" alt="${escapeHtml(ex.bookTitle)}" class="request-card-thumb" onerror="if (typeof CoverResolver !== 'undefined') { CoverResolver.handleImageError(this, '${escapeHtml(ex.bookTitle)}', '${escapeHtml(ex.bookAuthor || '')}', '${escapeHtml(ex.bookSubject || '')}'); }">
                 
                 <div class="request-card-body">
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
@@ -744,7 +744,7 @@ function renderExchangeDetails(ex, isOwner, isRequester) {
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
                     <!-- Requested Book -->
                     <div style="display: flex; gap: 1rem; background: #FFF; border: 1px solid var(--color-border); border-radius: 8px; padding: 1rem;">
-                        <img src="${escapeHtml(ex.bookImageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&q=80')}" alt="${escapeHtml(ex.bookTitle)}" style="width: 70px; height: 100px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&q=80';">
+                        <img src="${escapeHtml((typeof CoverResolver !== 'undefined') ? CoverResolver.resolve({ title: ex.bookTitle, author: ex.bookAuthor, imageUrl: ex.bookImageUrl, subject: ex.bookSubject }) : (ex.bookImageUrl || ''))}" alt="${escapeHtml(ex.bookTitle)}" style="width: 70px; height: 100px; object-fit: contain; background: #F8FAFC; border-radius: 4px; padding: 2px;" onerror="if (typeof CoverResolver !== 'undefined') { CoverResolver.handleImageError(this, '${escapeHtml(ex.bookTitle)}', '${escapeHtml(ex.bookAuthor || '')}', '${escapeHtml(ex.bookSubject || '')}'); }">
                         <div>
                             <span class="announcement-pill" style="font-size: 0.65rem;">PRIMARY TEXTBOOK</span>
                             <div style="font-weight: 700; font-size: 0.95rem; color: var(--color-navy); margin-top: 0.25rem;">
@@ -762,7 +762,7 @@ function renderExchangeDetails(ex, isOwner, isRequester) {
                     <!-- Offered Book for SWAP -->
                     ${ex.offeredBookTitle ? `
                         <div style="display: flex; gap: 1rem; background: #FFF; border: 1px solid var(--color-border); border-radius: 8px; padding: 1rem;">
-                            <img src="${escapeHtml(ex.offeredBookImageUrl || 'https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=300&q=80')}" alt="${escapeHtml(ex.offeredBookTitle)}" style="width: 70px; height: 100px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=300&q=80';">
+                            <img src="${escapeHtml((typeof CoverResolver !== 'undefined') ? CoverResolver.resolve({ title: ex.offeredBookTitle, author: ex.offeredBookAuthor, imageUrl: ex.offeredBookImageUrl }) : (ex.offeredBookImageUrl || ''))}" alt="${escapeHtml(ex.offeredBookTitle)}" style="width: 70px; height: 100px; object-fit: contain; background: #F8FAFC; border-radius: 4px; padding: 2px;" onerror="if (typeof CoverResolver !== 'undefined') { CoverResolver.handleImageError(this, '${escapeHtml(ex.offeredBookTitle)}', '${escapeHtml(ex.offeredBookAuthor || '')}', ''); }">
                             <div>
                                 <span class="announcement-pill" style="font-size: 0.65rem; background: #FDE68A; color: #92400E;">SWAPPED IN RETURN</span>
                                 <div style="font-weight: 700; font-size: 0.95rem; color: var(--color-navy); margin-top: 0.25rem;">

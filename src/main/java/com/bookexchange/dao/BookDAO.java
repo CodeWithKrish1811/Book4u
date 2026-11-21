@@ -2,6 +2,7 @@ package com.bookexchange.dao;
 
 import com.bookexchange.config.DBConnection;
 import com.bookexchange.model.Book;
+import com.bookexchange.util.BookCoverResolver;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -479,7 +480,9 @@ public class BookDAO {
         book.setDescription(rs.getString("description"));
 
         try {
-            book.setImageUrl(rs.getString("image_url"));
+            String rawImg = rs.getString("image_url");
+            String resolvedCover = BookCoverResolver.resolveCoverUrl(book.getTitle(), book.getAuthor(), book.getIsbn(), rawImg);
+            book.setImageUrl(resolvedCover);
         } catch (SQLException ignored) {
         }
 

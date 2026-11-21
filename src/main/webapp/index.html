@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book4u — Campus Peer-to-Peer Book Exchange</title>
-    <meta name="description" content="Your Books. Your Campus. Your Community. Connect with university students to swap, giveaway, or borrow academic textbooks.">
-    
+    <meta name="description"
+        content="Your Books. Your Campus. Your Community. Connect with university students to swap, giveaway, or borrow academic textbooks.">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
 
     <!-- Critical Inlined CSS Baseline -->
     <style>
@@ -18,17 +22,60 @@
             --color-blue: #2563EB;
             --color-bg-page: #F8FAFC;
         }
-        body { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--color-bg-page); color: #1E293B; }
-        header.b4u-header { background: #FFFFFF; border-bottom: 1px solid #E2E8F0; }
-        .b4u-header-container { max-width: 1240px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.5rem; gap: 1rem; }
-        .b4u-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
-        .b4u-logo-icon { width: 44px; height: 44px; background: #0F172A; color: #FFF; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 800; font-size: 1.5rem; }
-        .b4u-logo-title { font-size: 1.45rem; font-weight: 800; color: #0F172A; }
+
+        body {
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--color-bg-page);
+            color: #1E293B;
+        }
+
+        header.b4u-header {
+            background: #FFFFFF;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .b4u-header-container {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.85rem 1.5rem;
+            gap: 1rem;
+        }
+
+        .b4u-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .b4u-logo-icon {
+            width: 44px;
+            height: 44px;
+            background: #0F172A;
+            color: #FFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1.5rem;
+        }
+
+        .b4u-logo-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #0F172A;
+        }
     </style>
 
     <!-- Design System Stylesheet -->
     <link rel="stylesheet" href="css/style.css?v=3.0">
 </head>
+
 <body>
 
     <!-- Top Announcement Bar -->
@@ -36,7 +83,8 @@
         <div class="announcement-content">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <span class="announcement-pill">CAMPUS EXCHANGE</span>
-                <span>🎓 <strong>Your Books. Your Campus. Your Community.</strong> 100% Free Peer-to-Peer Academic Sharing.</span>
+                <span>🎓 <strong>Your Books. Your Campus. Your Community.</strong> 100% Free Peer-to-Peer Academic
+                    Sharing.</span>
             </div>
             <div class="health-status-badge" id="system-health-pill">
                 <span class="health-dot dot-green" id="health-dot"></span>
@@ -60,15 +108,11 @@
             <!-- Search Bar -->
             <div class="b4u-search-wrapper">
                 <form action="explore.html" method="GET" class="b4u-search-form">
-                    <input 
-                        type="text" 
-                        name="query" 
-                        class="b4u-search-input" 
-                        placeholder="Search textbooks, courses, authors, ISBN..."
-                        aria-label="Search campus catalog"
-                    >
+                    <input type="text" name="query" class="b4u-search-input"
+                        placeholder="Search textbooks, courses, authors, ISBN..." aria-label="Search campus catalog">
                     <button type="submit" class="b4u-search-btn" aria-label="Submit search">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
@@ -100,10 +144,11 @@
                     <li class="b4u-nav-item"><a href="index.html" class="b4u-nav-link active">Home</a></li>
                     <li class="b4u-nav-item"><a href="explore.html" class="b4u-nav-link">Explore Books</a></li>
                     <li class="b4u-nav-item"><a href="explore.html?mode=SWAP" class="b4u-nav-link">Swap</a></li>
-                    <li class="b4u-nav-item"><a href="explore.html?mode=GIVEAWAY" class="b4u-nav-link">Giveaways</a></li>
+                    <li class="b4u-nav-item"><a href="explore.html?mode=GIVEAWAY" class="b4u-nav-link">Giveaways</a>
+                    </li>
                     <li class="b4u-nav-item"><a href="explore.html?mode=LENDING" class="b4u-nav-link">Lending</a></li>
                     <li class="b4u-nav-item"><a href="my-books.html" class="b4u-nav-link">My Listings</a></li>
-                    <li class="b4u-nav-item"><a href="my-requests.html" class="b4u-nav-link">My Requests</a></li>
+                    <li class="b4u-nav-item"><a href="profile.html#requests" class="b4u-nav-link">My Requests</a></li>
                     <li class="b4u-nav-item"><a href="profile.html" class="b4u-nav-link">Profile</a></li>
                 </ul>
             </div>
@@ -124,7 +169,8 @@
                         Pass Books Forward.<br>Keep Knowledge Moving.
                     </h1>
                     <p class="b4u-hero-desc">
-                        Discover academic textbooks shared by students across your university. Swap a book, get one for free, or borrow it for your semester.
+                        Discover academic textbooks shared by students across your university. Swap a book, get one for
+                        free, or borrow it for your semester.
                     </p>
                     <div class="b4u-hero-ctas">
                         <a href="explore.html" class="btn btn-primary btn-lg">
@@ -163,7 +209,8 @@
                         <div class="mode-card-icon">🔄</div>
                         <h3 class="mode-card-title">SWAP</h3>
                         <p class="mode-card-desc">
-                            Exchange your unused textbook for a book you need. Trade course materials directly with peers taking related subjects.
+                            Exchange your unused textbook for a book you need. Trade course materials directly with
+                            peers taking related subjects.
                         </p>
                         <a href="explore.html?mode=SWAP" class="mode-card-link" style="color: var(--color-blue);">
                             Explore Book Swaps &rarr;
@@ -175,7 +222,8 @@
                         <div class="mode-card-icon">🎁</div>
                         <h3 class="mode-card-title">GIVEAWAY</h3>
                         <p class="mode-card-desc">
-                            Give your old books to another student for free. Pass finished course guides forward to juniors starting their journey.
+                            Give your old books to another student for free. Pass finished course guides forward to
+                            juniors starting their journey.
                         </p>
                         <a href="explore.html?mode=GIVEAWAY" class="mode-card-link" style="color: var(--color-teal);">
                             Explore Free Books &rarr;
@@ -187,7 +235,8 @@
                         <div class="mode-card-icon">⏱️</div>
                         <h3 class="mode-card-title">LENDING</h3>
                         <p class="mode-card-desc">
-                            Lend your books temporarily and get them back after the agreed period. Perfect for exam revisions or semester project references.
+                            Lend your books temporarily and get them back after the agreed period. Perfect for exam
+                            revisions or semester project references.
                         </p>
                         <a href="explore.html?mode=LENDING" class="mode-card-link" style="color: var(--color-warning);">
                             Explore Book Loans &rarr;
@@ -198,12 +247,14 @@
         </section>
 
         <!-- C. RECENTLY LISTED BOOKS SECTION -->
-        <section class="b4u-section" style="background-color: #FFFFFF; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);">
+        <section class="b4u-section"
+            style="background-color: #FFFFFF; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);">
             <div class="b4u-container">
                 <div class="b4u-section-header">
                     <div>
                         <h2 class="b4u-section-title">Recently Listed on Campus</h2>
-                        <p class="b4u-section-subtitle">Real academic textbooks posted by verified students across departments.</p>
+                        <p class="b4u-section-subtitle">Real academic textbooks posted by verified students across
+                            departments.</p>
                     </div>
                     <div style="display: flex; gap: 0.75rem;">
                         <a href="explore.html" class="btn btn-outline btn-sm">
@@ -228,7 +279,8 @@
                 <div class="b4u-section-header" style="justify-content: center; text-align: center;">
                     <div>
                         <h2 class="b4u-section-title">How Book4u Works</h2>
-                        <p class="b4u-section-subtitle">Simple, safe, and transparent textbook exchange in 4 straightforward steps.</p>
+                        <p class="b4u-section-subtitle">Simple, safe, and transparent textbook exchange in 4
+                            straightforward steps.</p>
                     </div>
                 </div>
 
@@ -238,7 +290,8 @@
                         <div class="step-num">1</div>
                         <h3 class="step-title">Register as a Student</h3>
                         <p class="step-desc">
-                            Create your campus profile using your university credentials to verify your peer identity within our student community.
+                            Create your campus profile using your university credentials to verify your peer identity
+                            within our student community.
                         </p>
                     </div>
 
@@ -247,7 +300,8 @@
                         <div class="step-num">2</div>
                         <h3 class="step-title">List or Discover a Book</h3>
                         <p class="step-desc">
-                            Post textbooks you've completed or search required semester titles by course code, faculty subject, author, or ISBN.
+                            Post textbooks you've completed or search required semester titles by course code, faculty
+                            subject, author, or ISBN.
                         </p>
                     </div>
 
@@ -256,7 +310,8 @@
                         <div class="step-num">3</div>
                         <h3 class="step-title">Send or Receive a Request</h3>
                         <p class="step-desc">
-                            Connect directly with the book owner to coordinate swap preferences, free gift pickup, or agreed loan duration.
+                            Connect directly with the book owner to coordinate swap preferences, free gift pickup, or
+                            agreed loan duration.
                         </p>
                     </div>
 
@@ -265,7 +320,8 @@
                         <div class="step-num">4</div>
                         <h3 class="step-title">Meet on Campus Handover</h3>
                         <p class="step-desc">
-                            Meet safely at the campus central library, student union, or department lobby to inspect and complete the handover.
+                            Meet safely at the campus central library, student union, or department lobby to inspect and
+                            complete the handover.
                         </p>
                     </div>
                 </div>
@@ -279,20 +335,24 @@
                     <div class="b4u-community-info">
                         <h2>Built by Students, for Students</h2>
                         <p>
-                            Textbooks shouldn't gather dust on shelves while fellow classmates struggle to afford required course reading. Book4u keeps academic resources moving across semesters.
+                            Textbooks shouldn't gather dust on shelves while fellow classmates struggle to afford
+                            required course reading. Book4u keeps academic resources moving across semesters.
                         </p>
                         <ul class="b4u-benefit-list">
                             <li class="b4u-benefit-item">
                                 <span class="icon">✓</span>
-                                <div><strong>Save on Semester Reading:</strong> Access expensive reference manuals and required reading lists without paying commercial bookstore markups.</div>
+                                <div><strong>Save on Semester Reading:</strong> Access expensive reference manuals and
+                                    required reading lists without paying commercial bookstore markups.</div>
                             </li>
                             <li class="b4u-benefit-item">
                                 <span class="icon">✓</span>
-                                <div><strong>Sustainable Campus Circulation:</strong> Reduce paper waste and prolong textbook lifecycles by passing books down to incoming student cohorts.</div>
+                                <div><strong>Sustainable Campus Circulation:</strong> Reduce paper waste and prolong
+                                    textbook lifecycles by passing books down to incoming student cohorts.</div>
                             </li>
                             <li class="b4u-benefit-item">
                                 <span class="icon">✓</span>
-                                <div><strong>Direct Peer Collaboration:</strong> Meet classmates in your department, share lecture insights, and strengthen our university academic community.</div>
+                                <div><strong>Direct Peer Collaboration:</strong> Meet classmates in your department,
+                                    share lecture insights, and strengthen our university academic community.</div>
                             </li>
                         </ul>
                         <div style="display: flex; gap: 1rem;">
@@ -308,20 +368,25 @@
                     <div class="b4u-community-visual">
                         <h3>Campus Handover Guidelines</h3>
                         <p>
-                            To ensure safe and reliable peer exchanges, always follow our recommended student handover checklist:
+                            To ensure safe and reliable peer exchanges, always follow our recommended student handover
+                            checklist:
                         </p>
-                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem; font-size: 0.95rem;">
+                        <ul
+                            style="list-style: none; display: flex; flex-direction: column; gap: 1rem; font-size: 0.95rem;">
                             <li style="display: flex; gap: 0.75rem; align-items: flex-start;">
                                 <span>🏛️</span>
-                                <span><strong>Designated Meeting Stations:</strong> Meet in public campus spots such as the Central Library Block B or the Student Center cafeteria.</span>
+                                <span><strong>Designated Meeting Stations:</strong> Meet in public campus spots such as
+                                    the Central Library Block B or the Student Center cafeteria.</span>
                             </li>
                             <li style="display: flex; gap: 0.75rem; align-items: flex-start;">
                                 <span>🔍</span>
-                                <span><strong>Inspect Book Condition:</strong> Verify edition, page completeness, and notes before finalizing your swap or temporary loan.</span>
+                                <span><strong>Inspect Book Condition:</strong> Verify edition, page completeness, and
+                                    notes before finalizing your swap or temporary loan.</span>
                             </li>
                             <li style="display: flex; gap: 0.75rem; align-items: flex-start;">
                                 <span>📅</span>
-                                <span><strong>Honor Loan Durations:</strong> Return borrowed textbooks promptly on or before the agreed semester return date.</span>
+                                <span><strong>Honor Loan Durations:</strong> Return borrowed textbooks promptly on or
+                                    before the agreed semester return date.</span>
                             </li>
                         </ul>
                     </div>
@@ -344,7 +409,8 @@
                         </div>
                     </div>
                     <p class="b4u-footer-desc">
-                        Your Books. Your Campus. Your Community. Connecting university students for academic book swaps, free giveaways, and temporary semester lending.
+                        Your Books. Your Campus. Your Community. Connecting university students for academic book swaps,
+                        free giveaways, and temporary semester lending.
                     </p>
                 </div>
                 <div class="b4u-footer-col">
@@ -367,14 +433,17 @@
                 </div>
             </div>
             <div class="b4u-footer-bottom">
-                <p>&copy; 2026 Book4u — Student Peer-to-Peer Book Exchange System. Academic Non-Profit Campus Platform.</p>
+                <p>&copy; 2026 Book4u — Student Peer-to-Peer Book Exchange System. Academic Non-Profit Campus Platform.
+                </p>
             </div>
         </div>
     </footer>
 
     <!-- Scripts -->
+    <script src="js/cover-resolver.js"></script>
     <script src="js/store.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
 </body>
+
 </html>

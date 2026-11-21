@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import com.bookexchange.config.DatabaseInitializer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -21,9 +23,15 @@ public class HealthCheckServletTest {
 
     private final Gson gson = new Gson();
 
+    @BeforeEach
+    void setUp() {
+        DatabaseInitializer.setSchemaStateForTesting(DatabaseInitializer.SchemaState.FULLY_INITIALIZED, "Schema OK");
+    }
+
     @AfterEach
     void tearDown() {
         DBConnection.resetTestConnectionOverride();
+        DatabaseInitializer.setSchemaStateForTesting(DatabaseInitializer.SchemaState.UNAVAILABLE, "Not initialized");
     }
 
     private HttpServletRequest createMockRequest(String uri) {
@@ -199,5 +207,48 @@ public class HealthCheckServletTest {
 
         assertTrue(thread1Success.get(), "Thread 1 must receive HTTP 200 / UP independently");
         assertTrue(thread2Success.get(), "Thread 2 must receive HTTP 503 / DEGRADED independently");
+    }
+
+    @Test
+    @DisplayName("HealthCheckServlet: Reports HTTP 503 and DEGRADED when DB connects but schema is PARTIALLY_INITIALIZED")
+    void testHealthCheckReturns503WhenSchemaPartiallyInitialized() throws Exception {
+        DatabaseInitializer.setSchemaStateForTesting(
+                DatabaseInitializer.SchemaState.PARTIALLY_INITIALIZED,
+                "Missing required table: exchanges"
+        );
+
+        HealthCheckServlet servlet = new HealthCheckServlet(() -> true);
+        StringWriter sw = new StringWriter();
+        int[] status = new int[]{0};
+
+        servlet.doGet(createMockRequest("/api/health/ready"), createMockResponse(sw, status));
+
+        assertEquals(HttpServletResponse.SC_SERVICE_UNAVAILABLE, status[0],
+                "Health endpoint must return HTTP 503 when schema is partially initialized");
+        JsonObject json = gson.fromJson(sw.toString(), JsonObject.class);
+        assertEquals("DEGRADED", json.get("status").getAsString());
+        assertEquals("PARTIALLY_INITIALIZED", json.get("schemaStatus").getAsString());
+        assertTrue(json.get("schemaDiagnostic").getAsString().contains("exchanges"));
+    }
+
+    @Test
+    @DisplayName("HealthCheckServlet: Reports HTTP 503 and DEGRADED when schema is INCOMPATIBLE")
+    void testHealthCheckReturns503WhenSchemaIncompatible() throws Exception {
+        DatabaseInitializer.setSchemaStateForTesting(
+                DatabaseInitializer.SchemaState.INCOMPATIBLE,
+                "Missing required column in books"
+        );
+
+        HealthCheckServlet servlet = new HealthCheckServlet(() -> true);
+        StringWriter sw = new StringWriter();
+        int[] status = new int[]{0};
+
+        servlet.doGet(createMockRequest("/api/health"), createMockResponse(sw, status));
+
+        assertEquals(HttpServletResponse.SC_SERVICE_UNAVAILABLE, status[0],
+                "Health endpoint must return HTTP 503 when schema is incompatible");
+        JsonObject json = gson.fromJson(sw.toString(), JsonObject.class);
+        assertEquals("DEGRADED", json.get("status").getAsString());
+        assertEquals("INCOMPATIBLE", json.get("schemaStatus").getAsString());
     }
 }

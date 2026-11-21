@@ -19,13 +19,13 @@ import java.util.*;
  * ============================================================================
  * DatabaseInitializer - Production-Safe Schema Inspector and Initializer
  * ============================================================================
- * Core Principles:
- * 1. NEVER execute DROP TABLE, TRUNCATE, or destructive SQL during startup.
- * 2. Never assume that the absence of the 'students' table means the database is empty.
- * 3. Inspect all expected tables and columns via DatabaseMetaData before taking action.
- * 4. Only initialize a genuinely empty database (0 application tables).
- * 5. If partial or incompatible schema is detected, fail safe with diagnostics without data loss.
- * 6. Existing production records remain completely untouched.
+ * Core Production-Safety Rules:
+ * 1. EMPTY DETECTION: A database is EMPTY only when it contains zero user/application tables.
+ *    If ANY unrelated tables exist, classify as INCOMPATIBLE and NEVER initialize into it.
+ * 2. STARTUP SAFETY: If schema is partial, incompatible, failed, or unavailable, startup fails fast.
+ * 3. NO AUTOMATIC ALTERATIONS: Existing schemas are strictly inspected, never modified/altered on startup.
+ * 4. SEED DATA ISOLATION: Production initialization creates DDL only, zero fake student or book records.
+ * 5. ATOMIC / STRICT EXECUTION: Any failed SQL statement during initialization halts and reports failure.
  * ============================================================================
  */
 @WebListener
@@ -42,10 +42,6 @@ public class DatabaseInitializer implements ServletContextListener {
 
     public static final Set<String> REQUIRED_TABLES = Set.of(
             "students", "books", "exchange_requests", "exchanges", "reviews"
-    );
-
-    public static final Set<String> FORBIDDEN_INCOMPATIBLE_TABLES = Set.of(
-            "book_listings" // Incompatible legacy/prototype schema
     );
 
     public static final Map<String, Set<String>> REQUIRED_COLUMNS = Map.of(
@@ -74,10 +70,11 @@ public class DatabaseInitializer implements ServletContextListener {
     public static boolean isSchemaBlocked() {
         return currentSchemaState == SchemaState.PARTIALLY_INITIALIZED
                 || currentSchemaState == SchemaState.INCOMPATIBLE
-                || currentSchemaState == SchemaState.INITIALIZATION_FAILED;
+                || currentSchemaState == SchemaState.INITIALIZATION_FAILED
+                || currentSchemaState == SchemaState.UNAVAILABLE;
     }
 
-    // Set state manually for testing if needed
+    // Allows resetting or configuring state during unit tests
     public static void setSchemaStateForTesting(SchemaState state, String diagnostic) {
         currentSchemaState = state;
         lastDiagnosticMessage = diagnostic;
@@ -87,22 +84,45 @@ public class DatabaseInitializer implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
         System.out.println("[DatabaseInitializer] Starting production-safe schema validation...");
         try (Connection conn = DBConnection.getConnection()) {
-            inspectAndInitialize(conn);
-        } catch (Exception e) {
+            performStartupValidation(conn);
+            System.out.println("[DatabaseInitializer] Database schema verified successfully. Application startup proceeding.");
+        } catch (SQLException e) {
             currentSchemaState = SchemaState.UNAVAILABLE;
-            lastDiagnosticMessage = "Unable to connect to database: " + e.getMessage();
-            System.err.println("[DatabaseInitializer] Database connection failure: " + e.getMessage());
+            lastDiagnosticMessage = "Unable to connect to database during application startup: " + e.getMessage();
+            String fatalError = "CRITICAL: Database connection failed during startup: " + e.getMessage();
+            System.err.println("[DatabaseInitializer] " + fatalError);
+            throw new IllegalStateException(fatalError, e);
+        }
+    }
+
+    /**
+     * Executes schema validation and halts application startup if schema is unusable.
+     * Throws IllegalStateException when schema is partial, incompatible, failed, or unavailable.
+     */
+    public static synchronized void performStartupValidation(Connection conn) {
+        if (conn == null) {
+            currentSchemaState = SchemaState.UNAVAILABLE;
+            lastDiagnosticMessage = "Database connection is null.";
+            throw new IllegalStateException("CRITICAL: Database connection is null during startup.");
+        }
+
+        SchemaState state = inspectAndInitialize(conn);
+        if (state != SchemaState.FULLY_INITIALIZED) {
+            String fatalError = "CRITICAL: Application startup blocked because database schema is [" +
+                    state + "]. Diagnostic: " + lastDiagnosticMessage;
+            System.err.println("[DatabaseInitializer] " + fatalError);
+            throw new IllegalStateException(fatalError);
         }
     }
 
     /**
      * Inspects the database and initializes it ONLY if genuinely empty.
-     * Safe to invoke in unit/integration tests with arbitrary connections.
+     * Never performs ALTER TABLE or updates on existing schemas.
      */
     public static synchronized SchemaState inspectAndInitialize(Connection conn) {
         if (conn == null) {
             currentSchemaState = SchemaState.UNAVAILABLE;
-            lastDiagnosticMessage = "Connection is null";
+            lastDiagnosticMessage = "Database connection is null.";
             return currentSchemaState;
         }
 
@@ -110,7 +130,7 @@ public class DatabaseInitializer implements ServletContextListener {
             SchemaState state = inspectSchema(conn);
 
             if (state == SchemaState.EMPTY) {
-                System.out.println("[DatabaseInitializer] Genuinely empty database detected. Running non-destructive schema initialization...");
+                System.out.println("[DatabaseInitializer] Genuinely empty database detected (0 tables). Executing non-destructive schema_init.sql...");
                 boolean success = initializeFromScript(conn, "schema_init.sql");
                 if (success) {
                     state = inspectSchema(conn);
@@ -120,7 +140,7 @@ public class DatabaseInitializer implements ServletContextListener {
                         System.out.println("[DatabaseInitializer] Schema initialization complete and verified.");
                     } else {
                         currentSchemaState = SchemaState.INITIALIZATION_FAILED;
-                        lastDiagnosticMessage = "Initialization completed but schema verification failed. Found: " + state;
+                        lastDiagnosticMessage = "Initialization completed but verification failed. Current state: " + state;
                         System.err.println("[DatabaseInitializer] " + lastDiagnosticMessage);
                     }
                 } else {
@@ -129,16 +149,15 @@ public class DatabaseInitializer implements ServletContextListener {
             } else if (state == SchemaState.FULLY_INITIALIZED) {
                 currentSchemaState = SchemaState.FULLY_INITIALIZED;
                 lastDiagnosticMessage = "All expected tables and columns are present. Existing records preserved untouched.";
-                System.out.println("[DatabaseInitializer] Database is fully initialized. Preserving all existing records.");
-                ensureSafeSchemaUpgrades(conn);
+                System.out.println("[DatabaseInitializer] Database is fully initialized. Preserving all existing records. No schema alterations executed.");
             } else if (state == SchemaState.PARTIALLY_INITIALIZED) {
                 currentSchemaState = SchemaState.PARTIALLY_INITIALIZED;
                 System.err.println("[DatabaseInitializer] CRITICAL WARNING: " + lastDiagnosticMessage);
-                System.err.println("[DatabaseInitializer] Refusing automatic destructive repair. Manual DBA intervention required.");
+                System.err.println("[DatabaseInitializer] Refusing automatic destructive repair. Startup blocked.");
             } else if (state == SchemaState.INCOMPATIBLE) {
                 currentSchemaState = SchemaState.INCOMPATIBLE;
                 System.err.println("[DatabaseInitializer] CRITICAL ERROR: " + lastDiagnosticMessage);
-                System.err.println("[DatabaseInitializer] Halting initialization to protect existing database structures.");
+                System.err.println("[DatabaseInitializer] Refusing to initialize into unknown or incompatible database. Startup blocked.");
             }
 
             return currentSchemaState;
@@ -152,6 +171,11 @@ public class DatabaseInitializer implements ServletContextListener {
 
     /**
      * Inspects existing tables and columns via DatabaseMetaData.
+     * Enforces:
+     * - EMPTY: Exactly zero user tables exist.
+     * - INCOMPATIBLE: Any table exists that does not belong to REQUIRED_TABLES.
+     * - PARTIALLY_INITIALIZED: Only tables from REQUIRED_TABLES exist, but fewer than all 5.
+     * - FULLY_INITIALIZED: All 5 tables and required columns exist.
      */
     public static SchemaState inspectSchema(Connection conn) throws SQLException {
         DatabaseMetaData meta = conn.getMetaData();
@@ -168,39 +192,36 @@ public class DatabaseInitializer implements ServletContextListener {
             }
         }
 
-        // Check for forbidden incompatible tables (e.g. legacy book_listings)
-        for (String forbidden : FORBIDDEN_INCOMPATIBLE_TABLES) {
-            if (existingTables.contains(forbidden)) {
-                lastDiagnosticMessage = "Incompatible schema detected: table '" + forbidden +
-                        "' exists from legacy prototype. Required table is 'books'.";
-                return SchemaState.INCOMPATIBLE;
-            }
-        }
-
-        // Find how many required application tables exist
-        Set<String> foundRequiredTables = new HashSet<>();
-        for (String req : REQUIRED_TABLES) {
-            if (existingTables.contains(req)) {
-                foundRequiredTables.add(req);
-            }
-        }
-
-        if (foundRequiredTables.isEmpty()) {
-            // Check if there are other unrelated user tables in this database
-            // If completely empty of application tables, consider it EMPTY
-            lastDiagnosticMessage = "No application tables found. Database is empty.";
+        // Rule 1: A database is EMPTY only when it contains zero user tables
+        if (existingTables.isEmpty()) {
+            lastDiagnosticMessage = "Genuinely empty database detected (0 tables).";
             return SchemaState.EMPTY;
         }
 
-        if (foundRequiredTables.size() < REQUIRED_TABLES.size()) {
+        // Rule 2: If any table exists that is not a known application table, classify as INCOMPATIBLE
+        Set<String> unrelatedTables = new HashSet<>();
+        for (String tbl : existingTables) {
+            if (!REQUIRED_TABLES.contains(tbl)) {
+                unrelatedTables.add(tbl);
+            }
+        }
+
+        if (!unrelatedTables.isEmpty()) {
+            lastDiagnosticMessage = "Unrelated/incompatible tables detected in database: " + unrelatedTables +
+                    ". Database is not empty and does not match Book4u application schema. Refusing to initialize into unknown database.";
+            return SchemaState.INCOMPATIBLE;
+        }
+
+        // Rule 3: All existing tables are known, but check if all 5 required tables are present
+        if (existingTables.size() < REQUIRED_TABLES.size()) {
             Set<String> missing = new HashSet<>(REQUIRED_TABLES);
-            missing.removeAll(foundRequiredTables);
-            lastDiagnosticMessage = "Partially initialized schema: found " + foundRequiredTables +
+            missing.removeAll(existingTables);
+            lastDiagnosticMessage = "Partially initialized schema: found " + existingTables +
                     ", but missing required tables " + missing + ". Automatic destructive reset blocked.";
             return SchemaState.PARTIALLY_INITIALIZED;
         }
 
-        // All 5 required tables exist: verify required columns in each table
+        // Rule 4: All 5 required tables exist: verify required columns in each table
         for (Map.Entry<String, Set<String>> entry : REQUIRED_COLUMNS.entrySet()) {
             String tableName = entry.getKey();
             Set<String> requiredCols = entry.getValue();
@@ -214,7 +235,7 @@ public class DatabaseInitializer implements ServletContextListener {
                     }
                 }
             }
-            // Some drivers might store table names upper case in metadata (like H2 or Oracle)
+            // Some JDBC drivers / in-memory databases report uppercase table names
             if (actualCols.isEmpty()) {
                 try (ResultSet rs = meta.getColumns(catalog, schema, tableName.toUpperCase(), "%")) {
                     while (rs.next()) {
@@ -241,13 +262,16 @@ public class DatabaseInitializer implements ServletContextListener {
 
     /**
      * Executes non-destructive SQL script from classpath.
-     * Enforces that NO destructive statements (DROP TABLE, TRUNCATE) exist.
+     * Enforces:
+     * - NO destructive statements (DROP TABLE, TRUNCATE).
+     * - Strictly halts and fails if ANY statement throws an exception.
      */
     public static boolean initializeFromScript(Connection conn, String scriptName) {
         try (InputStream in = DatabaseInitializer.class.getClassLoader().getResourceAsStream(scriptName)) {
             if (in == null) {
                 lastDiagnosticMessage = "Schema initialization script '" + scriptName + "' not found on classpath.";
                 System.err.println("[DatabaseInitializer] " + lastDiagnosticMessage);
+                currentSchemaState = SchemaState.INITIALIZATION_FAILED;
                 return false;
             }
 
@@ -274,6 +298,11 @@ public class DatabaseInitializer implements ServletContextListener {
                         assertNonDestructiveSql(statementSql);
                         try (Statement stmt = conn.createStatement()) {
                             stmt.execute(statementSql);
+                        } catch (SQLException ex) {
+                            lastDiagnosticMessage = "SQL error executing statement [" + statementSql + "]: " + ex.getMessage();
+                            System.err.println("[DatabaseInitializer] " + lastDiagnosticMessage);
+                            currentSchemaState = SchemaState.INITIALIZATION_FAILED;
+                            return false;
                         }
                     }
                     sql.setLength(0);
@@ -283,6 +312,7 @@ public class DatabaseInitializer implements ServletContextListener {
         } catch (Exception e) {
             lastDiagnosticMessage = "Error executing initialization script: " + e.getMessage();
             System.err.println("[DatabaseInitializer] " + lastDiagnosticMessage);
+            currentSchemaState = SchemaState.INITIALIZATION_FAILED;
             return false;
         }
     }
@@ -296,73 +326,6 @@ public class DatabaseInitializer implements ServletContextListener {
         if (normalized.contains("DROP TABLE") || normalized.contains("DROP DATABASE")
                 || normalized.contains("TRUNCATE TABLE") || normalized.startsWith("TRUNCATE ")) {
             throw new SecurityException("Destructive SQL statement rejected in production initialization: " + sql);
-        }
-    }
-
-    /**
-     * Non-destructive schema upgrades (ADD COLUMN IF NOT EXISTS).
-     */
-    private static void ensureSafeSchemaUpgrades(Connection conn) {
-        try (Statement stmt = conn.createStatement()) {
-            // Check & upgrade exchange_requests status ENUM if MySQL
-            try {
-                stmt.execute("ALTER TABLE exchange_requests MODIFY COLUMN status " +
-                        "ENUM('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED', 'EXPIRED') NOT NULL DEFAULT 'PENDING'");
-            } catch (Exception ignored) {
-                // Non-critical or H2 syntax variance
-            }
-
-            // Columns to ensure on exchanges table
-            String[][] exchangeColumns = {
-                    {"offered_book_id", "BIGINT NULL"},
-                    {"owner_handover_confirmed", "BOOLEAN NOT NULL DEFAULT FALSE"},
-                    {"requester_handover_confirmed", "BOOLEAN NOT NULL DEFAULT FALSE"},
-                    {"owner_return_confirmed", "BOOLEAN NOT NULL DEFAULT FALSE"},
-                    {"requester_return_confirmed", "BOOLEAN NOT NULL DEFAULT FALSE"},
-                    {"handover_location", "VARCHAR(255) NULL"},
-                    {"handover_notes", "TEXT NULL"}
-            };
-
-            DatabaseMetaData meta = conn.getMetaData();
-            String catalog = conn.getCatalog();
-            String schema = conn.getSchema();
-
-            Set<String> existingCols = new HashSet<>();
-            try (ResultSet rs = meta.getColumns(catalog, schema, "exchanges", "%")) {
-                while (rs.next()) {
-                    String col = rs.getString("COLUMN_NAME");
-                    if (col != null) existingCols.add(col.toLowerCase());
-                }
-            }
-            if (existingCols.isEmpty()) {
-                try (ResultSet rs = meta.getColumns(catalog, schema, "EXCHANGES", "%")) {
-                    while (rs.next()) {
-                        String col = rs.getString("COLUMN_NAME");
-                        if (col != null) existingCols.add(col.toLowerCase());
-                    }
-                }
-            }
-
-            for (String[] col : exchangeColumns) {
-                String colName = col[0];
-                String colDef = col[1];
-                if (!existingCols.contains(colName.toLowerCase())) {
-                    try {
-                        stmt.execute("ALTER TABLE exchanges ADD COLUMN " + colName + " " + colDef);
-                        System.out.println("[DatabaseInitializer] Added missing column 'exchanges." + colName + "'.");
-                    } catch (Exception ex) {
-                        System.out.println("[DatabaseInitializer] Upgrade note for '" + colName + "': " + ex.getMessage());
-                    }
-                }
-            }
-
-            // Ensure status column width
-            try {
-                stmt.execute("ALTER TABLE exchanges MODIFY COLUMN status VARCHAR(32) NOT NULL DEFAULT 'AWAITING_HANDOVER'");
-            } catch (Exception ignored) {}
-
-        } catch (Exception e) {
-            System.err.println("[DatabaseInitializer] Schema upgrade note: " + e.getMessage());
         }
     }
 

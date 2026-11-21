@@ -2,6 +2,7 @@ package com.bookexchange.service;
 
 import com.bookexchange.dao.BookDAO;
 import com.bookexchange.model.Book;
+import com.bookexchange.util.BookCoverResolver;
 import com.bookexchange.util.ValidationUtil;
 
 import java.sql.SQLException;
@@ -215,6 +216,12 @@ public class BookService {
         if (book.getSubject().trim().length() > 128) {
             throw new IllegalArgumentException("Subject area cannot exceed 128 characters.");
         }
+
+        // Auto-resolve cover image using canonical BookCoverResolver
+        String resolvedCover = BookCoverResolver.resolveCoverUrl(
+            book.getTitle(), book.getAuthor(), book.getIsbn(), book.getImageUrl()
+        );
+        book.setImageUrl(resolvedCover);
 
         // Validate condition grade
         if (!ValidationUtil.isNotEmpty(book.getConditionGrade())) {

@@ -74,50 +74,168 @@ async function loadAvailableBooks(subject = '', mode = '') {
         const sampleBooks = [
             {
                 id: 1,
-                title: "Core Java: Fundamentals, Volume 1 (12th Edition)",
-                author: "Cay S. Horstmann",
-                subject: "Computer Science",
-                courseCode: "CS201",
-                sharingMode: "SWAP",
+                title: "DSA: Data Structures & Algorithms in C++",
+                author: "Shreyash Tripathi",
+                isbn: "9781234567890",
+                subject: "DSA",
+                courseCode: "CS210",
                 conditionGrade: "LIKE_NEW",
-                swapPreferences: "Looking for DBMS Korth or OS Silberschatz",
+                sharingMode: "SWAP",
+                swapPreferences: "Looking for Database Systems or Operating Systems",
                 ownerName: "Aarav Sharma",
-                imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&q=80"
+                ownerCampus: "North Campus Library",
+                imageUrl: "images/covers/dsa-cpp-tripathi.webp"
             },
             {
                 id: 2,
                 title: "Database System Concepts (7th Edition)",
-                author: "Silberschatz, Korth, Sudarshan",
-                subject: "Database Systems",
+                author: "Abraham Silberschatz, Henry F. Korth",
+                isbn: "9780078022159",
+                subject: "DBMS",
                 courseCode: "CS304",
+                conditionGrade: "VERY_GOOD",
                 sharingMode: "LENDING",
                 lendingMaxDurationDays: 30,
-                conditionGrade: "VERY_GOOD",
                 ownerName: "Priya Patel",
-                imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80"
+                ownerCampus: "Central Campus",
+                imageUrl: "images/covers/database-system-concepts-silberschatz-7th.jpg"
             },
             {
                 id: 3,
-                title: "Introduction to Algorithms (CLRS 4th Edition)",
-                author: "Cormen, Leiserson, Rivest, Stein",
-                subject: "Algorithms",
-                courseCode: "CS210",
-                sharingMode: "SWAP",
+                title: "Computer Networks",
+                author: "Sarika Gupta, Gaurav Gupta",
+                isbn: "9789386173263",
+                subject: "Networks",
+                courseCode: "EC501",
                 conditionGrade: "GOOD",
-                swapPreferences: "Open to Machine Learning or Networks",
-                ownerName: "Rohan Verma",
-                imageUrl: "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=500&q=80"
+                sharingMode: "SWAP",
+                swapPreferences: "Looking for Database Management or Operating Systems",
+                ownerName: "Devendra Rao",
+                ownerCampus: "Engineering Quad",
+                imageUrl: "images/covers/computer-networks-gupta.jpg"
             },
             {
                 id: 4,
-                title: "Computer Networks: A Systems Approach",
-                author: "Larry L. Peterson, Bruce S. Davie",
-                subject: "Networking",
-                courseCode: "CS350",
-                sharingMode: "GIVEAWAY",
+                title: "Java: The Complete Reference (12th Edition)",
+                author: "Herbert Schildt",
+                isbn: "9781260440232",
+                subject: "Java",
+                courseCode: "CS201",
                 conditionGrade: "GOOD",
+                sharingMode: "GIVEAWAY",
+                ownerName: "Rohan Verma",
+                ownerCampus: "Engineering Quad",
+                imageUrl: "https://covers.openlibrary.org/b/isbn/9781260440232-L.jpg"
+            },
+            {
+                id: 5,
+                title: "Operating System Concepts (10th Edition)",
+                author: "Abraham Silberschatz, Peter B. Galvin",
+                isbn: "9781118063330",
+                subject: "Operating Systems",
+                courseCode: "CS204",
+                conditionGrade: "LIKE_NEW",
+                sharingMode: "SWAP",
+                swapPreferences: "Looking for Computer Networks or Compiler Design",
                 ownerName: "Ananya Iyer",
-                imageUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=500&q=80"
+                ownerCampus: "Central Library Block B",
+                imageUrl: "https://covers.openlibrary.org/b/isbn/9781118063330-L.jpg"
+            },
+            {
+                id: 6,
+                title: "Computer Networking: A Top-Down Approach",
+                author: "James F. Kurose, Keith W. Ross",
+                isbn: "9780132856201",
+                subject: "Networks",
+                courseCode: "EC501",
+                conditionGrade: "GOOD",
+                sharingMode: "SWAP",
+                swapPreferences: "Interested in Database Management or Web Technologies",
+                ownerName: "Devendra Rao",
+                ownerCampus: "Main Campus Library",
+                imageUrl: "https://covers.openlibrary.org/b/isbn/9780132856201-L.jpg"
+            },
+            {
+                id: 7,
+                title: "Effective Java (3rd Edition)",
+                author: "Joshua Bloch",
+                isbn: "9780134685991",
+                subject: "Java",
+                courseCode: "CS301",
+                conditionGrade: "LIKE_NEW",
+                sharingMode: "LENDING",
+                lendingMaxDurationDays: 21,
+                ownerName: "Aarav Sharma",
+                ownerCampus: "North Campus Library",
+                imageUrl: "https://covers.openlibrary.org/b/isbn/9780134685991-L.jpg"
+            },
+            {
+                id: 8,
+                title: "Fundamentals of Database Systems",
+                author: "Ramez Elmasri, Shamkant Navathe",
+                isbn: "9780133970777",
+                subject: "DBMS",
+                courseCode: "CS401",
+                conditionGrade: "FAIR",
+                sharingMode: "GIVEAWAY",
+                ownerName: "Priya Patel",
+                ownerCampus: "Central Campus",
+                imageUrl: "https://covers.openlibrary.org/b/isbn/9780133970777-L.jpg"
+            },
+            {
+                id: 9,
+                title: "Discrete Mathematics and Its Applications",
+                author: "Kenneth H. Rosen",
+                isbn: "9780073383095",
+                subject: "Mathematics",
+                courseCode: "MTH102",
+                conditionGrade: "GOOD",
+                sharingMode: "LENDING",
+                lendingMaxDurationDays: 14,
+                ownerName: "Rohan Verma",
+                ownerCampus: "Main Campus",
+                imageUrl: "https://covers.openlibrary.org/b/isbn/9780073383095-L.jpg"
+            },
+            {
+                id: 10,
+                title: "Core Java Volume I: Fundamentals",
+                author: "Cay S. Horstmann",
+                isbn: "9780135166307",
+                subject: "Java",
+                courseCode: "CS201",
+                conditionGrade: "VERY_GOOD",
+                sharingMode: "GIVEAWAY",
+                ownerName: "Sneha Nair",
+                ownerCampus: "Science Block Lobby",
+                imageUrl: "https://covers.openlibrary.org/b/isbn/9780135166307-L.jpg"
+            },
+            {
+                id: 11,
+                title: "Artificial Intelligence: A Modern Approach",
+                author: "Stuart Russell, Peter Norvig",
+                isbn: "9780134610993",
+                subject: "Artificial Intelligence",
+                courseCode: "CS480",
+                conditionGrade: "LIKE_NEW",
+                sharingMode: "SWAP",
+                swapPreferences: "Looking for Deep Learning (Goodfellow)",
+                ownerName: "Ananya Iyer",
+                ownerCampus: "Technology Hub",
+                imageUrl: "https://covers.openlibrary.org/b/isbn/9780134610993-L.jpg"
+            },
+            {
+                id: 12,
+                title: "Cracking the Coding Interview (6th Edition)",
+                author: "Gayle Laakmann McDowell",
+                isbn: "9780984782857",
+                subject: "Interview Prep",
+                courseCode: "CS390",
+                conditionGrade: "GOOD",
+                sharingMode: "LENDING",
+                lendingMaxDurationDays: 30,
+                ownerName: "Devendra Rao",
+                ownerCampus: "Career Services Lobby",
+                imageUrl: "https://covers.openlibrary.org/b/isbn/9780984782857-L.jpg"
             }
         ];
         renderBookCards(sampleBooks);
@@ -136,87 +254,25 @@ function renderBookCards(books) {
         return;
     }
 
-    grid.innerHTML = '';
-    books.forEach(book => {
-        const card = document.createElement('div');
-        card.className = 'b4u-book-card';
-
-        const coverSrc = book.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80';
-        
-        let modeLabel = 'SWAP';
-        let modeClass = 'mode-swap';
-        let modeActionText = 'Request Swap';
-        let modeDetail = book.swapPreferences ? `Wants: ${escapeHtml(book.swapPreferences)}` : 'Peer Exchange';
-
-        if (book.sharingMode === 'GIVEAWAY') {
-            modeLabel = 'GIVEAWAY';
-            modeClass = 'mode-giveaway';
-            modeActionText = 'Claim Free';
-            modeDetail = 'Free Student Gift';
-        } else if (book.sharingMode === 'LENDING') {
-            modeLabel = 'LENDING';
-            modeClass = 'mode-lending';
-            const days = book.lendingMaxDurationDays || 14;
-            modeActionText = `Borrow (${days}d)`;
-            modeDetail = `Loan period: ${days} days`;
+    grid.innerHTML = books.map(book => {
+        if (typeof CoverResolver !== 'undefined') {
+            return CoverResolver.createCardHtml(book);
         }
-
-        const isSaved = typeof Store !== 'undefined' && Store.isSaved(book.id);
-
-        const bookPayload = JSON.stringify({
-            id: book.id,
-            title: book.title,
-            author: book.author,
-            coverImage: coverSrc,
-            sharingMode: book.sharingMode,
-            subject: book.subject || 'Academic',
-            conditionGrade: book.conditionGrade || 'Good',
-            courseCode: book.courseCode || ''
-        }).replace(/"/g, '&quot;');
-
-        const conditionLabel = (book.conditionGrade || 'GOOD').replace('_', ' ');
-
-        card.innerHTML = `
-            <div class="b4u-card-media">
-                <a href="book-details.html?id=${book.id}">
-                    <img src="${escapeHtml(coverSrc)}" alt="${escapeHtml(book.title)}" class="b4u-card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80';">
-                </a>
-                <span class="b4u-mode-badge ${modeClass}">${modeLabel}</span>
-                <button class="b4u-save-btn ${isSaved ? 'active' : ''}" type="button" aria-label="Save Book" onclick='Store.toggleSave(${bookPayload}, this)' title="Save to Reading List">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="${isSaved ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
-                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                </button>
-            </div>
-            <div class="b4u-card-body">
-                <div class="b4u-card-meta">
-                    <span class="b4u-subject-tag">${escapeHtml(book.subject || 'Academic')}</span>
-                    ${book.courseCode ? `<span class="b4u-course-tag">${escapeHtml(book.courseCode)}</span>` : ''}
-                    <span class="b4u-condition-tag">${escapeHtml(conditionLabel)}</span>
-                </div>
-                <h3 class="b4u-card-title">
-                    <a href="book-details.html?id=${book.id}" title="${escapeHtml(book.title)}">${escapeHtml(book.title)}</a>
-                </h3>
-                <p class="b4u-card-author">By ${escapeHtml(book.author || 'Author')}</p>
-                <div class="b4u-card-owner">
-                    <span class="owner-icon">👤</span>
-                    <span>${escapeHtml(book.ownerName || 'Verified Student')}</span>
-                </div>
-                <div class="b4u-card-mode-detail">
-                    <span>${modeDetail}</span>
-                </div>
-                <div class="b4u-card-actions">
-                    <a href="book-details.html?id=${book.id}" class="btn btn-primary btn-sm" style="flex: 1; text-align: center;">
-                        ${modeActionText}
+        const coverSrc = book.imageUrl || 'https://covers.openlibrary.org/b/isbn/' + (book.isbn || '9780262033848') + '-L.jpg';
+        return `
+            <div class="b4u-book-card">
+                <div class="b4u-card-media">
+                    <a href="book-details.html?id=${book.id}">
+                        <img src="${coverSrc}" alt="${escapeHtml(book.title)}" class="b4u-card-img" loading="lazy">
                     </a>
-                    <a href="book-details.html?id=${book.id}" class="btn btn-outline btn-sm" title="View Specifications">
-                        Details
-                    </a>
+                </div>
+                <div class="b4u-card-body">
+                    <h3 class="b4u-card-title"><a href="book-details.html?id=${book.id}">${escapeHtml(book.title)}</a></h3>
+                    <p class="b4u-card-author">By ${escapeHtml(book.author || 'Author')}</p>
                 </div>
             </div>
         `;
-        grid.appendChild(card);
-    });
+    }).join('');
 }
 
 function setupEventListeners() {

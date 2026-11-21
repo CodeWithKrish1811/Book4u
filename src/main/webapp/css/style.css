@@ -684,137 +684,208 @@ nav.b4u-nav-bar::-webkit-scrollbar, nav.cw-nav-bar::-webkit-scrollbar {
 }
 
 /* ===================================================================
-   BOOK GRID & BOOK CARDS (CAMPUS DISCOVERY)
+   BOOK GRID & BOOK CARDS (CAMPUS DISCOVERY - SQUARE 1:1 LAYOUT)
    =================================================================== */
 .b4u-book-grid, .cw-product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.5rem;
+  width: 100%;
+}
+
+/* Tablet: 2 cards per row */
+@media (max-width: 900px) and (min-width: 601px) {
+  .b4u-book-grid, .cw-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+/* Mobile: 1 card per row */
+@media (max-width: 600px) {
+  .b4u-book-grid, .cw-product-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    max-width: 380px;
+    margin: 0 auto;
+  }
 }
 
 .b4u-book-card, .book-card-cw {
   background-color: #FFFFFF;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
   overflow: hidden;
-  transition: all var(--trans-smooth);
+  aspect-ratio: 1 / 1;
+  width: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
 }
 
 .b4u-book-card:hover, .book-card-cw:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-hover);
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   border-color: #CBD5E1;
 }
 
 .b4u-card-media, .cw-card-image-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 3/4;
-  background-color: #F1F5F9;
+  flex: 1 1 58%;
+  min-height: 0;
+  background-color: #F8FAFC;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 8px 8px 6px 8px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.b4u-card-cover-link {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .b4u-card-img, .cw-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform var(--trans-smooth);
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .b4u-book-card:hover .b4u-card-img {
   transform: scale(1.03);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
 }
 
 .b4u-card-media .b4u-mode-badge {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 2;
+  top: 8px;
+  left: 8px;
+  z-index: 4;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0.18rem 0.5rem;
+  font-size: 0.68rem;
 }
 
-.b4u-save-btn, .cw-heart-btn {
+.b4u-save-btn, .b4u-wishlist-btn, .cw-heart-btn {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
-  width: 36px;
-  height: 36px;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid var(--color-border);
-  color: var(--color-slate-light);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #64748B;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--trans-fast);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
 }
 
-.b4u-save-btn:hover, .cw-heart-btn:hover {
+.b4u-save-btn:hover, .b4u-wishlist-btn:hover, .cw-heart-btn:hover {
   background: #FFFFFF;
-  color: var(--color-blue);
-  transform: scale(1.08);
+  color: #DC2626;
+  border-color: #FCA5A5;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.16);
 }
 
-.b4u-save-btn.active {
-  color: var(--color-blue);
+.b4u-save-btn.active, .b4u-wishlist-btn.active {
+  color: #DC2626;
   background: #FFFFFF;
+  border-color: #FECACA;
+}
+
+.b4u-save-btn.active svg, .b4u-wishlist-btn.active svg {
+  fill: #DC2626;
+  stroke: #DC2626;
 }
 
 .b4u-card-body, .cw-card-info {
-  padding: 1.25rem;
+  padding: 0.5rem 0.75rem 0.65rem 0.75rem;
   display: flex;
   flex-direction: column;
-  flex: 1;
+  flex: 0 0 auto;
+  justify-content: space-between;
+  gap: 0.2rem;
+  background: #FFFFFF;
 }
 
 .b4u-card-meta {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .b4u-subject-tag {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  color: var(--color-blue);
+  color: #0284C7;
+  background-color: #F0F9FF;
+  border: 1px solid #E0F2FE;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .b4u-course-tag {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  color: var(--color-teal);
-  background-color: var(--color-teal-subtle);
+  color: #0D9488;
+  background-color: #F0FDFA;
+  border: 1px solid #CCFBF1;
   padding: 0.1rem 0.4rem;
-  border-radius: 3px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.b4u-condition-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #475569;
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  text-transform: capitalize;
+  white-space: nowrap;
 }
 
 .b4u-card-title, .cw-card-title {
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  line-height: 1.35;
+  line-height: 1.25;
   color: var(--color-navy);
-  margin-bottom: 0.35rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  margin: 0;
+  white-space: nowrap;
   overflow: hidden;
-  height: 2.7rem;
+  text-overflow: ellipsis;
 }
 
 .b4u-card-title a {
   color: inherit;
   text-decoration: none;
+  transition: color 0.15s ease;
 }
 
 .b4u-card-title a:hover {
@@ -822,36 +893,89 @@ nav.b4u-nav-bar::-webkit-scrollbar, nav.cw-nav-bar::-webkit-scrollbar {
 }
 
 .b4u-card-author, .cw-card-author {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: var(--color-slate-light);
-  margin-bottom: 0.75rem;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.b4u-card-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
 }
 
 .b4u-card-owner {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
+  gap: 0.35rem;
+  font-size: 0.74rem;
   color: var(--color-slate-medium);
-  margin-bottom: 0.75rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.b4u-card-mode-detail {
-  font-size: 0.78rem;
-  color: var(--color-slate-light);
-  margin-bottom: 1rem;
+.b4u-owner-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0F172A;
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.b4u-owner-name {
+  font-weight: 500;
+  color: #334155;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.b4u-card-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: auto;
+.b4u-btn-view-compact {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  background: var(--color-blue-subtle);
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  flex-shrink: 0;
+}
+
+.b4u-btn-view-compact:hover {
+  background: var(--color-blue);
+  color: #FFFFFF;
+}
+  padding: 0.45rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #0F172A;
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.b4u-btn-details:hover {
+  background-color: #0F172A;
+  color: #FFFFFF;
+  border-color: #0F172A;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
 }
 
 /* ===================================================================
@@ -1424,10 +1548,6 @@ footer.b4u-footer, footer.cw-footer {
   .b4u-footer-grid, .cw-footer-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
-  }
-
-  .b4u-card-media {
-    aspect-ratio: 1/1;
   }
 }
 

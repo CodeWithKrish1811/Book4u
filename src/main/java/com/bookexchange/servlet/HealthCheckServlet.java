@@ -39,7 +39,7 @@ public class HealthCheckServlet extends HttpServlet {
     }
 
     HealthCheckServlet(BooleanSupplier dbConnectionChecker) {
-        this(dbConnectionChecker, () -> DatabaseInitializer.SchemaState.FULLY_INITIALIZED, () -> "All tables valid");
+        this(dbConnectionChecker, DatabaseInitializer::getSchemaState, DatabaseInitializer::getSchemaDiagnostic);
     }
 
     HealthCheckServlet(BooleanSupplier dbConnectionChecker,

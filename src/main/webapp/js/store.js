@@ -122,11 +122,12 @@ const Store = (function () {
                 showToast(`Removed <strong>${escapeHtml(book.title)}</strong> from your Saved Books.`, 'info');
                 return false;
             } else {
+                const resolvedImg = (typeof CoverResolver !== 'undefined') ? CoverResolver.resolve(book) : (book.coverImage || book.image || book.imageUrl || '');
                 items.push({
                     id: book.id,
                     title: book.title || 'Academic Book',
                     author: book.author || 'Author',
-                    coverImage: book.coverImage || book.image || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80',
+                    coverImage: resolvedImg,
                     sharingMode: book.sharingMode || book.mode || 'SWAP',
                     subject: book.subject || 'Academic',
                     conditionGrade: book.conditionGrade || 'Good',
@@ -162,11 +163,12 @@ const Store = (function () {
             if (!book || !book.id) return;
             let items = getItem(RECENT_KEY);
             items = items.filter(item => String(item.id) !== String(book.id));
+            const resolvedImg = (typeof CoverResolver !== 'undefined') ? CoverResolver.resolve(book) : (book.coverImage || book.image || book.imageUrl || '');
             items.unshift({
                 id: book.id,
                 title: book.title,
                 author: book.author,
-                coverImage: book.coverImage || book.image || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80',
+                coverImage: resolvedImg,
                 sharingMode: book.sharingMode || book.mode || 'SWAP',
                 subject: book.subject || 'Academic',
                 conditionGrade: book.conditionGrade || 'Good',
