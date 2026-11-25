@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS books (
     INDEX idx_books_subject (subject),
     INDEX idx_books_mode (sharing_mode),
     INDEX idx_books_status (status),
+    INDEX idx_books_course (course_code),
     INDEX idx_books_status_created (status, created_at DESC),
     INDEX idx_books_owner_status_created (owner_id, status, created_at DESC),
     INDEX idx_books_subject_status (subject, status),

@@ -149,11 +149,68 @@ public class BookService {
     }
 
     /**
+     * Enhanced dynamic search and multi-criteria filter across available books.
+     * Supports title, author, ISBN, department, and course code filters.
+     */
+    public List<Book> searchAndFilterBooks(String query, String title, String author, String isbn,
+                                           String subject, String department, String courseCode,
+                                           String condition, String mode, Long excludeOwnerId,
+                                           int offset, int limit) throws SQLException {
+        return bookDAO.searchAndFilter(query, title, author, isbn, subject, department, courseCode,
+                condition, mode, excludeOwnerId, offset, limit);
+    }
+
+    /**
      * Total count of available books matching search and filter criteria.
      */
     public int countBooks(String query, String subject, String condition, String mode, Long excludeOwnerId)
             throws SQLException {
         return bookDAO.countSearchAndFilter(query, subject, condition, mode, excludeOwnerId);
+    }
+
+    /**
+     * Total count of available books matching enhanced search and filter criteria.
+     */
+    public int countBooks(String query, String title, String author, String isbn,
+                          String subject, String department, String courseCode,
+                          String condition, String mode, Long excludeOwnerId) throws SQLException {
+        return bookDAO.countSearchAndFilter(query, title, author, isbn, subject, department, courseCode,
+                condition, mode, excludeOwnerId);
+    }
+
+    /**
+     * Search books specifically by title (case-insensitive).
+     */
+    public List<Book> searchBooksByTitle(String title, Long excludeOwnerId) throws SQLException {
+        return searchAndFilterBooks(null, title, null, null, null, null, null, null, null, excludeOwnerId, 0, 0);
+    }
+
+    /**
+     * Search books specifically by author (case-insensitive).
+     */
+    public List<Book> searchBooksByAuthor(String author, Long excludeOwnerId) throws SQLException {
+        return searchAndFilterBooks(null, null, author, null, null, null, null, null, null, excludeOwnerId, 0, 0);
+    }
+
+    /**
+     * Search books specifically by ISBN (index-accelerated).
+     */
+    public List<Book> searchBooksByIsbn(String isbn, Long excludeOwnerId) throws SQLException {
+        return searchAndFilterBooks(null, null, null, isbn, null, null, null, null, null, excludeOwnerId, 0, 0);
+    }
+
+    /**
+     * Filter books specifically by course code.
+     */
+    public List<Book> filterBooksByCourse(String courseCode, Long excludeOwnerId) throws SQLException {
+        return searchAndFilterBooks(null, null, null, null, null, null, courseCode, null, null, excludeOwnerId, 0, 0);
+    }
+
+    /**
+     * Filter books specifically by department.
+     */
+    public List<Book> filterBooksByDepartment(String department, Long excludeOwnerId) throws SQLException {
+        return searchAndFilterBooks(null, null, null, null, null, department, null, null, null, excludeOwnerId, 0, 0);
     }
 
     public List<Book> getBooksBySubject(String subject) throws SQLException {

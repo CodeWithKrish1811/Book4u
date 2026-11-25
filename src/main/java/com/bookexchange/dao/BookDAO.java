@@ -235,10 +235,15 @@ public class BookDAO {
 
     /**
      * Performs dynamic, parameterized search and multi-criteria filtering on available books with pagination.
-     * Uses index acceleration on exact ISBN lookups alongside full-text substring search.
+     * Supports title, author, ISBN, course code, department, subject, condition, and sharing mode.
      *
-     * @param query Search keywords
+     * @param query General search keyword
+     * @param title Title filter
+     * @param author Author filter
+     * @param isbn ISBN filter
      * @param subject Academic subject filter
+     * @param department Student department filter
+     * @param courseCode Course code filter
      * @param condition Condition grade filter
      * @param mode Sharing mode filter
      * @param excludeOwnerId Current logged-in student to exclude from explore results
@@ -247,7 +252,9 @@ public class BookDAO {
      * @return Filtered list of books
      * @throws SQLException On database error
      */
-    public List<Book> searchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId,
+    public List<Book> searchAndFilter(String query, String title, String author, String isbn,
+                                      String subject, String department, String courseCode,
+                                      String condition, String mode, Long excludeOwnerId,
                                       int offset, int limit) throws SQLException {
 
         List<Book> bookList = new ArrayList<>();
@@ -261,7 +268,7 @@ public class BookDAO {
         );
 
         List<Object> params = new ArrayList<>();
-        appendSearchAndFilterCriteria(sql, params, query, subject, condition, mode, excludeOwnerId);
+        appendSearchAndFilterCriteria(sql, params, query, title, author, isbn, subject, department, courseCode, condition, mode, excludeOwnerId);
 
         sql.append("ORDER BY b.created_at DESC, b.id DESC");
         if (limit > 0) {
@@ -285,6 +292,14 @@ public class BookDAO {
     }
 
     /**
+     * Backward-compatible search and filter with pagination.
+     */
+    public List<Book> searchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId,
+                                      int offset, int limit) throws SQLException {
+        return searchAndFilter(query, null, null, null, subject, null, null, condition, mode, excludeOwnerId, offset, limit);
+    }
+
+    /**
      * Backward-compatible unpaginated search and filter overload.
      */
     public List<Book> searchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId)
@@ -293,14 +308,22 @@ public class BookDAO {
     }
 
     /**
-     * Efficiently counts matching books without joining the students table.
+     * Efficiently counts matching books for enhanced search and filter.
      */
-    public int countSearchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId)
-            throws SQLException {
+    public int countSearchAndFilter(String query, String title, String author, String isbn,
+                                    String subject, String department, String courseCode,
+                                    String condition, String mode, Long excludeOwnerId) throws SQLException {
 
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM books b WHERE b.status = 'AVAILABLE' ");
+        StringBuilder sql = new StringBuilder();
+        boolean needsStudentJoin = department != null && !department.trim().isEmpty() && !"ALL".equalsIgnoreCase(department);
+        if (needsStudentJoin) {
+            sql.append("SELECT COUNT(*) FROM books b JOIN students s ON b.owner_id = s.id WHERE b.status = 'AVAILABLE' ");
+        } else {
+            sql.append("SELECT COUNT(*) FROM books b WHERE b.status = 'AVAILABLE' ");
+        }
+
         List<Object> params = new ArrayList<>();
-        appendSearchAndFilterCriteria(sql, params, query, subject, condition, mode, excludeOwnerId);
+        appendSearchAndFilterCriteria(sql, params, query, title, author, isbn, subject, department, courseCode, condition, mode, excludeOwnerId);
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
@@ -316,13 +339,24 @@ public class BookDAO {
         return 0;
     }
 
+    /**
+     * Backward-compatible count search and filter overload.
+     */
+    public int countSearchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId)
+            throws SQLException {
+        return countSearchAndFilter(query, null, null, null, subject, null, null, condition, mode, excludeOwnerId);
+    }
+
     private void appendSearchAndFilterCriteria(StringBuilder sql, List<Object> params,
-                                              String query, String subject, String condition, String mode, Long excludeOwnerId) {
+                                              String query, String title, String author, String isbn,
+                                              String subject, String department, String courseCode,
+                                              String condition, String mode, Long excludeOwnerId) {
         if (excludeOwnerId != null) {
             sql.append("AND b.owner_id <> ? ");
             params.add(excludeOwnerId);
         }
 
+        // 1. General search query (across Title, Author, ISBN, Subject, Course Code)
         if (query != null && !query.trim().isEmpty()) {
             String trimmed = query.trim();
             String wildcard = "%" + trimmed.toLowerCase() + "%";
@@ -330,14 +364,16 @@ public class BookDAO {
 
             if (cleanIsbn.matches("^[0-9]{9}[0-9Xx]$") || cleanIsbn.matches("^[0-9]{13}$")) {
                 // Index-accelerated path for ISBN searches
-                sql.append("AND (b.isbn = ? OR b.isbn = ? OR LOWER(b.title) LIKE ? OR LOWER(b.author) LIKE ? OR LOWER(b.subject) LIKE ?) ");
+                sql.append("AND (b.isbn = ? OR b.isbn = ? OR LOWER(b.title) LIKE ? OR LOWER(b.author) LIKE ? OR LOWER(b.subject) LIKE ? OR LOWER(b.course_code) LIKE ?) ");
                 params.add(trimmed);
                 params.add(cleanIsbn);
                 params.add(wildcard);
                 params.add(wildcard);
                 params.add(wildcard);
+                params.add(wildcard);
             } else {
-                sql.append("AND (LOWER(b.title) LIKE ? OR LOWER(b.author) LIKE ? OR LOWER(b.subject) LIKE ? OR LOWER(b.isbn) LIKE ?) ");
+                sql.append("AND (LOWER(b.title) LIKE ? OR LOWER(b.author) LIKE ? OR LOWER(b.subject) LIKE ? OR LOWER(b.isbn) LIKE ? OR LOWER(b.course_code) LIKE ?) ");
+                params.add(wildcard);
                 params.add(wildcard);
                 params.add(wildcard);
                 params.add(wildcard);
@@ -345,16 +381,65 @@ public class BookDAO {
             }
         }
 
+        // 2. Specific Title Search (case-insensitive)
+        if (title != null && !title.trim().isEmpty()) {
+            sql.append("AND LOWER(b.title) LIKE ? ");
+            params.add("%" + title.trim().toLowerCase() + "%");
+        }
+
+        // 3. Specific Author Search (case-insensitive)
+        if (author != null && !author.trim().isEmpty()) {
+            sql.append("AND LOWER(b.author) LIKE ? ");
+            params.add("%" + author.trim().toLowerCase() + "%");
+        }
+
+        // 4. Specific ISBN Search (index-accelerated + wildcard fallback)
+        if (isbn != null && !isbn.trim().isEmpty()) {
+            String rawIsbn = isbn.trim();
+            String cleanIsbn = rawIsbn.replace("-", "").replace(" ", "");
+            if (cleanIsbn.matches("^[0-9]{9}[0-9Xx]$") || cleanIsbn.matches("^[0-9]{13}$")) {
+                sql.append("AND (b.isbn = ? OR b.isbn = ? OR LOWER(b.isbn) LIKE ?) ");
+                params.add(rawIsbn);
+                params.add(cleanIsbn);
+                params.add("%" + cleanIsbn.toLowerCase() + "%");
+            } else {
+                sql.append("AND LOWER(b.isbn) LIKE ? ");
+                params.add("%" + rawIsbn.toLowerCase() + "%");
+            }
+        }
+
+        // 5. Academic Subject Filter (case-insensitive, handles "ALL")
         if (subject != null && !subject.trim().isEmpty() && !"ALL".equalsIgnoreCase(subject)) {
-            sql.append("AND b.subject = ? ");
+            sql.append("AND (b.subject = ? OR LOWER(b.subject) = LOWER(?)) ");
+            params.add(subject.trim());
             params.add(subject.trim());
         }
 
+        // 6. Academic Department Filter (from students s, case-insensitive, handles "ALL")
+        if (department != null && !department.trim().isEmpty() && !"ALL".equalsIgnoreCase(department)) {
+            String deptTrimmed = department.trim();
+            sql.append("AND (s.department = ? OR LOWER(s.department) = LOWER(?) OR LOWER(s.department) LIKE ?) ");
+            params.add(deptTrimmed);
+            params.add(deptTrimmed);
+            params.add("%" + deptTrimmed.toLowerCase() + "%");
+        }
+
+        // 7. Course Code Filter (b.course_code, case-insensitive, handles "ALL")
+        if (courseCode != null && !courseCode.trim().isEmpty() && !"ALL".equalsIgnoreCase(courseCode)) {
+            String courseTrimmed = courseCode.trim();
+            sql.append("AND (b.course_code = ? OR LOWER(b.course_code) = LOWER(?) OR LOWER(b.course_code) LIKE ?) ");
+            params.add(courseTrimmed);
+            params.add(courseTrimmed);
+            params.add("%" + courseTrimmed.toLowerCase() + "%");
+        }
+
+        // 8. Condition Grade Filter
         if (condition != null && !condition.trim().isEmpty() && !"ALL".equalsIgnoreCase(condition)) {
             sql.append("AND b.condition_grade = ? ");
             params.add(condition.trim().toUpperCase());
         }
 
+        // 9. Sharing Mode Filter
         if (mode != null && !mode.trim().isEmpty() && !"ALL".equalsIgnoreCase(mode)) {
             sql.append("AND b.sharing_mode = ? ");
             params.add(mode.trim().toUpperCase());

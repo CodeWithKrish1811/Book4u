@@ -68,7 +68,15 @@ public class BookServlet extends HttpServlet {
         String idParam = req.getParameter("id");
         String myBooksParam = req.getParameter("myBooks");
         String query = req.getParameter("query");
+        String title = req.getParameter("title");
+        String author = req.getParameter("author");
+        String isbn = req.getParameter("isbn");
         String subject = req.getParameter("subject");
+        String department = req.getParameter("department");
+        String courseCode = req.getParameter("courseCode");
+        if (courseCode == null || courseCode.isBlank()) {
+            courseCode = req.getParameter("course");
+        }
         String condition = req.getParameter("condition");
         String mode = req.getParameter("mode");
         String status = req.getParameter("status");
@@ -185,8 +193,8 @@ public class BookServlet extends HttpServlet {
             JsonObject res = new JsonObject();
             res.addProperty("success", true);
             if (isPaginated) {
-                int totalCount = bookService.countBooks(query, subject, condition, mode, excludeOwnerId);
-                List<Book> books = bookService.searchAndFilterBooks(query, subject, condition, mode, excludeOwnerId, offset, limit);
+                int totalCount = bookService.countBooks(query, title, author, isbn, subject, department, courseCode, condition, mode, excludeOwnerId);
+                List<Book> books = bookService.searchAndFilterBooks(query, title, author, isbn, subject, department, courseCode, condition, mode, excludeOwnerId, offset, limit);
                 int totalPages = totalCount > 0 ? (int) Math.ceil((double) totalCount / limit) : 0;
                 res.add("books", gson.toJsonTree(books));
                 res.addProperty("count", books.size());
@@ -195,7 +203,7 @@ public class BookServlet extends HttpServlet {
                 res.addProperty("pageSize", limit);
                 res.addProperty("totalPages", totalPages);
             } else {
-                List<Book> books = bookService.searchAndFilterBooks(query, subject, condition, mode, excludeOwnerId);
+                List<Book> books = bookService.searchAndFilterBooks(query, title, author, isbn, subject, department, courseCode, condition, mode, excludeOwnerId, 0, 0);
                 res.add("books", gson.toJsonTree(books));
                 res.addProperty("count", books.size());
             }

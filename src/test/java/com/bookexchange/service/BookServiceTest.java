@@ -349,7 +349,10 @@ public class BookServiceTest {
         }
 
         @Override
-        public List<Book> searchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId) {
+        public List<Book> searchAndFilter(String query, String title, String author, String isbn,
+                                          String subject, String department, String courseCode,
+                                          String condition, String mode, Long excludeOwnerId,
+                                          int offset, int limit) throws SQLException {
             return storage.values().stream()
                     .filter(b -> "AVAILABLE".equalsIgnoreCase(b.getStatus()))
                     .filter(b -> excludeOwnerId == null || !b.getOwnerId().equals(excludeOwnerId))
@@ -359,52 +362,63 @@ public class BookServiceTest {
                         return (b.getTitle() != null && b.getTitle().toLowerCase().contains(q)) ||
                                (b.getAuthor() != null && b.getAuthor().toLowerCase().contains(q)) ||
                                (b.getSubject() != null && b.getSubject().toLowerCase().contains(q)) ||
+                               (b.getCourseCode() != null && b.getCourseCode().toLowerCase().contains(q)) ||
                                (b.getIsbn() != null && b.getIsbn().toLowerCase().contains(q));
                     })
-                    .filter(b -> subject == null || subject.isBlank() || "ALL".equalsIgnoreCase(subject) || b.getSubject().equalsIgnoreCase(subject))
-                    .filter(b -> condition == null || condition.isBlank() || "ALL".equalsIgnoreCase(condition) || b.getConditionGrade().equalsIgnoreCase(condition))
-                    .filter(b -> mode == null || mode.isBlank() || "ALL".equalsIgnoreCase(mode) || b.getSharingMode().equalsIgnoreCase(mode))
+                    .filter(b -> title == null || title.isBlank() || (b.getTitle() != null && b.getTitle().toLowerCase().contains(title.trim().toLowerCase())))
+                    .filter(b -> author == null || author.isBlank() || (b.getAuthor() != null && b.getAuthor().toLowerCase().contains(author.trim().toLowerCase())))
+                    .filter(b -> isbn == null || isbn.isBlank() || (b.getIsbn() != null && b.getIsbn().replace("-", "").toLowerCase().contains(isbn.trim().replace("-", "").toLowerCase())))
+                    .filter(b -> subject == null || subject.isBlank() || "ALL".equalsIgnoreCase(subject) || (b.getSubject() != null && b.getSubject().equalsIgnoreCase(subject.trim())))
+                    .filter(b -> courseCode == null || courseCode.isBlank() || "ALL".equalsIgnoreCase(courseCode) || (b.getCourseCode() != null && b.getCourseCode().equalsIgnoreCase(courseCode.trim())))
+                    .filter(b -> department == null || department.isBlank() || "ALL".equalsIgnoreCase(department) || (b.getOwnerDepartment() != null && b.getOwnerDepartment().toLowerCase().contains(department.trim().toLowerCase())))
+                    .filter(b -> condition == null || condition.isBlank() || "ALL".equalsIgnoreCase(condition) || (b.getConditionGrade() != null && b.getConditionGrade().equalsIgnoreCase(condition.trim())))
+                    .filter(b -> mode == null || mode.isBlank() || "ALL".equalsIgnoreCase(mode) || (b.getSharingMode() != null && b.getSharingMode().equalsIgnoreCase(mode.trim())))
+                    .skip(Math.max(0, offset))
+                    .limit(limit > 0 ? limit : Long.MAX_VALUE)
                     .collect(Collectors.toList());
         }
 
         @Override
-        public List<Book> findByOwnerId(Long ownerId, String statusFilter) {
-            return storage.values().stream()
-                    .filter(b -> b.getOwnerId().equals(ownerId))
-                    .filter(b -> statusFilter == null || statusFilter.isBlank() || "ALL".equalsIgnoreCase(statusFilter) || b.getStatus().equalsIgnoreCase(statusFilter))
-                    .collect(Collectors.toList());
+        public int countSearchAndFilter(String query, String title, String author, String isbn,
+                                        String subject, String department, String courseCode,
+                                        String condition, String mode, Long excludeOwnerId) throws SQLException {
+            return searchAndFilter(query, title, author, isbn, subject, department, courseCode, condition, mode, excludeOwnerId, 0, 0).size();
         }
 
         @Override
-        public List<Book> searchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId, int offset, int limit) {
-            List<Book> all = searchAndFilter(query, subject, condition, mode, excludeOwnerId);
-            return all.stream().skip(Math.max(0, offset)).limit(Math.max(1, limit)).collect(Collectors.toList());
+        public List<Book> searchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId) throws SQLException {
+            return searchAndFilter(query, null, null, null, subject, null, null, condition, mode, excludeOwnerId, 0, 0);
         }
 
         @Override
-        public int countSearchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId) {
-            return searchAndFilter(query, subject, condition, mode, excludeOwnerId).size();
+        public List<Book> searchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId, int offset, int limit) throws SQLException {
+            return searchAndFilter(query, null, null, null, subject, null, null, condition, mode, excludeOwnerId, offset, limit);
         }
 
         @Override
-        public List<Book> findByOwnerId(Long ownerId, String statusFilter, int offset, int limit) {
+        public int countSearchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId) throws SQLException {
+            return countSearchAndFilter(query, null, null, null, subject, null, null, condition, mode, excludeOwnerId);
+        }
+
+        @Override
+        public List<Book> findByOwnerId(Long ownerId, String statusFilter, int offset, int limit) throws SQLException {
             List<Book> all = findByOwnerId(ownerId, statusFilter);
             return all.stream().skip(Math.max(0, offset)).limit(Math.max(1, limit)).collect(Collectors.toList());
         }
 
         @Override
-        public int countByOwnerId(Long ownerId, String statusFilter) {
+        public int countByOwnerId(Long ownerId, String statusFilter) throws SQLException {
             return findByOwnerId(ownerId, statusFilter).size();
         }
 
         @Override
-        public List<Book> findAllAvailable(Long excludeOwnerId, int offset, int limit) {
-            return searchAndFilter(null, null, null, null, excludeOwnerId, offset, limit);
+        public List<Book> findAllAvailable(Long excludeOwnerId, int offset, int limit) throws SQLException {
+            return searchAndFilter(null, null, null, null, null, null, null, null, null, excludeOwnerId, offset, limit);
         }
 
         @Override
-        public int countAllAvailable(Long excludeOwnerId) {
-            return countSearchAndFilter(null, null, null, null, excludeOwnerId);
+        public int countAllAvailable(Long excludeOwnerId) throws SQLException {
+            return countSearchAndFilter(null, null, null, null, null, null, null, null, null, excludeOwnerId);
         }
     }
 }

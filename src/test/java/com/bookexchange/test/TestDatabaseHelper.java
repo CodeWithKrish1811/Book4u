@@ -121,6 +121,7 @@ public class TestDatabaseHelper {
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_students_campus ON students(campus_name)");
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_author ON books(author)");
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_isbn ON books(isbn)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_course ON books(course_code)");
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_status_created ON books(status, created_at DESC)");
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_owner_status_created ON books(owner_id, status, created_at DESC)");
             stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_subject_status ON books(subject, status)");
