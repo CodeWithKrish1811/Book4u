@@ -4,8 +4,12 @@ import com.bookexchange.model.Exchange;
 import com.bookexchange.model.ExchangeRequest;
 import com.bookexchange.model.User;
 import com.bookexchange.service.ExchangeRequestService;
+import com.bookexchange.util.ValidationUtil;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -100,33 +104,34 @@ public class ExchangeRequestServlet extends HttpServlet {
 
             // Otherwise, pathInfo is "/{id}"
             String[] segments = pathInfo.split("/");
-            if (segments.length >= 2 && !segments[1].isBlank()) {
-                try {
-                    Long id = Long.parseLong(segments[1]);
-                    ExchangeRequest request = exchangeRequestService.getRequestById(id, currentUser.getId());
-                    if (request == null) {
-                        sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Exchange request not found with ID: " + id);
-                        return;
-                    }
-
-                    JsonObject res = new JsonObject();
-                    res.addProperty("success", true);
-                    res.add("request", gson.toJsonTree(request));
-                    boolean isOwner = currentUser.getId().equals(request.getOwnerId());
-                    boolean isRequester = currentUser.getId().equals(request.getRequesterId());
-                    res.addProperty("isOwner", isOwner);
-                    res.addProperty("isRequester", isRequester);
-                    out.print(gson.toJson(res));
-                    return;
-
-                } catch (NumberFormatException e) {
-                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid request ID format.");
+            if (segments.length == 2 && !segments[1].isBlank()) {
+                if (!ValidationUtil.isValidPositiveId(segments[1])) {
+                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid request ID format: " + segments[1]);
                     return;
                 }
+
+                Long id = Long.parseLong(segments[1].trim());
+                ExchangeRequest request = exchangeRequestService.getRequestById(id, currentUser.getId());
+                if (request == null) {
+                    sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Exchange request not found with ID: " + id);
+                    return;
+                }
+
+                JsonObject res = new JsonObject();
+                res.addProperty("success", true);
+                res.add("request", gson.toJsonTree(request));
+                boolean isOwner = currentUser.getId().equals(request.getOwnerId());
+                boolean isRequester = currentUser.getId().equals(request.getRequesterId());
+                res.addProperty("isOwner", isOwner);
+                res.addProperty("isRequester", isRequester);
+                out.print(gson.toJson(res));
+                return;
             }
 
-            sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Endpoint not found.");
+            sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Endpoint not found: " + pathInfo);
 
+        } catch (IllegalArgumentException e) {
+            sendError(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (SecurityException e) {
             sendError(resp, HttpServletResponse.SC_FORBIDDEN, e.getMessage());
         } catch (SQLException e) {
@@ -150,13 +155,20 @@ public class ExchangeRequestServlet extends HttpServlet {
 
         String pathInfo = req.getPathInfo();
         String body = readRequestBody(req);
-        JsonObject json = parseJsonBody(body);
+
+        JsonObject json;
+        try {
+            json = parseJsonBody(body);
+        } catch (JsonSyntaxException e) {
+            sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Malformed JSON request payload.");
+            return;
+        }
 
         try (PrintWriter out = resp.getWriter()) {
 
             // 1. POST /api/exchange-requests -> Create new request
             if (pathInfo == null || pathInfo.isEmpty() || "/".equals(pathInfo)) {
-                if (json == null) {
+                if (json == null || json.size() == 0) {
                     sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid or missing JSON body.");
                     return;
                 }
@@ -166,21 +178,68 @@ public class ExchangeRequestServlet extends HttpServlet {
                     return;
                 }
 
-                Long bookId = json.get("bookId").getAsLong();
+                Long bookId;
+                try {
+                    bookId = json.get("bookId").getAsLong();
+                } catch (Exception e) {
+                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid numeric format for bookId.");
+                    return;
+                }
+
+                if (!ValidationUtil.isValidPositiveId(bookId)) {
+                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "bookId must be a positive integer.");
+                    return;
+                }
+
                 String mode = json.has("exchangeMode") && !json.get("exchangeMode").isJsonNull()
-                        ? json.get("exchangeMode").getAsString() : null;
+                        ? json.get("exchangeMode").getAsString().trim() : null;
 
-                Long offeredBookId = (json.has("offeredBookId") && !json.get("offeredBookId").isJsonNull())
-                        ? json.get("offeredBookId").getAsLong() : null;
+                if (mode != null && !ValidationUtil.isValidSharingMode(mode)) {
+                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid sharing mode: " + mode + ". Allowed: SWAP, GIVEAWAY, LENDING.");
+                    return;
+                }
 
-                Integer proposedDurationDays = (json.has("proposedDurationDays") && !json.get("proposedDurationDays").isJsonNull())
-                        ? json.get("proposedDurationDays").getAsInt() : null;
+                Long offeredBookId = null;
+                if (json.has("offeredBookId") && !json.get("offeredBookId").isJsonNull()) {
+                    try {
+                        offeredBookId = json.get("offeredBookId").getAsLong();
+                        if (!ValidationUtil.isValidPositiveId(offeredBookId)) {
+                            sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "offeredBookId must be a positive integer.");
+                            return;
+                        }
+                    } catch (Exception e) {
+                        sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid numeric format for offeredBookId.");
+                        return;
+                    }
+                }
+
+                Integer proposedDurationDays = null;
+                if (json.has("proposedDurationDays") && !json.get("proposedDurationDays").isJsonNull()) {
+                    try {
+                        proposedDurationDays = json.get("proposedDurationDays").getAsInt();
+                        if (proposedDurationDays <= 0 || proposedDurationDays > 180) {
+                            sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Proposed loan duration must be between 1 and 180 days.");
+                            return;
+                        }
+                    } catch (Exception e) {
+                        sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid numeric format for proposedDurationDays.");
+                        return;
+                    }
+                }
 
                 String requestMessage = (json.has("requestMessage") && !json.get("requestMessage").isJsonNull())
-                        ? json.get("requestMessage").getAsString() : null;
+                        ? json.get("requestMessage").getAsString().trim() : null;
+                if (requestMessage != null && requestMessage.length() > 2000) {
+                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Request message cannot exceed 2000 characters.");
+                    return;
+                }
 
                 String handoverLocation = (json.has("handoverLocation") && !json.get("handoverLocation").isJsonNull())
-                        ? json.get("handoverLocation").getAsString() : null;
+                        ? json.get("handoverLocation").getAsString().trim() : null;
+                if (handoverLocation != null && handoverLocation.length() > 255) {
+                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Handover location cannot exceed 255 characters.");
+                    return;
+                }
 
                 ExchangeRequest created = exchangeRequestService.createRequest(
                         currentUser.getId(),
@@ -203,22 +262,29 @@ public class ExchangeRequestServlet extends HttpServlet {
 
             // 2. Action endpoints: /{id}/accept, /{id}/reject, /{id}/cancel
             String[] segments = pathInfo.split("/");
-            if (segments.length >= 3) {
-                Long id;
-                try {
-                    id = Long.parseLong(segments[1]);
-                } catch (NumberFormatException e) {
-                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid request ID format.");
+            if (segments.length == 3) {
+                if (!ValidationUtil.isValidPositiveId(segments[1])) {
+                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid request ID format: " + segments[1]);
                     return;
                 }
 
+                Long id = Long.parseLong(segments[1].trim());
                 String action = segments[2].toLowerCase();
 
                 if ("accept".equals(action)) {
                     String handoverLocation = (json != null && json.has("handoverLocation") && !json.get("handoverLocation").isJsonNull())
-                            ? json.get("handoverLocation").getAsString() : null;
+                            ? json.get("handoverLocation").getAsString().trim() : null;
+                    if (handoverLocation != null && handoverLocation.length() > 255) {
+                        sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Handover location cannot exceed 255 characters.");
+                        return;
+                    }
+
                     String handoverNotes = (json != null && json.has("handoverNotes") && !json.get("handoverNotes").isJsonNull())
-                            ? json.get("handoverNotes").getAsString() : null;
+                            ? json.get("handoverNotes").getAsString().trim() : null;
+                    if (handoverNotes != null && handoverNotes.length() > 2000) {
+                        sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Handover notes cannot exceed 2000 characters.");
+                        return;
+                    }
 
                     Exchange exchange = exchangeRequestService.acceptRequest(id, currentUser.getId(), handoverLocation, handoverNotes);
 
@@ -232,7 +298,11 @@ public class ExchangeRequestServlet extends HttpServlet {
 
                 if ("reject".equals(action)) {
                     String reason = (json != null && json.has("reason") && !json.get("reason").isJsonNull())
-                            ? json.get("reason").getAsString() : null;
+                            ? json.get("reason").getAsString().trim() : null;
+                    if (reason != null && reason.length() > 1000) {
+                        sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Rejection reason cannot exceed 1000 characters.");
+                        return;
+                    }
 
                     exchangeRequestService.rejectRequest(id, currentUser.getId(), reason);
 
@@ -254,7 +324,7 @@ public class ExchangeRequestServlet extends HttpServlet {
                 }
             }
 
-            sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Action endpoint not found.");
+            sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Action endpoint not found: " + pathInfo);
 
         } catch (IllegalArgumentException e) {
             sendError(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
@@ -289,11 +359,11 @@ public class ExchangeRequestServlet extends HttpServlet {
 
     private JsonObject parseJsonBody(String body) {
         if (body == null || body.isBlank()) return null;
-        try {
-            return gson.fromJson(body, JsonObject.class);
-        } catch (Exception e) {
-            return null;
+        JsonElement element = JsonParser.parseString(body);
+        if (element != null && element.isJsonObject()) {
+            return element.getAsJsonObject();
         }
+        return null;
     }
 
     private void sendError(HttpServletResponse resp, int statusCode, String message) throws IOException {

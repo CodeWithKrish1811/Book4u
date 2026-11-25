@@ -3,8 +3,12 @@ package com.bookexchange.servlet;
 import com.bookexchange.config.DBConnection;
 import com.bookexchange.model.User;
 import com.bookexchange.service.UserService;
+import com.bookexchange.util.ValidationUtil;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -29,8 +33,18 @@ import java.sql.SQLException;
 @WebServlet(name = "UserServlet", urlPatterns = "/api/users")
 public class UserServlet extends HttpServlet {
 
-    private final UserService userService = new UserService();
-    private final Gson gson = new Gson();
+    private final UserService userService;
+    private final Gson gson;
+
+    public UserServlet() {
+        this.userService = new UserService();
+        this.gson = new Gson();
+    }
+
+    public UserServlet(UserService userService) {
+        this.userService = userService;
+        this.gson = new Gson();
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -43,13 +57,19 @@ public class UserServlet extends HttpServlet {
         try (PrintWriter out = resp.getWriter()) {
             if (idParam == null || idParam.isBlank()) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                JsonObject err = new JsonObject();
-                err.addProperty("error", "Parameter 'id' is required.");
+                JsonObject err = createErrorJson("Parameter 'id' is required.");
                 out.print(gson.toJson(err));
                 return;
             }
 
-            Long id = Long.parseLong(idParam);
+            if (!ValidationUtil.isValidPositiveId(idParam)) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                JsonObject err = createErrorJson("Invalid numeric ID format: " + idParam);
+                out.print(gson.toJson(err));
+                return;
+            }
+
+            Long id = Long.parseLong(idParam.trim());
             User user = userService.getStudentById(id);
             if (user != null) {
                 // Do not expose password hash in response
@@ -57,21 +77,14 @@ public class UserServlet extends HttpServlet {
                 out.print(gson.toJson(user));
             } else {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                JsonObject err = new JsonObject();
-                err.addProperty("error", "Student not found with ID: " + id);
+                JsonObject err = createErrorJson("Student not found with ID: " + id);
                 out.print(gson.toJson(err));
             }
 
-        } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            JsonObject err = new JsonObject();
-            err.addProperty("error", "Invalid numeric ID format: " + idParam);
-            resp.getWriter().print(gson.toJson(err));
         } catch (SQLException e) {
             System.err.println(DBConnection.formatSqlException("UserServlet.doGet", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            JsonObject err = new JsonObject();
-            err.addProperty("error", "Unable to retrieve student record due to an internal database error. Please try again later.");
+            JsonObject err = createErrorJson("Unable to retrieve student record due to an internal database error. Please try again later.");
             resp.getWriter().print(gson.toJson(err));
         }
     }
@@ -92,24 +105,47 @@ public class UserServlet extends HttpServlet {
         }
 
         try (PrintWriter out = resp.getWriter()) {
-            JsonObject json = gson.fromJson(sb.toString(), JsonObject.class);
-
-            if (json == null) {
+            String body = sb.toString().trim();
+            if (body.isEmpty()) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                JsonObject err = new JsonObject();
-                err.addProperty("error", "Empty JSON payload");
+                JsonObject err = createErrorJson("Empty JSON payload");
                 out.print(gson.toJson(err));
                 return;
             }
 
-            String universityId = json.has("universityId") ? json.get("universityId").getAsString() : "";
-            String fullName = json.has("fullName") ? json.get("fullName").getAsString() : "";
-            String email = json.has("email") ? json.get("email").getAsString() : "";
-            String phone = json.has("phone") ? json.get("phone").getAsString() : "";
-            String rawPassword = json.has("password") ? json.get("password").getAsString() : "";
-            String department = json.has("department") ? json.get("department").getAsString() : "General";
-            int semester = json.has("semester") ? json.get("semester").getAsInt() : 1;
-            String campus = json.has("campusName") ? json.get("campusName").getAsString() : "Main Campus";
+            JsonObject json;
+            try {
+                JsonElement elem = JsonParser.parseString(body);
+                if (elem == null || !elem.isJsonObject()) {
+                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    JsonObject err = createErrorJson("Invalid JSON object payload");
+                    out.print(gson.toJson(err));
+                    return;
+                }
+                json = elem.getAsJsonObject();
+            } catch (JsonSyntaxException e) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                JsonObject err = createErrorJson("Malformed JSON request payload.");
+                out.print(gson.toJson(err));
+                return;
+            }
+
+            String universityId = json.has("universityId") && !json.get("universityId").isJsonNull()
+                    ? json.get("universityId").getAsString().trim() : "";
+            String fullName = json.has("fullName") && !json.get("fullName").isJsonNull()
+                    ? json.get("fullName").getAsString().trim() : "";
+            String email = json.has("email") && !json.get("email").isJsonNull()
+                    ? json.get("email").getAsString().trim() : "";
+            String phone = json.has("phone") && !json.get("phone").isJsonNull()
+                    ? json.get("phone").getAsString().trim() : "";
+            String rawPassword = json.has("password") && !json.get("password").isJsonNull()
+                    ? json.get("password").getAsString() : "";
+            String department = json.has("department") && !json.get("department").isJsonNull()
+                    ? json.get("department").getAsString().trim() : "General";
+            int semester = json.has("semester") && !json.get("semester").isJsonNull()
+                    ? json.get("semester").getAsInt() : 1;
+            String campus = json.has("campusName") && !json.get("campusName").isJsonNull()
+                    ? json.get("campusName").getAsString().trim() : "Main Campus";
 
             User newUser = new User(universityId, fullName, email, phone, null, department, semester, campus);
             User registered = userService.registerStudent(newUser, rawPassword);
@@ -123,15 +159,20 @@ public class UserServlet extends HttpServlet {
 
         } catch (IllegalArgumentException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            JsonObject err = new JsonObject();
-            err.addProperty("error", e.getMessage());
+            JsonObject err = createErrorJson(e.getMessage());
             resp.getWriter().print(gson.toJson(err));
         } catch (SQLException e) {
             System.err.println(DBConnection.formatSqlException("UserServlet.doPost", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            JsonObject err = new JsonObject();
-            err.addProperty("error", "Unable to process student registration due to an internal database error. Please try again later.");
+            JsonObject err = createErrorJson("Unable to process student registration due to an internal database error. Please try again later.");
             resp.getWriter().print(gson.toJson(err));
         }
+    }
+
+    private JsonObject createErrorJson(String message) {
+        JsonObject err = new JsonObject();
+        err.addProperty("success", false);
+        err.addProperty("error", message);
+        return err;
     }
 }

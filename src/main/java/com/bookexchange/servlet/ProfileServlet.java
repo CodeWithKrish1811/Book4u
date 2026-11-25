@@ -4,7 +4,10 @@ import com.bookexchange.config.DBConnection;
 import com.bookexchange.model.User;
 import com.bookexchange.service.UserService;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -31,8 +34,18 @@ import java.sql.SQLException;
 @WebServlet(name = "ProfileServlet", urlPatterns = "/api/profile/*")
 public class ProfileServlet extends HttpServlet {
 
-    private final UserService userService = new UserService();
-    private final Gson gson = new Gson();
+    private final UserService userService;
+    private final Gson gson;
+
+    public ProfileServlet() {
+        this.userService = new UserService();
+        this.gson = new Gson();
+    }
+
+    public ProfileServlet(UserService userService) {
+        this.userService = userService;
+        this.gson = new Gson();
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -79,7 +92,7 @@ public class ProfileServlet extends HttpServlet {
         }
 
         String pathInfo = req.getPathInfo();
-        if (pathInfo == null || pathInfo.equals("") || pathInfo.equals("/update")) {
+        if (pathInfo == null || pathInfo.equals("") || pathInfo.equals("/") || pathInfo.equals("/update")) {
             handleProfileUpdate(req, resp, currentUser);
         } else if (pathInfo.equals("/password") || pathInfo.equals("/change-password")) {
             handlePasswordChange(req, resp, currentUser);
@@ -96,7 +109,14 @@ public class ProfileServlet extends HttpServlet {
     private void handleProfileUpdate(HttpServletRequest req, HttpServletResponse resp, User currentUser)
             throws IOException {
 
-        JsonObject payload = parseRequestBody(req);
+        JsonObject payload;
+        try {
+            payload = parseRequestBody(req);
+        } catch (JsonSyntaxException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            sendJson(resp, createErrorJson("Malformed JSON request payload."));
+            return;
+        }
 
         String fullName = getString(payload, req, "fullName");
         String phone = getString(payload, req, "phone");
@@ -142,7 +162,14 @@ public class ProfileServlet extends HttpServlet {
     private void handlePasswordChange(HttpServletRequest req, HttpServletResponse resp, User currentUser)
             throws IOException {
 
-        JsonObject payload = parseRequestBody(req);
+        JsonObject payload;
+        try {
+            payload = parseRequestBody(req);
+        } catch (JsonSyntaxException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            sendJson(resp, createErrorJson("Malformed JSON request payload."));
+            return;
+        }
 
         String currentPassword = getString(payload, req, "currentPassword");
         String newPassword = getString(payload, req, "newPassword");
@@ -186,12 +213,15 @@ public class ProfileServlet extends HttpServlet {
                         sb.append(line);
                     }
                 }
-                if (!sb.toString().trim().isEmpty()) {
-                    JsonObject json = gson.fromJson(sb.toString(), JsonObject.class);
-                    if (json != null) {
-                        return json;
+                String raw = sb.toString().trim();
+                if (!raw.isEmpty()) {
+                    JsonElement element = JsonParser.parseString(raw);
+                    if (element != null && element.isJsonObject()) {
+                        return element.getAsJsonObject();
                     }
                 }
+            } catch (JsonSyntaxException e) {
+                throw e;
             } catch (Exception ignored) {
             }
         }
@@ -199,15 +229,18 @@ public class ProfileServlet extends HttpServlet {
     }
 
     private String getString(JsonObject json, HttpServletRequest req, String key) {
-        if (json.has(key) && !json.get(key).isJsonNull()) {
-            return json.get(key).getAsString().trim();
+        if (json != null && json.has(key) && !json.get(key).isJsonNull()) {
+            try {
+                return json.get(key).getAsString().trim();
+            } catch (Exception ignored) {
+            }
         }
         String param = req.getParameter(key);
         return param != null ? param.trim() : "";
     }
 
     private int getInt(JsonObject json, HttpServletRequest req, String key, int defaultValue) {
-        if (json.has(key) && !json.get(key).isJsonNull()) {
+        if (json != null && json.has(key) && !json.get(key).isJsonNull()) {
             try {
                 return json.get(key).getAsInt();
             } catch (Exception ignored) {

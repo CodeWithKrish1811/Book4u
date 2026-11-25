@@ -3,8 +3,12 @@ package com.bookexchange.servlet;
 import com.bookexchange.config.DBConnection;
 import com.bookexchange.model.User;
 import com.bookexchange.service.UserService;
+import com.bookexchange.util.ValidationUtil;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -23,17 +27,27 @@ import java.sql.SQLException;
  * ============================================================================
  * Handles:
  * - POST /api/auth/register : Student account registration
- * - POST /api/auth/login    : Email/password authentication and session creation
- * - POST /api/auth/logout   : HTTP session invalidation
- * - GET  /api/auth/logout   : Browser logout with redirect
- * - GET  /api/auth/status   : Check active session authentication state
+ * - POST /api/auth/login : Email/password authentication and session creation
+ * - POST /api/auth/logout : HTTP session invalidation
+ * - GET /api/auth/logout : Browser logout with redirect
+ * - GET /api/auth/status : Check active session authentication state
  * ============================================================================
  */
 @WebServlet(name = "AuthServlet", urlPatterns = "/api/auth/*")
 public class AuthServlet extends HttpServlet {
 
-    private final UserService userService = new UserService();
-    private final Gson gson = new Gson();
+    private final UserService userService;
+    private final Gson gson;
+
+    public AuthServlet() {
+        this.userService = new UserService();
+        this.gson = new Gson();
+    }
+
+    public AuthServlet(UserService userService) {
+        this.userService = userService;
+        this.gson = new Gson();
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -94,7 +108,14 @@ public class AuthServlet extends HttpServlet {
      * Handles student account registration.
      */
     private void handleRegister(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        JsonObject payload = parseRequestBody(req);
+        JsonObject payload;
+        try {
+            payload = parseRequestBody(req);
+        } catch (JsonSyntaxException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            sendJson(resp, createErrorJson("Malformed JSON request payload."));
+            return;
+        }
 
         String fullName = getString(payload, req, "fullName");
         String universityId = getString(payload, req, "universityId");
@@ -129,7 +150,8 @@ public class AuthServlet extends HttpServlet {
         } catch (SQLException e) {
             System.err.println(DBConnection.formatSqlException("AuthServlet.register", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            sendJson(resp, createErrorJson("Registration could not be completed due to an internal database error. Please try again later."));
+            sendJson(resp, createErrorJson(
+                    "Registration could not be completed due to an internal database error. Please try again later."));
         }
     }
 
@@ -137,7 +159,14 @@ public class AuthServlet extends HttpServlet {
      * Handles student login and HTTP session creation.
      */
     private void handleLogin(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        JsonObject payload = parseRequestBody(req);
+        JsonObject payload;
+        try {
+            payload = parseRequestBody(req);
+        } catch (JsonSyntaxException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            sendJson(resp, createErrorJson("Malformed JSON request payload."));
+            return;
+        }
 
         String email = getString(payload, req, "email");
         String password = getString(payload, req, "password");
@@ -145,6 +174,12 @@ public class AuthServlet extends HttpServlet {
         if (email.isBlank() || password.isBlank()) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             sendJson(resp, createErrorJson("Email and password are required."));
+            return;
+        }
+
+        if (!ValidationUtil.isValidEmail(email)) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            sendJson(resp, createErrorJson("Invalid college email format: " + email));
             return;
         }
 
@@ -182,14 +217,16 @@ public class AuthServlet extends HttpServlet {
         } catch (SQLException e) {
             System.err.println(DBConnection.formatSqlException("AuthServlet.login", e));
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            sendJson(resp, createErrorJson("Authentication service is temporarily unavailable. Please try again later."));
+            sendJson(resp,
+                    createErrorJson("Authentication service is temporarily unavailable. Please try again later."));
         }
     }
 
     /**
      * Handles session invalidation and logout.
      */
-    private void handleLogout(HttpServletRequest req, HttpServletResponse resp, boolean isBrowserRedirect) throws IOException {
+    private void handleLogout(HttpServletRequest req, HttpServletResponse resp, boolean isBrowserRedirect)
+            throws IOException {
         HttpSession session = req.getSession(false);
         if (session != null) {
             session.removeAttribute("currentUser");
@@ -254,12 +291,15 @@ public class AuthServlet extends HttpServlet {
                         sb.append(line);
                     }
                 }
-                if (!sb.toString().trim().isEmpty()) {
-                    JsonObject json = gson.fromJson(sb.toString(), JsonObject.class);
-                    if (json != null) {
-                        return json;
+                String raw = sb.toString().trim();
+                if (!raw.isEmpty()) {
+                    JsonElement element = JsonParser.parseString(raw);
+                    if (element != null && element.isJsonObject()) {
+                        return element.getAsJsonObject();
                     }
                 }
+            } catch (JsonSyntaxException e) {
+                throw e;
             } catch (Exception ignored) {
             }
         }
@@ -267,15 +307,18 @@ public class AuthServlet extends HttpServlet {
     }
 
     private String getString(JsonObject json, HttpServletRequest req, String key) {
-        if (json.has(key) && !json.get(key).isJsonNull()) {
-            return json.get(key).getAsString().trim();
+        if (json != null && json.has(key) && !json.get(key).isJsonNull()) {
+            try {
+                return json.get(key).getAsString().trim();
+            } catch (Exception ignored) {
+            }
         }
         String param = req.getParameter(key);
         return param != null ? param.trim() : "";
     }
 
     private int getInt(JsonObject json, HttpServletRequest req, String key, int defaultValue) {
-        if (json.has(key) && !json.get(key).isJsonNull()) {
+        if (json != null && json.has(key) && !json.get(key).isJsonNull()) {
             try {
                 return json.get(key).getAsInt();
             } catch (Exception ignored) {

@@ -204,17 +204,84 @@ public class BookService {
         if (book.getTitle().trim().length() > 255) {
             throw new IllegalArgumentException("Book title cannot exceed 255 characters.");
         }
+        book.setTitle(book.getTitle().trim());
+
         if (!ValidationUtil.isNotEmpty(book.getAuthor())) {
             throw new IllegalArgumentException("Author name is required.");
         }
         if (book.getAuthor().trim().length() > 255) {
             throw new IllegalArgumentException("Author name cannot exceed 255 characters.");
         }
+        book.setAuthor(book.getAuthor().trim());
+
         if (!ValidationUtil.isNotEmpty(book.getSubject())) {
             throw new IllegalArgumentException("Academic subject area is required.");
         }
         if (book.getSubject().trim().length() > 128) {
             throw new IllegalArgumentException("Subject area cannot exceed 128 characters.");
+        }
+        book.setSubject(book.getSubject().trim());
+
+        // Validate and sanitize ISBN (optional, but must be valid if provided)
+        if (ValidationUtil.isNotEmpty(book.getIsbn())) {
+            String trimmedIsbn = book.getIsbn().trim();
+            if (trimmedIsbn.length() > 32) {
+                throw new IllegalArgumentException("ISBN cannot exceed 32 characters.");
+            }
+            if (!ValidationUtil.isValidIsbn(trimmedIsbn)) {
+                throw new IllegalArgumentException("Invalid ISBN format: '" + trimmedIsbn + "'. Expected a valid 10- or 13-digit ISBN.");
+            }
+            book.setIsbn(trimmedIsbn);
+        } else {
+            book.setIsbn(null);
+        }
+
+        // Validate and sanitize Edition (optional, max 32 chars)
+        if (ValidationUtil.isNotEmpty(book.getEdition())) {
+            String trimmedEdition = book.getEdition().trim();
+            if (trimmedEdition.length() > 32) {
+                throw new IllegalArgumentException("Edition cannot exceed 32 characters.");
+            }
+            book.setEdition(trimmedEdition);
+        } else {
+            book.setEdition(null);
+        }
+
+        // Validate and sanitize Course Code (optional, max 32 chars)
+        if (ValidationUtil.isNotEmpty(book.getCourseCode())) {
+            String trimmedCourse = book.getCourseCode().trim();
+            if (trimmedCourse.length() > 32) {
+                throw new IllegalArgumentException("Course code cannot exceed 32 characters.");
+            }
+            book.setCourseCode(trimmedCourse);
+        } else {
+            book.setCourseCode(null);
+        }
+
+        // Validate Description (optional, max 4000 chars)
+        if (book.getDescription() != null) {
+            String trimmedDesc = book.getDescription().trim();
+            if (trimmedDesc.length() > 4000) {
+                throw new IllegalArgumentException("Book description cannot exceed 4000 characters.");
+            }
+            book.setDescription(trimmedDesc.isEmpty() ? null : trimmedDesc);
+        }
+
+        // Validate Swap Preferences (optional, max 2000 chars)
+        if (book.getSwapPreferences() != null) {
+            String trimmedPref = book.getSwapPreferences().trim();
+            if (trimmedPref.length() > 2000) {
+                throw new IllegalArgumentException("Swap preferences cannot exceed 2000 characters.");
+            }
+            book.setSwapPreferences(trimmedPref.isEmpty() ? null : trimmedPref);
+        }
+
+        // Validate Image URL length if provided
+        if (ValidationUtil.isNotEmpty(book.getImageUrl())) {
+            if (book.getImageUrl().trim().length() > 512) {
+                throw new IllegalArgumentException("Image URL cannot exceed 512 characters.");
+            }
+            book.setImageUrl(book.getImageUrl().trim());
         }
 
         // Auto-resolve cover image using canonical BookCoverResolver
@@ -227,9 +294,9 @@ public class BookService {
         if (!ValidationUtil.isNotEmpty(book.getConditionGrade())) {
             book.setConditionGrade("GOOD");
         } else {
-            String cond = book.getConditionGrade().trim().toUpperCase();
-            if (!cond.equals("LIKE_NEW") && !cond.equals("GOOD") && !cond.equals("FAIR") && !cond.equals("NEW")) {
-                throw new IllegalArgumentException("Invalid condition grade: " + book.getConditionGrade() + ". Allowed: LIKE_NEW, GOOD, FAIR.");
+            String cond = book.getConditionGrade().trim().toUpperCase(java.util.Locale.ROOT);
+            if (!ValidationUtil.isValidConditionGrade(cond)) {
+                throw new IllegalArgumentException("Invalid condition grade: " + book.getConditionGrade() + ". Allowed: NEW, LIKE_NEW, GOOD, FAIR.");
             }
             book.setConditionGrade(cond);
         }
@@ -238,7 +305,7 @@ public class BookService {
         if (!ValidationUtil.isValidSharingMode(book.getSharingMode())) {
             throw new IllegalArgumentException("Invalid sharing mode: " + book.getSharingMode() + ". Allowed: SWAP, GIVEAWAY, LENDING.");
         }
-        book.setSharingMode(book.getSharingMode().trim().toUpperCase());
+        book.setSharingMode(book.getSharingMode().trim().toUpperCase(java.util.Locale.ROOT));
 
         // Validate lending mode rules
         if ("LENDING".equals(book.getSharingMode())) {
