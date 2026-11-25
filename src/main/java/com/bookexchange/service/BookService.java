@@ -89,6 +89,20 @@ public class BookService {
     }
 
     /**
+     * Paginated retrieval of all available books.
+     */
+    public List<Book> getAllAvailableBooks(Long excludeOwnerId, int offset, int limit) throws SQLException {
+        return bookDAO.findAllAvailable(excludeOwnerId, offset, limit);
+    }
+
+    /**
+     * Total count of all available books.
+     */
+    public int countAllAvailableBooks(Long excludeOwnerId) throws SQLException {
+        return bookDAO.countAllAvailable(excludeOwnerId);
+    }
+
+    /**
      * Retrieves all books listed by the current student (for My Books).
      */
     public List<Book> getMyBooks(Long ownerId, String statusFilter) throws SQLException {
@@ -99,11 +113,47 @@ public class BookService {
     }
 
     /**
+     * Paginated retrieval of student's own books (for My Books).
+     */
+    public List<Book> getMyBooks(Long ownerId, String statusFilter, int offset, int limit) throws SQLException {
+        if (ownerId == null || ownerId <= 0) {
+            throw new IllegalArgumentException("Owner ID is required to fetch student books.");
+        }
+        return bookDAO.findByOwnerId(ownerId, statusFilter, offset, limit);
+    }
+
+    /**
+     * Total count of books listed by current student matching status filter.
+     */
+    public int countMyBooks(Long ownerId, String statusFilter) throws SQLException {
+        if (ownerId == null || ownerId <= 0) {
+            throw new IllegalArgumentException("Owner ID is required to fetch student books.");
+        }
+        return bookDAO.countByOwnerId(ownerId, statusFilter);
+    }
+
+    /**
      * Multi-criteria search and filter across available books.
      */
     public List<Book> searchAndFilterBooks(String query, String subject, String condition, String mode, Long excludeOwnerId)
             throws SQLException {
         return bookDAO.searchAndFilter(query, subject, condition, mode, excludeOwnerId);
+    }
+
+    /**
+     * Paginated multi-criteria search and filter across available books.
+     */
+    public List<Book> searchAndFilterBooks(String query, String subject, String condition, String mode,
+                                           Long excludeOwnerId, int offset, int limit) throws SQLException {
+        return bookDAO.searchAndFilter(query, subject, condition, mode, excludeOwnerId, offset, limit);
+    }
+
+    /**
+     * Total count of available books matching search and filter criteria.
+     */
+    public int countBooks(String query, String subject, String condition, String mode, Long excludeOwnerId)
+            throws SQLException {
+        return bookDAO.countSearchAndFilter(query, subject, condition, mode, excludeOwnerId);
     }
 
     public List<Book> getBooksBySubject(String subject) throws SQLException {

@@ -9,15 +9,16 @@ import java.util.List;
 
 /**
  * ============================================================================
- * ExchangeDAO (Data Access Object)
+ * ExchangeDAO (Data Access Object) - High Performance JDBC Data Access
  * ============================================================================
  * Manages raw JDBC persistence for the 'exchanges' database table.
  * Adheres strictly to:
  * - PreparedStatement parameterized queries
  * - Try-with-resources resource management
- * - Transaction support with Connection propagation
+ * - Connection propagation to eliminate redundant connection pool checkouts
  * - Dual handover & return confirmation tracking
  * - Concurrency protection with SELECT FOR UPDATE
+ * - Short-circuit single row fetching via LIMIT 1
  * ============================================================================
  */
 public class ExchangeDAO {
@@ -108,19 +109,11 @@ public class ExchangeDAO {
     }
 
     /**
-     * Finds an exchange by ID with all joined details.
-     */
-    public Exchange findById(Long id) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            return findById(conn, id);
-        }
-    }
-
-    /**
      * Finds an exchange by ID within an existing connection.
+     * Appends LIMIT 1 to stop scan after match.
      */
     public Exchange findById(Connection conn, Long id) throws SQLException {
-        String sql = "SELECT " + SELECT_JOIN_FIELDS + FROM_JOIN_CLAUSE + "WHERE ex.id = ?";
+        String sql = "SELECT " + SELECT_JOIN_FIELDS + FROM_JOIN_CLAUSE + "WHERE ex.id = ? LIMIT 1";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -130,6 +123,15 @@ public class ExchangeDAO {
             }
         }
         return null;
+    }
+
+    /**
+     * Finds an exchange by ID (standalone connection).
+     */
+    public Exchange findById(Long id) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return findById(conn, id);
+        }
     }
 
     /**
@@ -149,12 +151,11 @@ public class ExchangeDAO {
     }
 
     /**
-     * Finds an exchange associated with a request ID.
+     * Finds an exchange associated with a request ID using an existing connection.
      */
-    public Exchange findByRequestId(Long requestId) throws SQLException {
-        String sql = "SELECT " + SELECT_JOIN_FIELDS + FROM_JOIN_CLAUSE + "WHERE ex.request_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    public Exchange findByRequestId(Connection conn, Long requestId) throws SQLException {
+        String sql = "SELECT " + SELECT_JOIN_FIELDS + FROM_JOIN_CLAUSE + "WHERE ex.request_id = ? LIMIT 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, requestId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -166,17 +167,35 @@ public class ExchangeDAO {
     }
 
     /**
-     * Finds all exchanges for a given student (whether as owner or requester).
+     * Finds an exchange associated with a request ID (standalone connection).
      */
-    public List<Exchange> findByStudent(Long studentId) throws SQLException {
-        List<Exchange> list = new ArrayList<>();
-        String sql = "SELECT " + SELECT_JOIN_FIELDS + FROM_JOIN_CLAUSE +
-                     "WHERE ex.owner_id = ? OR ex.requester_id = ? ORDER BY ex.updated_at DESC";
+    public Exchange findByRequestId(Long requestId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return findByRequestId(conn, requestId);
+        }
+    }
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    /**
+     * Finds exchanges for a given student with pagination and connection propagation.
+     */
+    public List<Exchange> findByStudent(Connection conn, Long studentId, int offset, int limit) throws SQLException {
+        List<Exchange> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT " + SELECT_JOIN_FIELDS + FROM_JOIN_CLAUSE +
+                "WHERE ex.owner_id = ? OR ex.requester_id = ? ORDER BY ex.updated_at DESC, ex.id DESC"
+        );
+
+        if (limit > 0) {
+            sql.append(" LIMIT ? OFFSET ?");
+        }
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             stmt.setLong(1, studentId);
             stmt.setLong(2, studentId);
+            if (limit > 0) {
+                stmt.setInt(3, limit);
+                stmt.setInt(4, Math.max(0, offset));
+            }
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRowToExchange(rs));
@@ -184,6 +203,15 @@ public class ExchangeDAO {
             }
         }
         return list;
+    }
+
+    /**
+     * Finds all exchanges for a given student (standalone connection).
+     */
+    public List<Exchange> findByStudent(Long studentId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return findByStudent(conn, studentId, 0, 0);
+        }
     }
 
     /**

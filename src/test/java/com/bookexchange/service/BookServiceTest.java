@@ -374,5 +374,37 @@ public class BookServiceTest {
                     .filter(b -> statusFilter == null || statusFilter.isBlank() || "ALL".equalsIgnoreCase(statusFilter) || b.getStatus().equalsIgnoreCase(statusFilter))
                     .collect(Collectors.toList());
         }
+
+        @Override
+        public List<Book> searchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId, int offset, int limit) {
+            List<Book> all = searchAndFilter(query, subject, condition, mode, excludeOwnerId);
+            return all.stream().skip(Math.max(0, offset)).limit(Math.max(1, limit)).collect(Collectors.toList());
+        }
+
+        @Override
+        public int countSearchAndFilter(String query, String subject, String condition, String mode, Long excludeOwnerId) {
+            return searchAndFilter(query, subject, condition, mode, excludeOwnerId).size();
+        }
+
+        @Override
+        public List<Book> findByOwnerId(Long ownerId, String statusFilter, int offset, int limit) {
+            List<Book> all = findByOwnerId(ownerId, statusFilter);
+            return all.stream().skip(Math.max(0, offset)).limit(Math.max(1, limit)).collect(Collectors.toList());
+        }
+
+        @Override
+        public int countByOwnerId(Long ownerId, String statusFilter) {
+            return findByOwnerId(ownerId, statusFilter).size();
+        }
+
+        @Override
+        public List<Book> findAllAvailable(Long excludeOwnerId, int offset, int limit) {
+            return searchAndFilter(null, null, null, null, excludeOwnerId, offset, limit);
+        }
+
+        @Override
+        public int countAllAvailable(Long excludeOwnerId) {
+            return countSearchAndFilter(null, null, null, null, excludeOwnerId);
+        }
     }
 }

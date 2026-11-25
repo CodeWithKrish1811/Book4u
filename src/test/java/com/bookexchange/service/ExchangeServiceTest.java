@@ -309,5 +309,10 @@ public class ExchangeServiceTest {
         public Exchange findById(Long id) {
             return storage.get(id);
         }
+
+        @Override
+        public Exchange findById(Connection conn, Long id) {
+            return findById(id);
+        }
     }
 }

@@ -9,33 +9,61 @@ import java.util.List;
 
 /**
  * ============================================================================
- * UserDAO (Data Access Object)
+ * UserDAO (Data Access Object) - High Performance JDBC Data Access
  * ============================================================================
  * Encapsulates all raw JDBC operations for the 'students' database table.
  * Demonstrates:
  * 1. PreparedStatement parameterized SQL execution (prevents SQL injection).
  * 2. Proper resource management using Java 7+ try-with-resources.
- * 3. Mapping relational ResultSet rows to Object-Oriented User instances.
- * 4. Distinct queries for authentication, profile updates, and uniqueness checks.
+ * 3. Index-accelerated uniqueness and identity lookups with LIMIT 1.
+ * 4. Fast existence checks with SELECT 1 ... LIMIT 1.
+ * 5. Connection propagation support.
  * ============================================================================
  */
 public class UserDAO {
 
     /**
-     * Finds a registered student by their unique email address.
-     *
-     * @param email The university email to search for
-     * @return User object if found, or null if no record exists
-     * @throws SQLException On database errors
+     * Finds a registered student by their unique email address using an existing connection.
+     * Evaluates exact indexed match first, falling back to case-insensitive comparison, terminated with LIMIT 1.
+     */
+    public User findByEmail(Connection conn, String email) throws SQLException {
+        String trimmed = email.trim();
+        String sql = "SELECT id, university_id, full_name, email, phone, password_hash, department, semester, campus_name, created_at " +
+                     "FROM students WHERE email = ? OR LOWER(email) = LOWER(?) LIMIT 1";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, trimmed);
+            stmt.setString(2, trimmed);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapRowToUser(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Finds a registered student by their unique email address (standalone connection).
      */
     public User findByEmail(String email) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return findByEmail(conn, email);
+        }
+    }
+
+    /**
+     * Finds a registered student by their unique university roll number / ID within an existing connection.
+     */
+    public User findByUniversityId(Connection conn, String universityId) throws SQLException {
+        String trimmed = universityId.trim();
         String sql = "SELECT id, university_id, full_name, email, phone, password_hash, department, semester, campus_name, created_at " +
-                     "FROM students WHERE LOWER(email) = LOWER(?)";
+                     "FROM students WHERE university_id = ? OR LOWER(university_id) = LOWER(?) LIMIT 1";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, email.trim());
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, trimmed);
+            stmt.setString(2, trimmed);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -47,44 +75,22 @@ public class UserDAO {
     }
 
     /**
-     * Finds a registered student by their unique university roll number / ID.
-     *
-     * @param universityId The campus ID
-     * @return User object or null
-     * @throws SQLException On database errors
+     * Finds a registered student by their unique university roll number / ID (standalone connection).
      */
     public User findByUniversityId(String universityId) throws SQLException {
-        String sql = "SELECT id, university_id, full_name, email, phone, password_hash, department, semester, campus_name, created_at " +
-                     "FROM students WHERE LOWER(university_id) = LOWER(?)";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, universityId.trim());
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapRowToUser(rs);
-                }
-            }
+        try (Connection conn = DBConnection.getConnection()) {
+            return findByUniversityId(conn, universityId);
         }
-        return null;
     }
 
     /**
-     * Finds a student by their primary key ID.
-     *
-     * @param id Student primary key
-     * @return User object or null
-     * @throws SQLException On database errors
+     * Finds a student by their primary key ID within an existing connection.
      */
-    public User findById(Long id) throws SQLException {
+    public User findById(Connection conn, Long id) throws SQLException {
         String sql = "SELECT id, university_id, full_name, email, phone, password_hash, department, semester, campus_name, created_at " +
-                     "FROM students WHERE id = ?";
+                     "FROM students WHERE id = ? LIMIT 1";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -97,19 +103,22 @@ public class UserDAO {
     }
 
     /**
-     * Inserts a new student account into the database.
-     *
-     * @param user The student object to persist
-     * @return true if insertion succeeded, false otherwise
-     * @throws SQLException On database errors
+     * Finds a student by their primary key ID (standalone connection).
      */
-    public boolean save(User user) throws SQLException {
+    public User findById(Long id) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return findById(conn, id);
+        }
+    }
+
+    /**
+     * Inserts a new student account into the database within an active transaction.
+     */
+    public boolean save(Connection conn, User user) throws SQLException {
         String sql = "INSERT INTO students (university_id, full_name, email, phone, password_hash, department, semester, campus_name) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, user.getUniversityId());
             stmt.setString(2, user.getFullName());
             stmt.setString(3, user.getEmail());
@@ -133,20 +142,22 @@ public class UserDAO {
     }
 
     /**
-     * Updates permitted profile fields (full name, phone, department, semester, campus name) for a student.
-     * University ID and Email are intentionally excluded to protect identity integrity.
-     *
-     * @param user The updated user entity
-     * @return true if update succeeded, false otherwise
-     * @throws SQLException On database error
+     * Inserts a new student account into the database (standalone connection).
      */
-    public boolean updateProfile(User user) throws SQLException {
+    public boolean save(User user) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return save(conn, user);
+        }
+    }
+
+    /**
+     * Updates permitted profile fields within an active transaction.
+     */
+    public boolean updateProfile(Connection conn, User user) throws SQLException {
         String sql = "UPDATE students SET full_name = ?, phone = ?, department = ?, semester = ?, campus_name = ? " +
                      "WHERE id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.getFullName());
             stmt.setString(2, user.getPhone());
             stmt.setString(3, user.getDepartment());
@@ -159,19 +170,21 @@ public class UserDAO {
     }
 
     /**
-     * Securely updates a student's password hash.
-     *
-     * @param userId The student ID
-     * @param newPasswordHash The new PBKDF2 hash
-     * @return true if password was updated, false otherwise
-     * @throws SQLException On database error
+     * Updates permitted profile fields (standalone connection).
      */
-    public boolean updatePassword(Long userId, String newPasswordHash) throws SQLException {
+    public boolean updateProfile(User user) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return updateProfile(conn, user);
+        }
+    }
+
+    /**
+     * Securely updates a student's password hash within an active transaction.
+     */
+    public boolean updatePassword(Connection conn, Long userId, String newPasswordHash) throws SQLException {
         String sql = "UPDATE students SET password_hash = ? WHERE id = ?";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, newPasswordHash);
             stmt.setLong(2, userId);
 
@@ -180,55 +193,68 @@ public class UserDAO {
     }
 
     /**
-     * Checks if an email address is already registered by any other student.
-     *
-     * @param email The email to check
-     * @param currentUserId The student to exclude from the check
-     * @return true if taken by another user, false if available
-     * @throws SQLException On database error
+     * Securely updates a student's password hash (standalone connection).
      */
-    public boolean isEmailTakenByOther(String email, Long currentUserId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM students WHERE LOWER(email) = LOWER(?) AND id <> ?";
+    public boolean updatePassword(Long userId, String newPasswordHash) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return updatePassword(conn, userId, newPasswordHash);
+        }
+    }
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    /**
+     * Checks if an email address is already registered by any other student.
+     * Uses SELECT 1 ... LIMIT 1 for instant response.
+     */
+    public boolean isEmailTakenByOther(Connection conn, String email, Long currentUserId) throws SQLException {
+        String trimmed = email.trim();
+        String sql = "SELECT 1 FROM students WHERE (email = ? OR LOWER(email) = LOWER(?)) AND id <> ? LIMIT 1";
 
-            stmt.setString(1, email.trim());
-            stmt.setLong(2, currentUserId);
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, trimmed);
+            stmt.setString(2, trimmed);
+            stmt.setLong(3, currentUserId);
 
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
+                return rs.next();
             }
         }
-        return false;
+    }
+
+    /**
+     * Checks if an email address is already registered by any other student (standalone connection).
+     */
+    public boolean isEmailTakenByOther(String email, Long currentUserId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return isEmailTakenByOther(conn, email, currentUserId);
+        }
     }
 
     /**
      * Checks if a university ID is already assigned to another student.
-     *
-     * @param universityId The university ID to check
-     * @param currentUserId The student to exclude from the check
-     * @return true if taken by another user, false if available
-     * @throws SQLException On database error
+     * Uses SELECT 1 ... LIMIT 1 for instant response.
      */
-    public boolean isUniversityIdTakenByOther(String universityId, Long currentUserId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM students WHERE LOWER(university_id) = LOWER(?) AND id <> ?";
+    public boolean isUniversityIdTakenByOther(Connection conn, String universityId, Long currentUserId) throws SQLException {
+        String trimmed = universityId.trim();
+        String sql = "SELECT 1 FROM students WHERE (university_id = ? OR LOWER(university_id) = LOWER(?)) AND id <> ? LIMIT 1";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, universityId.trim());
-            stmt.setLong(2, currentUserId);
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, trimmed);
+            stmt.setString(2, trimmed);
+            stmt.setLong(3, currentUserId);
 
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
+                return rs.next();
             }
         }
-        return false;
+    }
+
+    /**
+     * Checks if a university ID is already assigned to another student (standalone connection).
+     */
+    public boolean isUniversityIdTakenByOther(String universityId, Long currentUserId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return isUniversityIdTakenByOther(conn, universityId, currentUserId);
+        }
     }
 
     /**
@@ -247,11 +273,9 @@ public class UserDAO {
         user.setCampusName(rs.getString("campus_name"));
         user.setCreatedAt(rs.getTimestamp("created_at"));
 
-        // If updated_at exists in ResultSet, map it safely
         try {
             user.setUpdatedAt(rs.getTimestamp("updated_at"));
         } catch (SQLException ignored) {
-            // Column may not be in query or older schema
         }
 
         return user;

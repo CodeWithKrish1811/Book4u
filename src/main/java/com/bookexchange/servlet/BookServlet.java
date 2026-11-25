@@ -73,6 +73,32 @@ public class BookServlet extends HttpServlet {
         String mode = req.getParameter("mode");
         String status = req.getParameter("status");
         String excludeSelfParam = req.getParameter("excludeSelf");
+        String pageParam = req.getParameter("page");
+        String limitParam = req.getParameter("limit");
+
+        boolean isPaginated = (pageParam != null && !pageParam.isBlank()) || (limitParam != null && !limitParam.isBlank());
+        int page = 1;
+        int limit = 20;
+        if (isPaginated) {
+            if (pageParam != null && !pageParam.isBlank()) {
+                try {
+                    page = Integer.parseInt(pageParam.trim());
+                    if (page < 1) page = 1;
+                } catch (NumberFormatException ignored) {
+                    page = 1;
+                }
+            }
+            if (limitParam != null && !limitParam.isBlank()) {
+                try {
+                    limit = Integer.parseInt(limitParam.trim());
+                    if (limit < 1) limit = 20;
+                    if (limit > 100) limit = 100;
+                } catch (NumberFormatException ignored) {
+                    limit = 20;
+                }
+            }
+        }
+        int offset = (page - 1) * limit;
 
         String pathInfo = req.getPathInfo();
         if (pathInfo != null) {
@@ -129,11 +155,23 @@ public class BookServlet extends HttpServlet {
                     return;
                 }
 
-                List<Book> myBooks = bookService.getMyBooks(currentUser.getId(), status);
                 JsonObject res = new JsonObject();
                 res.addProperty("success", true);
-                res.add("books", gson.toJsonTree(myBooks));
-                res.addProperty("count", myBooks.size());
+                if (isPaginated) {
+                    int totalCount = bookService.countMyBooks(currentUser.getId(), status);
+                    List<Book> myBooks = bookService.getMyBooks(currentUser.getId(), status, offset, limit);
+                    int totalPages = totalCount > 0 ? (int) Math.ceil((double) totalCount / limit) : 0;
+                    res.add("books", gson.toJsonTree(myBooks));
+                    res.addProperty("count", myBooks.size());
+                    res.addProperty("totalCount", totalCount);
+                    res.addProperty("page", page);
+                    res.addProperty("pageSize", limit);
+                    res.addProperty("totalPages", totalPages);
+                } else {
+                    List<Book> myBooks = bookService.getMyBooks(currentUser.getId(), status);
+                    res.add("books", gson.toJsonTree(myBooks));
+                    res.addProperty("count", myBooks.size());
+                }
                 out.print(gson.toJson(res));
                 return;
             }
@@ -144,12 +182,23 @@ public class BookServlet extends HttpServlet {
                 excludeOwnerId = currentUser.getId();
             }
 
-            List<Book> books = bookService.searchAndFilterBooks(query, subject, condition, mode, excludeOwnerId);
-
             JsonObject res = new JsonObject();
             res.addProperty("success", true);
-            res.add("books", gson.toJsonTree(books));
-            res.addProperty("count", books.size());
+            if (isPaginated) {
+                int totalCount = bookService.countBooks(query, subject, condition, mode, excludeOwnerId);
+                List<Book> books = bookService.searchAndFilterBooks(query, subject, condition, mode, excludeOwnerId, offset, limit);
+                int totalPages = totalCount > 0 ? (int) Math.ceil((double) totalCount / limit) : 0;
+                res.add("books", gson.toJsonTree(books));
+                res.addProperty("count", books.size());
+                res.addProperty("totalCount", totalCount);
+                res.addProperty("page", page);
+                res.addProperty("pageSize", limit);
+                res.addProperty("totalPages", totalPages);
+            } else {
+                List<Book> books = bookService.searchAndFilterBooks(query, subject, condition, mode, excludeOwnerId);
+                res.add("books", gson.toJsonTree(books));
+                res.addProperty("count", books.size());
+            }
             out.print(gson.toJson(res));
 
         } catch (IllegalArgumentException e) {
