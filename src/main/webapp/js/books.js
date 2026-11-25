@@ -73,14 +73,29 @@ async function loadExploreCatalog() {
     grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--color-muted); padding: 2.5rem;">Loading campus academic catalog...</p>';
 
     const query = document.getElementById('search-query') ? document.getElementById('search-query').value.trim() : '';
+    const searchField = document.getElementById('search-field') ? document.getElementById('search-field').value : 'ALL';
     const subject = document.getElementById('filter-subject') ? document.getElementById('filter-subject').value : '';
+    const department = document.getElementById('filter-department') ? document.getElementById('filter-department').value : '';
+    const courseCode = document.getElementById('filter-course') ? document.getElementById('filter-course').value.trim() : '';
     const condition = document.getElementById('filter-condition') ? document.getElementById('filter-condition').value : '';
     const mode = document.getElementById('filter-mode') ? document.getElementById('filter-mode').value : '';
 
     const params = new URLSearchParams();
     params.append('excludeSelf', 'true');
-    if (query) params.append('query', query);
+    if (query) {
+        if (searchField === 'title') {
+            params.append('title', query);
+        } else if (searchField === 'author') {
+            params.append('author', query);
+        } else if (searchField === 'isbn') {
+            params.append('isbn', query);
+        } else {
+            params.append('query', query);
+        }
+    }
     if (subject && subject !== 'ALL') params.append('subject', subject);
+    if (department && department !== 'ALL') params.append('department', department);
+    if (courseCode) params.append('courseCode', courseCode);
     if (condition && condition !== 'ALL') params.append('condition', condition);
     if (mode && mode !== 'ALL') params.append('mode', mode);
 
@@ -325,14 +340,20 @@ function filterExploreByMode(mode) {
 
 function resetExploreFilters() {
     const searchInput = document.getElementById('search-query');
+    const searchFieldSelect = document.getElementById('search-field');
     const headerInput = document.getElementById('header-search-input');
     const subjectSelect = document.getElementById('filter-subject');
+    const departmentSelect = document.getElementById('filter-department');
+    const courseInput = document.getElementById('filter-course');
     const conditionSelect = document.getElementById('filter-condition');
     const modeSelect = document.getElementById('filter-mode');
 
     if (searchInput) searchInput.value = '';
+    if (searchFieldSelect) searchFieldSelect.value = 'ALL';
     if (headerInput) headerInput.value = '';
     if (subjectSelect) subjectSelect.value = 'ALL';
+    if (departmentSelect) departmentSelect.value = 'ALL';
+    if (courseInput) courseInput.value = '';
     if (conditionSelect) conditionSelect.value = 'ALL';
     if (modeSelect) modeSelect.value = 'ALL';
 
@@ -375,14 +396,39 @@ function initExplorePage() {
     // Parse URL query parameters if arriving with pre-set filters
     const params = new URLSearchParams(window.location.search);
     const initialQuery = params.get('query');
+    const initialTitle = params.get('title');
+    const initialAuthor = params.get('author');
+    const initialIsbn = params.get('isbn');
     const initialSubject = params.get('subject');
+    const initialDepartment = params.get('department');
+    const initialCourse = params.get('courseCode') || params.get('course');
+    const initialCondition = params.get('condition');
     const initialMode = params.get('mode');
 
-    if (initialQuery && document.getElementById('search-query')) {
+    if (initialTitle && document.getElementById('search-query') && document.getElementById('search-field')) {
+        document.getElementById('search-query').value = initialTitle;
+        document.getElementById('search-field').value = 'title';
+    } else if (initialAuthor && document.getElementById('search-query') && document.getElementById('search-field')) {
+        document.getElementById('search-query').value = initialAuthor;
+        document.getElementById('search-field').value = 'author';
+    } else if (initialIsbn && document.getElementById('search-query') && document.getElementById('search-field')) {
+        document.getElementById('search-query').value = initialIsbn;
+        document.getElementById('search-field').value = 'isbn';
+    } else if (initialQuery && document.getElementById('search-query')) {
         document.getElementById('search-query').value = initialQuery;
     }
+
     if (initialSubject && document.getElementById('filter-subject')) {
         document.getElementById('filter-subject').value = initialSubject;
+    }
+    if (initialDepartment && document.getElementById('filter-department')) {
+        document.getElementById('filter-department').value = initialDepartment;
+    }
+    if (initialCourse && document.getElementById('filter-course')) {
+        document.getElementById('filter-course').value = initialCourse;
+    }
+    if (initialCondition && document.getElementById('filter-condition')) {
+        document.getElementById('filter-condition').value = initialCondition;
     }
     if (initialMode && document.getElementById('filter-mode')) {
         document.getElementById('filter-mode').value = initialMode;

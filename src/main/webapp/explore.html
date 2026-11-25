@@ -112,8 +112,19 @@
                     <form id="search-filter-form" onsubmit="event.preventDefault(); loadExploreCatalog();">
                         <!-- Keyword Search Input -->
                         <div class="form-group">
-                            <label for="search-query" class="form-label">Keyword Search</label>
-                            <input type="text" id="search-query" class="form-control" placeholder="Title, author, ISBN...">
+                            <label for="search-query" class="form-label">Search Query</label>
+                            <input type="text" id="search-query" class="form-control" placeholder="Search title, author, ISBN...">
+                        </div>
+
+                        <!-- Search Field Scope -->
+                        <div class="form-group">
+                            <label for="search-field" class="form-label">Search In</label>
+                            <select id="search-field" class="form-control">
+                                <option value="ALL">All Fields (Title, Author, ISBN, Course)</option>
+                                <option value="title">Title Only</option>
+                                <option value="author">Author Only</option>
+                                <option value="isbn">ISBN Only</option>
+                            </select>
                         </div>
 
                         <!-- Subject Area -->
@@ -131,6 +142,28 @@
                                 <option value="Literature">Literature & Humanities</option>
                                 <option value="Other">Other Academic</option>
                             </select>
+                        </div>
+
+                        <!-- Academic Department Filter -->
+                        <div class="form-group">
+                            <label for="filter-department" class="form-label">Academic Department</label>
+                            <select id="filter-department" class="form-control">
+                                <option value="ALL">All Departments</option>
+                                <option value="Computer Science">Computer Science & Engineering</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Electrical Engineering">Electrical & Electronics</option>
+                                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                <option value="Civil Engineering">Civil Engineering</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Business Administration">Business Administration</option>
+                            </select>
+                        </div>
+
+                        <!-- Course Code Filter -->
+                        <div class="form-group">
+                            <label for="filter-course" class="form-label">Course Code</label>
+                            <input type="text" id="filter-course" class="form-control" placeholder="e.g. CS101, CS201, EC501">
                         </div>
 
                         <!-- Sharing Mode -->

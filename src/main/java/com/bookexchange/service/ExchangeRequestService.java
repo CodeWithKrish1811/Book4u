@@ -150,7 +150,7 @@ public class ExchangeRequestService {
                 Long requestId = exchangeRequestDAO.createRequest(conn, req);
                 req.setId(requestId);
                 conn.commit();
-                return exchangeRequestDAO.findById(requestId);
+                return exchangeRequestDAO.findById(conn, requestId);
 
             } catch (Exception e) {
                 conn.rollback();
@@ -245,7 +245,7 @@ public class ExchangeRequestService {
                 exchangeRequestDAO.cancelOtherPendingRequestsForBook(conn, req.getBookId(), requestId);
 
                 conn.commit();
-                return exchangeDAO.findById(exchangeId);
+                return exchangeDAO.findById(conn, exchangeId);
 
             } catch (Exception e) {
                 conn.rollback();

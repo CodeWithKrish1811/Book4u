@@ -393,6 +393,11 @@ public class ExchangeRequestServiceTest {
         }
 
         @Override
+        public Book findById(Connection conn, Long id) {
+            return findById(id);
+        }
+
+        @Override
         public Book findByIdForUpdate(Connection conn, Long id) {
             return findById(id);
         }
@@ -445,6 +450,11 @@ public class ExchangeRequestServiceTest {
         @Override
         public ExchangeRequest findById(Long id) {
             return requests.get(id);
+        }
+
+        @Override
+        public ExchangeRequest findById(Connection conn, Long id) {
+            return findById(id);
         }
 
         @Override
@@ -502,6 +512,11 @@ public class ExchangeRequestServiceTest {
         @Override
         public Exchange findById(Long id) {
             return exchanges.get(id);
+        }
+
+        @Override
+        public Exchange findById(Connection conn, Long id) {
+            return findById(id);
         }
     }
 }

@@ -54,17 +54,62 @@ public class UserService {
         if (!ValidationUtil.isNotEmpty(user.getFullName())) {
             throw new IllegalArgumentException("Full Name is required.");
         }
+        if (user.getFullName().trim().length() > 128) {
+            throw new IllegalArgumentException("Full Name cannot exceed 128 characters.");
+        }
+        user.setFullName(user.getFullName().trim());
+
         if (!ValidationUtil.isNotEmpty(user.getUniversityId())) {
             throw new IllegalArgumentException("University ID / Roll Number is required.");
         }
+        if (user.getUniversityId().trim().length() > 64) {
+            throw new IllegalArgumentException("University ID cannot exceed 64 characters.");
+        }
+        user.setUniversityId(user.getUniversityId().trim());
+
         if (!ValidationUtil.isNotEmpty(user.getEmail())) {
             throw new IllegalArgumentException("College Email is required.");
         }
+        if (user.getEmail().trim().length() > 255) {
+            throw new IllegalArgumentException("College Email cannot exceed 255 characters.");
+        }
+        user.setEmail(user.getEmail().trim());
+
         if (!ValidationUtil.isNotEmpty(user.getDepartment())) {
             throw new IllegalArgumentException("Department is required.");
         }
-        if (user.getSemester() < 1 || user.getSemester() > 12) {
+        if (user.getDepartment().trim().length() > 128) {
+            throw new IllegalArgumentException("Department cannot exceed 128 characters.");
+        }
+        user.setDepartment(user.getDepartment().trim());
+
+        if (!ValidationUtil.isValidSemester(user.getSemester())) {
             throw new IllegalArgumentException("Semester must be between 1 and 12.");
+        }
+
+        // Phone validation (optional)
+        if (ValidationUtil.isNotEmpty(user.getPhone())) {
+            String trimmedPhone = user.getPhone().trim();
+            if (trimmedPhone.length() > 20) {
+                throw new IllegalArgumentException("Phone number cannot exceed 20 characters.");
+            }
+            if (!ValidationUtil.isValidPhone(trimmedPhone)) {
+                throw new IllegalArgumentException("Invalid phone number format: " + trimmedPhone);
+            }
+            user.setPhone(trimmedPhone);
+        } else {
+            user.setPhone(null);
+        }
+
+        // Campus name validation (optional, defaults to Main Campus)
+        if (ValidationUtil.isNotEmpty(user.getCampusName())) {
+            String trimmedCampus = user.getCampusName().trim();
+            if (trimmedCampus.length() > 128) {
+                throw new IllegalArgumentException("Campus name cannot exceed 128 characters.");
+            }
+            user.setCampusName(trimmedCampus);
+        } else {
+            user.setCampusName("Main Campus");
         }
 
         // 2. Email format validation
@@ -78,6 +123,9 @@ public class UserService {
         }
         if (rawPassword.length() < 6) {
             throw new IllegalArgumentException("Password must be at least 6 characters long.");
+        }
+        if (rawPassword.length() > 128) {
+            throw new IllegalArgumentException("Password cannot exceed 128 characters.");
         }
 
         // 4. Password confirmation match
@@ -171,17 +219,35 @@ public class UserService {
      * Note: University ID and Email are intentionally immutable here to preserve identity integrity.
      */
     public User updateProfile(Long userId, String fullName, String phone, String department, int semester, String campusName) throws SQLException {
-        if (userId == null) {
+        if (userId == null || userId <= 0) {
             throw new IllegalArgumentException("User ID is required.");
         }
         if (!ValidationUtil.isNotEmpty(fullName)) {
             throw new IllegalArgumentException("Full Name cannot be blank.");
         }
+        if (fullName.trim().length() > 128) {
+            throw new IllegalArgumentException("Full Name cannot exceed 128 characters.");
+        }
         if (!ValidationUtil.isNotEmpty(department)) {
             throw new IllegalArgumentException("Department cannot be blank.");
         }
-        if (semester < 1 || semester > 12) {
+        if (department.trim().length() > 128) {
+            throw new IllegalArgumentException("Department cannot exceed 128 characters.");
+        }
+        if (!ValidationUtil.isValidSemester(semester)) {
             throw new IllegalArgumentException("Semester must be between 1 and 12.");
+        }
+        if (ValidationUtil.isNotEmpty(phone)) {
+            String trimmedPhone = phone.trim();
+            if (trimmedPhone.length() > 20) {
+                throw new IllegalArgumentException("Phone number cannot exceed 20 characters.");
+            }
+            if (!ValidationUtil.isValidPhone(trimmedPhone)) {
+                throw new IllegalArgumentException("Invalid phone number format: " + trimmedPhone);
+            }
+        }
+        if (ValidationUtil.isNotEmpty(campusName) && campusName.trim().length() > 128) {
+            throw new IllegalArgumentException("Campus name cannot exceed 128 characters.");
         }
 
         User existing = userDAO.findById(userId);
@@ -190,7 +256,7 @@ public class UserService {
         }
 
         existing.setFullName(fullName.trim());
-        existing.setPhone(phone != null ? phone.trim() : null);
+        existing.setPhone(ValidationUtil.isNotEmpty(phone) ? phone.trim() : null);
         existing.setDepartment(department.trim());
         existing.setSemester(semester);
         if (ValidationUtil.isNotEmpty(campusName)) {
@@ -210,17 +276,23 @@ public class UserService {
      * Securely changes a student's password after verifying their current password.
      */
     public void changePassword(Long userId, String currentPassword, String newPassword, String confirmPassword) throws SQLException {
-        if (userId == null) {
+        if (userId == null || userId <= 0) {
             throw new IllegalArgumentException("User ID is required.");
         }
         if (!ValidationUtil.isNotEmpty(currentPassword)) {
             throw new IllegalArgumentException("Current password is required.");
+        }
+        if (currentPassword.length() > 128) {
+            throw new IllegalArgumentException("Current password cannot exceed 128 characters.");
         }
         if (!ValidationUtil.isNotEmpty(newPassword)) {
             throw new IllegalArgumentException("New password is required.");
         }
         if (newPassword.length() < 6) {
             throw new IllegalArgumentException("New password must be at least 6 characters long.");
+        }
+        if (newPassword.length() > 128) {
+            throw new IllegalArgumentException("New password cannot exceed 128 characters.");
         }
         if (!newPassword.equals(confirmPassword)) {
             throw new IllegalArgumentException("New password and confirm password do not match.");

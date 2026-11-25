@@ -147,7 +147,7 @@ public class ExchangeService {
                 }
 
                 conn.commit();
-                return exchangeDAO.findById(exchangeId);
+                return exchangeDAO.findById(conn, exchangeId);
 
             } catch (Exception e) {
                 conn.rollback();
@@ -210,7 +210,7 @@ public class ExchangeService {
                 }
 
                 conn.commit();
-                return exchangeDAO.findById(exchangeId);
+                return exchangeDAO.findById(conn, exchangeId);
 
             } catch (Exception e) {
                 conn.rollback();

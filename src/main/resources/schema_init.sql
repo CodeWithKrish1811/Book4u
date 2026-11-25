@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS students (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_students_email (email),
-    INDEX idx_students_dept (department)
+    INDEX idx_students_dept (department),
+    INDEX idx_students_campus (campus_name)
 ) ENGINE=InnoDB COMMENT='Registered university student accounts';
 
 -- ---------------------------------------------------------------------
@@ -51,9 +52,16 @@ CREATE TABLE IF NOT EXISTS books (
     CONSTRAINT fk_books_owner FOREIGN KEY (owner_id) REFERENCES students(id) ON DELETE CASCADE,
     INDEX idx_books_owner (owner_id),
     INDEX idx_books_title (title),
+    INDEX idx_books_author (author),
+    INDEX idx_books_isbn (isbn),
     INDEX idx_books_subject (subject),
     INDEX idx_books_mode (sharing_mode),
-    INDEX idx_books_status (status)
+    INDEX idx_books_status (status),
+    INDEX idx_books_course (course_code),
+    INDEX idx_books_status_created (status, created_at DESC),
+    INDEX idx_books_owner_status_created (owner_id, status, created_at DESC),
+    INDEX idx_books_subject_status (subject, status),
+    INDEX idx_books_mode_status (sharing_mode, status)
 ) ENGINE=InnoDB COMMENT='Academic book listings';
 
 -- ---------------------------------------------------------------------
@@ -81,7 +89,10 @@ CREATE TABLE IF NOT EXISTS exchange_requests (
     INDEX idx_requests_book (book_id),
     INDEX idx_requests_requester (requester_id),
     INDEX idx_requests_owner (owner_id),
-    INDEX idx_requests_status (status)
+    INDEX idx_requests_status (status),
+    INDEX idx_requests_dup_check (book_id, requester_id, status),
+    INDEX idx_requests_owner_created (owner_id, created_at DESC),
+    INDEX idx_requests_requester_created (requester_id, created_at DESC)
 ) ENGINE=InnoDB COMMENT='Book exchange requests';
 
 -- ---------------------------------------------------------------------
@@ -116,7 +127,10 @@ CREATE TABLE IF NOT EXISTS exchanges (
     CONSTRAINT fk_exchanges_requester FOREIGN KEY (requester_id) REFERENCES students(id) ON DELETE RESTRICT,
     INDEX idx_exchanges_status (status),
     INDEX idx_exchanges_owner (owner_id),
-    INDEX idx_exchanges_requester (requester_id)
+    INDEX idx_exchanges_requester (requester_id),
+    INDEX idx_exchanges_book_status (book_id, status),
+    INDEX idx_exchanges_owner_updated (owner_id, updated_at DESC),
+    INDEX idx_exchanges_requester_updated (requester_id, updated_at DESC)
 ) ENGINE=InnoDB COMMENT='Active and completed exchanges';
 
 -- ---------------------------------------------------------------------

@@ -9,14 +9,16 @@ import java.util.List;
 
 /**
  * ============================================================================
- * ExchangeRequestDAO (Data Access Object)
+ * ExchangeRequestDAO (Data Access Object) - High Performance JDBC Data Access
  * ============================================================================
  * Manages raw JDBC persistence for the 'exchange_requests' database table.
  * Adheres strictly to:
  * - PreparedStatement parameterized queries
  * - Try-with-resources resource management
- * - Transaction support with Connection propagation
+ * - Connection propagation across transactions
  * - Concurrency protection with SELECT FOR UPDATE
+ * - Short-circuit single row fetching via LIMIT 1
+ * - Constant-time duplicate checking via SELECT 1 ... LIMIT 1
  * ============================================================================
  */
 public class ExchangeRequestDAO {
@@ -102,19 +104,10 @@ public class ExchangeRequestDAO {
     }
 
     /**
-     * Retrieves a single exchange request with all joined metadata by primary key ID.
-     */
-    public ExchangeRequest findById(Long id) throws SQLException {
-        try (Connection conn = DBConnection.getConnection()) {
-            return findById(conn, id);
-        }
-    }
-
-    /**
      * Retrieves an exchange request by ID within an existing connection.
      */
     public ExchangeRequest findById(Connection conn, Long id) throws SQLException {
-        String sql = "SELECT " + SELECT_JOIN_FIELDS + FROM_JOIN_CLAUSE + "WHERE er.id = ?";
+        String sql = "SELECT " + SELECT_JOIN_FIELDS + FROM_JOIN_CLAUSE + "WHERE er.id = ? LIMIT 1";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -124,6 +117,15 @@ public class ExchangeRequestDAO {
             }
         }
         return null;
+    }
+
+    /**
+     * Retrieves a single exchange request with all joined metadata by primary key ID (standalone connection).
+     */
+    public ExchangeRequest findById(Long id) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return findById(conn, id);
+        }
     }
 
     /**
@@ -143,16 +145,25 @@ public class ExchangeRequestDAO {
     }
 
     /**
-     * Retrieves all requests sent by the specified student.
+     * Retrieves requests sent by the specified student with connection propagation and pagination.
      */
-    public List<ExchangeRequest> findByRequester(Long requesterId) throws SQLException {
+    public List<ExchangeRequest> findByRequester(Connection conn, Long requesterId, int offset, int limit) throws SQLException {
         List<ExchangeRequest> list = new ArrayList<>();
-        String sql = "SELECT " + SELECT_JOIN_FIELDS + FROM_JOIN_CLAUSE +
-                     "WHERE er.requester_id = ? ORDER BY er.created_at DESC";
+        StringBuilder sql = new StringBuilder(
+                "SELECT " + SELECT_JOIN_FIELDS + FROM_JOIN_CLAUSE +
+                "WHERE er.requester_id = ? ORDER BY er.created_at DESC, er.id DESC"
+        );
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        if (limit > 0) {
+            sql.append(" LIMIT ? OFFSET ?");
+        }
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             stmt.setLong(1, requesterId);
+            if (limit > 0) {
+                stmt.setInt(2, limit);
+                stmt.setInt(3, Math.max(0, offset));
+            }
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRowToExchangeRequest(rs));
@@ -163,16 +174,34 @@ public class ExchangeRequestDAO {
     }
 
     /**
-     * Retrieves all requests received by the specified book owner.
+     * Retrieves all requests sent by the specified student (standalone connection).
      */
-    public List<ExchangeRequest> findByOwner(Long ownerId) throws SQLException {
-        List<ExchangeRequest> list = new ArrayList<>();
-        String sql = "SELECT " + SELECT_JOIN_FIELDS + FROM_JOIN_CLAUSE +
-                     "WHERE er.owner_id = ? ORDER BY er.created_at DESC";
+    public List<ExchangeRequest> findByRequester(Long requesterId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return findByRequester(conn, requesterId, 0, 0);
+        }
+    }
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    /**
+     * Retrieves requests received by the specified book owner with connection propagation and pagination.
+     */
+    public List<ExchangeRequest> findByOwner(Connection conn, Long ownerId, int offset, int limit) throws SQLException {
+        List<ExchangeRequest> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT " + SELECT_JOIN_FIELDS + FROM_JOIN_CLAUSE +
+                "WHERE er.owner_id = ? ORDER BY er.created_at DESC, er.id DESC"
+        );
+
+        if (limit > 0) {
+            sql.append(" LIMIT ? OFFSET ?");
+        }
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             stmt.setLong(1, ownerId);
+            if (limit > 0) {
+                stmt.setInt(2, limit);
+                stmt.setInt(3, Math.max(0, offset));
+            }
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRowToExchangeRequest(rs));
@@ -180,23 +209,30 @@ public class ExchangeRequestDAO {
             }
         }
         return list;
+    }
+
+    /**
+     * Retrieves all requests received by the specified book owner (standalone connection).
+     */
+    public List<ExchangeRequest> findByOwner(Long ownerId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection()) {
+            return findByOwner(conn, ownerId, 0, 0);
+        }
     }
 
     /**
      * Checks if a requester already has a PENDING request for a given book within a transaction.
+     * Uses SELECT 1 ... LIMIT 1 for instant short-circuit evaluation.
      */
     public int countPendingRequests(Connection conn, Long bookId, Long requesterId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM exchange_requests WHERE book_id = ? AND requester_id = ? AND status = 'PENDING'";
+        String sql = "SELECT 1 FROM exchange_requests WHERE book_id = ? AND requester_id = ? AND status = 'PENDING' LIMIT 1";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, bookId);
             stmt.setLong(2, requesterId);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+                return rs.next() ? 1 : 0;
             }
         }
-        return 0;
     }
 
     /**

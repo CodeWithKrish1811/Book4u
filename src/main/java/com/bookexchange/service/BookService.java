@@ -89,6 +89,20 @@ public class BookService {
     }
 
     /**
+     * Paginated retrieval of all available books.
+     */
+    public List<Book> getAllAvailableBooks(Long excludeOwnerId, int offset, int limit) throws SQLException {
+        return bookDAO.findAllAvailable(excludeOwnerId, offset, limit);
+    }
+
+    /**
+     * Total count of all available books.
+     */
+    public int countAllAvailableBooks(Long excludeOwnerId) throws SQLException {
+        return bookDAO.countAllAvailable(excludeOwnerId);
+    }
+
+    /**
      * Retrieves all books listed by the current student (for My Books).
      */
     public List<Book> getMyBooks(Long ownerId, String statusFilter) throws SQLException {
@@ -99,11 +113,104 @@ public class BookService {
     }
 
     /**
+     * Paginated retrieval of student's own books (for My Books).
+     */
+    public List<Book> getMyBooks(Long ownerId, String statusFilter, int offset, int limit) throws SQLException {
+        if (ownerId == null || ownerId <= 0) {
+            throw new IllegalArgumentException("Owner ID is required to fetch student books.");
+        }
+        return bookDAO.findByOwnerId(ownerId, statusFilter, offset, limit);
+    }
+
+    /**
+     * Total count of books listed by current student matching status filter.
+     */
+    public int countMyBooks(Long ownerId, String statusFilter) throws SQLException {
+        if (ownerId == null || ownerId <= 0) {
+            throw new IllegalArgumentException("Owner ID is required to fetch student books.");
+        }
+        return bookDAO.countByOwnerId(ownerId, statusFilter);
+    }
+
+    /**
      * Multi-criteria search and filter across available books.
      */
     public List<Book> searchAndFilterBooks(String query, String subject, String condition, String mode, Long excludeOwnerId)
             throws SQLException {
         return bookDAO.searchAndFilter(query, subject, condition, mode, excludeOwnerId);
+    }
+
+    /**
+     * Paginated multi-criteria search and filter across available books.
+     */
+    public List<Book> searchAndFilterBooks(String query, String subject, String condition, String mode,
+                                           Long excludeOwnerId, int offset, int limit) throws SQLException {
+        return bookDAO.searchAndFilter(query, subject, condition, mode, excludeOwnerId, offset, limit);
+    }
+
+    /**
+     * Enhanced dynamic search and multi-criteria filter across available books.
+     * Supports title, author, ISBN, department, and course code filters.
+     */
+    public List<Book> searchAndFilterBooks(String query, String title, String author, String isbn,
+                                           String subject, String department, String courseCode,
+                                           String condition, String mode, Long excludeOwnerId,
+                                           int offset, int limit) throws SQLException {
+        return bookDAO.searchAndFilter(query, title, author, isbn, subject, department, courseCode,
+                condition, mode, excludeOwnerId, offset, limit);
+    }
+
+    /**
+     * Total count of available books matching search and filter criteria.
+     */
+    public int countBooks(String query, String subject, String condition, String mode, Long excludeOwnerId)
+            throws SQLException {
+        return bookDAO.countSearchAndFilter(query, subject, condition, mode, excludeOwnerId);
+    }
+
+    /**
+     * Total count of available books matching enhanced search and filter criteria.
+     */
+    public int countBooks(String query, String title, String author, String isbn,
+                          String subject, String department, String courseCode,
+                          String condition, String mode, Long excludeOwnerId) throws SQLException {
+        return bookDAO.countSearchAndFilter(query, title, author, isbn, subject, department, courseCode,
+                condition, mode, excludeOwnerId);
+    }
+
+    /**
+     * Search books specifically by title (case-insensitive).
+     */
+    public List<Book> searchBooksByTitle(String title, Long excludeOwnerId) throws SQLException {
+        return searchAndFilterBooks(null, title, null, null, null, null, null, null, null, excludeOwnerId, 0, 0);
+    }
+
+    /**
+     * Search books specifically by author (case-insensitive).
+     */
+    public List<Book> searchBooksByAuthor(String author, Long excludeOwnerId) throws SQLException {
+        return searchAndFilterBooks(null, null, author, null, null, null, null, null, null, excludeOwnerId, 0, 0);
+    }
+
+    /**
+     * Search books specifically by ISBN (index-accelerated).
+     */
+    public List<Book> searchBooksByIsbn(String isbn, Long excludeOwnerId) throws SQLException {
+        return searchAndFilterBooks(null, null, null, isbn, null, null, null, null, null, excludeOwnerId, 0, 0);
+    }
+
+    /**
+     * Filter books specifically by course code.
+     */
+    public List<Book> filterBooksByCourse(String courseCode, Long excludeOwnerId) throws SQLException {
+        return searchAndFilterBooks(null, null, null, null, null, null, courseCode, null, null, excludeOwnerId, 0, 0);
+    }
+
+    /**
+     * Filter books specifically by department.
+     */
+    public List<Book> filterBooksByDepartment(String department, Long excludeOwnerId) throws SQLException {
+        return searchAndFilterBooks(null, null, null, null, null, department, null, null, null, excludeOwnerId, 0, 0);
     }
 
     public List<Book> getBooksBySubject(String subject) throws SQLException {
@@ -204,17 +311,84 @@ public class BookService {
         if (book.getTitle().trim().length() > 255) {
             throw new IllegalArgumentException("Book title cannot exceed 255 characters.");
         }
+        book.setTitle(book.getTitle().trim());
+
         if (!ValidationUtil.isNotEmpty(book.getAuthor())) {
             throw new IllegalArgumentException("Author name is required.");
         }
         if (book.getAuthor().trim().length() > 255) {
             throw new IllegalArgumentException("Author name cannot exceed 255 characters.");
         }
+        book.setAuthor(book.getAuthor().trim());
+
         if (!ValidationUtil.isNotEmpty(book.getSubject())) {
             throw new IllegalArgumentException("Academic subject area is required.");
         }
         if (book.getSubject().trim().length() > 128) {
             throw new IllegalArgumentException("Subject area cannot exceed 128 characters.");
+        }
+        book.setSubject(book.getSubject().trim());
+
+        // Validate and sanitize ISBN (optional, but must be valid if provided)
+        if (ValidationUtil.isNotEmpty(book.getIsbn())) {
+            String trimmedIsbn = book.getIsbn().trim();
+            if (trimmedIsbn.length() > 32) {
+                throw new IllegalArgumentException("ISBN cannot exceed 32 characters.");
+            }
+            if (!ValidationUtil.isValidIsbn(trimmedIsbn)) {
+                throw new IllegalArgumentException("Invalid ISBN format: '" + trimmedIsbn + "'. Expected a valid 10- or 13-digit ISBN.");
+            }
+            book.setIsbn(trimmedIsbn);
+        } else {
+            book.setIsbn(null);
+        }
+
+        // Validate and sanitize Edition (optional, max 32 chars)
+        if (ValidationUtil.isNotEmpty(book.getEdition())) {
+            String trimmedEdition = book.getEdition().trim();
+            if (trimmedEdition.length() > 32) {
+                throw new IllegalArgumentException("Edition cannot exceed 32 characters.");
+            }
+            book.setEdition(trimmedEdition);
+        } else {
+            book.setEdition(null);
+        }
+
+        // Validate and sanitize Course Code (optional, max 32 chars)
+        if (ValidationUtil.isNotEmpty(book.getCourseCode())) {
+            String trimmedCourse = book.getCourseCode().trim();
+            if (trimmedCourse.length() > 32) {
+                throw new IllegalArgumentException("Course code cannot exceed 32 characters.");
+            }
+            book.setCourseCode(trimmedCourse);
+        } else {
+            book.setCourseCode(null);
+        }
+
+        // Validate Description (optional, max 4000 chars)
+        if (book.getDescription() != null) {
+            String trimmedDesc = book.getDescription().trim();
+            if (trimmedDesc.length() > 4000) {
+                throw new IllegalArgumentException("Book description cannot exceed 4000 characters.");
+            }
+            book.setDescription(trimmedDesc.isEmpty() ? null : trimmedDesc);
+        }
+
+        // Validate Swap Preferences (optional, max 2000 chars)
+        if (book.getSwapPreferences() != null) {
+            String trimmedPref = book.getSwapPreferences().trim();
+            if (trimmedPref.length() > 2000) {
+                throw new IllegalArgumentException("Swap preferences cannot exceed 2000 characters.");
+            }
+            book.setSwapPreferences(trimmedPref.isEmpty() ? null : trimmedPref);
+        }
+
+        // Validate Image URL length if provided
+        if (ValidationUtil.isNotEmpty(book.getImageUrl())) {
+            if (book.getImageUrl().trim().length() > 512) {
+                throw new IllegalArgumentException("Image URL cannot exceed 512 characters.");
+            }
+            book.setImageUrl(book.getImageUrl().trim());
         }
 
         // Auto-resolve cover image using canonical BookCoverResolver
@@ -227,9 +401,9 @@ public class BookService {
         if (!ValidationUtil.isNotEmpty(book.getConditionGrade())) {
             book.setConditionGrade("GOOD");
         } else {
-            String cond = book.getConditionGrade().trim().toUpperCase();
-            if (!cond.equals("LIKE_NEW") && !cond.equals("GOOD") && !cond.equals("FAIR") && !cond.equals("NEW")) {
-                throw new IllegalArgumentException("Invalid condition grade: " + book.getConditionGrade() + ". Allowed: LIKE_NEW, GOOD, FAIR.");
+            String cond = book.getConditionGrade().trim().toUpperCase(java.util.Locale.ROOT);
+            if (!ValidationUtil.isValidConditionGrade(cond)) {
+                throw new IllegalArgumentException("Invalid condition grade: " + book.getConditionGrade() + ". Allowed: NEW, LIKE_NEW, GOOD, FAIR.");
             }
             book.setConditionGrade(cond);
         }
@@ -238,7 +412,7 @@ public class BookService {
         if (!ValidationUtil.isValidSharingMode(book.getSharingMode())) {
             throw new IllegalArgumentException("Invalid sharing mode: " + book.getSharingMode() + ". Allowed: SWAP, GIVEAWAY, LENDING.");
         }
-        book.setSharingMode(book.getSharingMode().trim().toUpperCase());
+        book.setSharingMode(book.getSharingMode().trim().toUpperCase(java.util.Locale.ROOT));
 
         // Validate lending mode rules
         if ("LENDING".equals(book.getSharingMode())) {

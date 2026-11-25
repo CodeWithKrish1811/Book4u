@@ -3,6 +3,7 @@ package com.bookexchange.servlet;
 import com.bookexchange.model.Exchange;
 import com.bookexchange.model.User;
 import com.bookexchange.service.ExchangeService;
+import com.bookexchange.util.ValidationUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import jakarta.servlet.ServletException;
@@ -72,39 +73,40 @@ public class ExchangeServlet extends HttpServlet {
 
             // Single exchange: /{id}
             String[] segments = pathInfo.split("/");
-            if (segments.length >= 2 && !segments[1].isBlank()) {
-                try {
-                    Long id = Long.parseLong(segments[1]);
-                    Exchange exchange = exchangeService.getExchangeById(id, currentUser.getId());
-                    if (exchange == null) {
-                        sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Exchange not found with ID: " + id);
-                        return;
-                    }
-
-                    boolean isOwner = currentUser.getId().equals(exchange.getOwnerId());
-                    boolean isRequester = currentUser.getId().equals(exchange.getRequesterId());
-
-                    JsonObject res = new JsonObject();
-                    res.addProperty("success", true);
-                    res.add("exchange", gson.toJsonTree(exchange));
-                    res.addProperty("isOwner", isOwner);
-                    res.addProperty("isRequester", isRequester);
-                    res.addProperty("userHandoverConfirmed", isOwner ? exchange.isOwnerHandoverConfirmed() : exchange.isRequesterHandoverConfirmed());
-                    res.addProperty("peerHandoverConfirmed", isOwner ? exchange.isRequesterHandoverConfirmed() : exchange.isOwnerHandoverConfirmed());
-                    res.addProperty("userReturnConfirmed", isOwner ? exchange.isOwnerReturnConfirmed() : exchange.isRequesterReturnConfirmed());
-                    res.addProperty("peerReturnConfirmed", isOwner ? exchange.isRequesterReturnConfirmed() : exchange.isOwnerReturnConfirmed());
-
-                    out.print(gson.toJson(res));
-                    return;
-
-                } catch (NumberFormatException e) {
-                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid exchange ID format.");
+            if (segments.length == 2 && !segments[1].isBlank()) {
+                if (!ValidationUtil.isValidPositiveId(segments[1])) {
+                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid exchange ID format: " + segments[1]);
                     return;
                 }
+
+                Long id = Long.parseLong(segments[1].trim());
+                Exchange exchange = exchangeService.getExchangeById(id, currentUser.getId());
+                if (exchange == null) {
+                    sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Exchange not found with ID: " + id);
+                    return;
+                }
+
+                boolean isOwner = currentUser.getId().equals(exchange.getOwnerId());
+                boolean isRequester = currentUser.getId().equals(exchange.getRequesterId());
+
+                JsonObject res = new JsonObject();
+                res.addProperty("success", true);
+                res.add("exchange", gson.toJsonTree(exchange));
+                res.addProperty("isOwner", isOwner);
+                res.addProperty("isRequester", isRequester);
+                res.addProperty("userHandoverConfirmed", isOwner ? exchange.isOwnerHandoverConfirmed() : exchange.isRequesterHandoverConfirmed());
+                res.addProperty("peerHandoverConfirmed", isOwner ? exchange.isRequesterHandoverConfirmed() : exchange.isOwnerHandoverConfirmed());
+                res.addProperty("userReturnConfirmed", isOwner ? exchange.isOwnerReturnConfirmed() : exchange.isRequesterReturnConfirmed());
+                res.addProperty("peerReturnConfirmed", isOwner ? exchange.isRequesterReturnConfirmed() : exchange.isOwnerReturnConfirmed());
+
+                out.print(gson.toJson(res));
+                return;
             }
 
-            sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Endpoint not found.");
+            sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Endpoint not found: " + pathInfo);
 
+        } catch (IllegalArgumentException e) {
+            sendError(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (SecurityException e) {
             sendError(resp, HttpServletResponse.SC_FORBIDDEN, e.getMessage());
         } catch (SQLException e) {
@@ -134,19 +136,17 @@ public class ExchangeServlet extends HttpServlet {
 
         String[] segments = pathInfo.split("/");
         // Expected format: /{id}/confirm-handover or /{id}/confirm-return
-        if (segments.length < 3) {
+        if (segments.length != 3) {
             sendError(resp, HttpServletResponse.SC_NOT_FOUND, "Invalid exchange action URL.");
             return;
         }
 
-        Long exchangeId;
-        try {
-            exchangeId = Long.parseLong(segments[1]);
-        } catch (NumberFormatException e) {
-            sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid exchange ID format.");
+        if (!ValidationUtil.isValidPositiveId(segments[1])) {
+            sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid exchange ID format: " + segments[1]);
             return;
         }
 
+        Long exchangeId = Long.parseLong(segments[1].trim());
         String action = segments[2].toLowerCase();
 
         try (PrintWriter out = resp.getWriter()) {
@@ -154,7 +154,6 @@ public class ExchangeServlet extends HttpServlet {
                 Exchange updated = exchangeService.confirmHandover(exchangeId, currentUser.getId());
                 boolean isOwner = currentUser.getId().equals(updated.getOwnerId());
 
-                boolean userConfirmed = isOwner ? updated.isOwnerHandoverConfirmed() : updated.isRequesterHandoverConfirmed();
                 boolean bothConfirmed = updated.isOwnerHandoverConfirmed() && updated.isRequesterHandoverConfirmed();
 
                 String message = bothConfirmed
@@ -172,7 +171,6 @@ public class ExchangeServlet extends HttpServlet {
 
             if ("confirm-return".equals(action)) {
                 Exchange updated = exchangeService.confirmReturn(exchangeId, currentUser.getId());
-                boolean isOwner = currentUser.getId().equals(updated.getOwnerId());
 
                 boolean bothConfirmed = updated.isOwnerReturnConfirmed() && updated.isRequesterReturnConfirmed();
 

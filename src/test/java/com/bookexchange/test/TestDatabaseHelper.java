@@ -118,6 +118,21 @@ public class TestDatabaseHelper {
                 )
             """);
 
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_students_campus ON students(campus_name)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_author ON books(author)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_isbn ON books(isbn)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_course ON books(course_code)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_status_created ON books(status, created_at DESC)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_owner_status_created ON books(owner_id, status, created_at DESC)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_subject_status ON books(subject, status)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_books_mode_status ON books(sharing_mode, status)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_requests_dup_check ON exchange_requests(book_id, requester_id, status)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_requests_owner_created ON exchange_requests(owner_id, created_at DESC)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_requests_requester_created ON exchange_requests(requester_id, created_at DESC)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_exchanges_book_status ON exchanges(book_id, status)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_exchanges_owner_updated ON exchanges(owner_id, updated_at DESC)");
+            stmt.execute("CREATE INDEX IF NOT EXISTS idx_exchanges_requester_updated ON exchanges(requester_id, updated_at DESC)");
+
         } catch (SQLException e) {
             throw new RuntimeException("Failed to initialize test database", e);
         }
